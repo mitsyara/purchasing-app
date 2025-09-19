@@ -95,7 +95,7 @@ class ProductResource extends Resource
                     ->separator(',')
                     ->splitKeys([',', ';', 'enter']),
 
-                F\Textarea::make('product_notes')
+                __notes()
                     ->columnSpanFull(),
             ])
             ->columns();

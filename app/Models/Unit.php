@@ -12,7 +12,7 @@ class Unit extends Model
         'unit_code',
         'unit_name',
         'conversion_factor',
-        'unit_notes',
+        'notes',
     ];
 
     protected $casts = [

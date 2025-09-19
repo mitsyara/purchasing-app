@@ -11,7 +11,7 @@ class Packing extends Model
         'packing_name',
         'unit_conversion_value',
         'unit_id',
-        'packing_notes',
+        'notes',
     ];
 
     public function unit(): BelongsTo

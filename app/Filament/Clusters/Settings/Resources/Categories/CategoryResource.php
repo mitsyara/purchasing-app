@@ -62,9 +62,7 @@ class CategoryResource extends Resource
                             ->action(fn (F\TagsInput $component) => $component->state([]))
                     ]),
 
-                F\Textarea::make('category_notes')
-                    ->label(__('Category Notes'))
-                    ->rows(3)
+                __notes()
                     ->columnSpanFull(),
             ])
             ->columns();
@@ -74,10 +72,7 @@ class CategoryResource extends Resource
     {
         return $table
             ->columns([
-                T\Textcolumn::make('index')
-                    ->label('#')
-                    ->rowIndex()
-                    ->toggleable(),
+                __index(),
 
                 T\TextColumn::make('category_code')
                     ->label(__('Category Code'))

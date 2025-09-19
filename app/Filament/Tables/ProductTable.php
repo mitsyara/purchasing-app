@@ -25,10 +25,7 @@ class ProductTable
                 return $query;
             })
             ->columns([
-                T\TextColumn::make('index')
-                    ->label('#')
-                    ->rowIndex()
-                    ->sortable(),
+                __index(),
 
                 T\TextColumn::make('product_code')
                     ->label(__('Code'))

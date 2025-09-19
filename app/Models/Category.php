@@ -14,7 +14,7 @@ class Category extends Model
         'vat_id',
         'is_gmp_required',
         'category_keywords',
-        'category_notes',
+        'notes',
         'category_index',
     ];
 

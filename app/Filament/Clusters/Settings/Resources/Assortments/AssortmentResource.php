@@ -61,7 +61,7 @@ class AssortmentResource extends Resource
                     ->label(__('Products'))
                     ->relationship('products', 'product_full_name')
                     ->tableConfiguration(ProductTable::class)
-                    ->tableArguments(function($get) {
+                    ->tableArguments(function ($get) {
                         return [
                             'category_id' => $get('category_id'),
                         ];
@@ -71,9 +71,7 @@ class AssortmentResource extends Resource
                     ->multiple()
                     ->columnSpanFull(),
 
-                F\Textarea::make('assortment_notes')
-                    ->label(__('Assortment Notes'))
-                    ->rows(3)
+                __notes()
                     ->columnSpanFull(),
             ])
             ->columns();
@@ -83,15 +81,13 @@ class AssortmentResource extends Resource
     {
         return $table
             ->columns([
-                T\TextColumn::make('index')
-                    ->label('#')
-                    ->rowIndex()
-                    ->sortable(),
+                __index(),
 
                 T\TextColumn::make('assortment_code')
                     ->label(__('Assortment'))
-                    ->description(fn (Assortment $record): string => $record->assortment_name)
-                    ->searchable(query: fn(Builder $query, string $search): Builder =>
+                    ->description(fn(Assortment $record): string => $record->assortment_name)
+                    ->searchable(
+                        query: fn(Builder $query, string $search): Builder =>
                         $query->whereAny(['assortment_code', 'assortment_name'], 'like', "%{$search}%")
                     )
                     ->sortable(),

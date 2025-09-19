@@ -24,7 +24,7 @@ class VatSeeder extends Seeder
                 \App\Models\Vat::create([
                     'vat_name' => $vat[0],
                     'vat_value' => $vat[1],
-                    'vat_notes' => $vat[2],
+                    'notes' => $vat[2],
                 ]);
             }
             $this->command->info('Vats table seeded!');

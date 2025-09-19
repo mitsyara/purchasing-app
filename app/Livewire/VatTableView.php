@@ -38,9 +38,7 @@ class VatTableView extends Component implements HasActions, HasSchemas, HasTable
         return $table
             ->query(Vat::query())
             ->columns([
-                T\TextColumn::make('index')->label('#')
-                    ->rowIndex()
-                    ->toggleable(),
+                __index(),
                 T\TextColumn::make('vat_name')->label('VAT Name')
                     ->searchable(),
 

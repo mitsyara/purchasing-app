@@ -41,7 +41,7 @@ return new class extends Migration
             $table->date('gmp_expires_at')->nullable();
 
             $table->longText('certificates')->nullable();
-            $table->longText('contact_notes')->nullable();
+            $table->longText('notes')->nullable();
 
             $table->timestamps();
         });

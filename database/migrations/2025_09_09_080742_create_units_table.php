@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('unit_name')->unique();
             $table->foreignId('parent_id')->nullable()->constrained('units')->cascadeOnDelete();
             $table->decimal('conversion_factor', 22, 6)->nullable();
-            $table->longText('unit_notes')->nullable();
+            $table->longText('notes')->nullable();
             $table->timestamps();
         });
     }

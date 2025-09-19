@@ -166,10 +166,7 @@ class CompanyResource extends Resource
     {
         return $table
             ->columns([
-                T\TextColumn::make('index')
-                    ->label('#')
-                    ->rowIndex()
-                    ->toggleable(),
+                __index(),
 
                 T\TextColumn::make('company_code')
                     ->label('Code')

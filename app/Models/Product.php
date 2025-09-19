@@ -24,7 +24,7 @@ class Product extends Model
         'product_alert_qty',
         'product_life_cycle',
         'product_certificates',
-        'product_notes',
+        'notes',
 
         'product_full_name',
         'product_unit_label',

@@ -39,9 +39,7 @@ class UnitSchema
                     ->label('Conversion of')
                     ->columns(2),
 
-                F\Textarea::make('unit_notes')
-                    ->label('Unit Notes')
-                    ->rows(4),
+                __notes(),
             ]);
     }
 }

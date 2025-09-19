@@ -38,9 +38,7 @@ class UnitTableView extends Component implements HasActions, HasSchemas, HasTabl
         return $table
             ->query(Unit::query())
             ->columns([
-                T\TextColumn::make('index')->label('#')
-                    ->rowIndex()
-                    ->toggleable(),
+                __index(),
                 T\TextColumn::make('unit_code')->label('Unit Code')
                     ->searchable(),
                 T\TextColumn::make('unit_name')->label('Unit Name')

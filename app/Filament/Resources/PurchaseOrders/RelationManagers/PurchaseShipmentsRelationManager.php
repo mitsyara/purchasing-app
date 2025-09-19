@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Filament\Resources\PurchaseOrders\RelationManagers;
+
+use App\Filament\Resources\PurchaseShipments\Schemas\PurchaseShipmentForm;
+use App\Filament\Resources\PurchaseShipments\Schemas\PurchaseShipmentInfolist;
+use App\Filament\Resources\PurchaseShipments\Tables\PurchaseShipmentTable;
+use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Schema;
+use Filament\Tables\Table;
+
+class PurchaseShipmentsRelationManager extends RelationManager
+{
+    protected static string $relationship = 'purchaseShipments';
+
+    public function form(Schema $schema): Schema
+    {
+        return PurchaseShipmentForm::configure($schema);
+    }
+
+    public function infolist(Schema $schema): Schema
+    {
+        return PurchaseShipmentInfolist::configure($schema);
+    }
+
+    public function table(Table $table): Table
+    {
+        return PurchaseShipmentTable::configure($table);
+    }
+}

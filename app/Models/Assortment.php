@@ -12,9 +12,14 @@ class Assortment extends Model
     protected $fillable = [
         'assortment_code',
         'assortment_name',
+        'is_active',
         'assortment_description',
         'category_id',
-        'assortment_notes',
+        'notes',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
     ];
 
     public function category(): BelongsTo

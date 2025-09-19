@@ -20,7 +20,8 @@ return new class extends Migration
 
             $table->foreignId('company_id')->nullable()->constrained('companies')->nullOnDelete();
             $table->foreignId('supplier_id')->nullable()->constrained('contacts')->nullOnDelete();
-            $table->foreignId('3rd_party_id')->nullable()->constrained('contacts')->nullOnDelete();
+            $table->foreignId('supplier_contract_id')->nullable()->constrained('contacts')->nullOnDelete();
+            $table->foreignId('shipper_id')->nullable()->constrained('contacts')->nullOnDelete();
 
             $table->foreignId('import_warehouse_id')->nullable()->constrained('warehouses')->nullOnDelete();
             $table->foreignId('import_port_id')->nullable()->constrained('ports')->nullOnDelete();
@@ -29,6 +30,7 @@ return new class extends Migration
             $table->foreignId('staff_approved_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('staff_docs_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('staff_declarant_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('staff_declarant_processing_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('staff_sales_id')->nullable()->constrained('users')->nullOnDelete();
 
             $table->string('etd')->nullable();
@@ -43,7 +45,7 @@ return new class extends Migration
             $table->string('incoterm')->nullable();
             $table->string('currency')->nullable();
             
-            $table->date('pay_term_delay_at')->nullable();
+            $table->string('pay_term_delay_at')->nullable();
             $table->integer('pay_term_days')->default(0);
 
             $table->decimal('total_value', 24, 6)->default(0);
@@ -56,7 +58,7 @@ return new class extends Migration
             $table->string('payment_method')->nullable();
             $table->text('shipping_address')->nullable();
             $table->text('billing_address')->nullable();
-            $table->longText('order_notes')->nullable();
+            $table->longText('notes')->nullable();
 
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();

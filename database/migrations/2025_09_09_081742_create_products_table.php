@@ -26,7 +26,7 @@ return new class extends Migration
             $table->unsignedBigInteger('product_alert_qty')->nullable();
             $table->unsignedBigInteger('product_life_cycle')->default(0);
             $table->longText('product_certificates')->nullable();
-            $table->longText('product_notes')->nullable();
+            $table->longText('notes')->nullable();
 
             $table->longText('product_full_name')->nullable();
             $table->string('product_unit_label')->nullable();

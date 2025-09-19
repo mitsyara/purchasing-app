@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('curr_code')->nullable();
             $table->string('curr_name')->nullable();
             $table->boolean('is_fav')->nullable();
-            $table->longText('country_notes')->nullable();
+            $table->longText('notes')->nullable();
             $table->timestamps();
         });
     }

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PurchaseOrder extends Model
 {
@@ -12,24 +13,28 @@ class PurchaseOrder extends Model
         'order_date',
         'order_number',
 
+        // buyer
         'company_id',
+        // supplier
         'supplier_id',
-        '3rd_party_id',
+        // contract supplier
+        'supplier_contract_id',
+        // money receiver
+        'shipper_id',
 
         'import_warehouse_id',
         'import_port_id',
 
         'staff_buy_id',
         'staff_approved_id',
+        'staff_sales_id',
 
         'staff_docs_id',
         'staff_declarant_id',
-        'staff_sales_id',
+        'staff_declarant_processing_id',
 
-        'etd',
         'etd_min',
         'etd_max',
-        'eta',
         'eta_min',
         'eta_max',
 
@@ -50,7 +55,7 @@ class PurchaseOrder extends Model
         'total_received_value',
         'total_paid_value',
 
-        'order_notes',
+        'notes',
 
         'created_by',
         'updated_by',
@@ -60,6 +65,7 @@ class PurchaseOrder extends Model
     protected $casts = [
         'order_date' => 'date',
         'order_status' => \App\Enums\OrderStatusEnum::class,
+        'pay_term_delay_at' => \App\Enums\PaytermDelayAtEnum::class,
         'incoterm' => \App\Enums\IncotermEnum::class,
         'real_amount' => 'decimal:6',
         'total_amount' => 'decimal:6',
@@ -76,9 +82,14 @@ class PurchaseOrder extends Model
         return $this->belongsTo(Contact::class, 'supplier_id');
     }
 
-    public function thirdParty(): BelongsTo
+    public function contractSupplier(): BelongsTo
     {
-        return $this->belongsTo(Contact::class, '3rd_party_id');
+        return $this->belongsTo(Contact::class, 'supplier_contract_id');
+    }
+
+    public function shipper(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'shipper_id');
     }
 
     public function importWarehouse(): BelongsTo
@@ -126,4 +137,17 @@ class PurchaseOrder extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+
+    // Product lines
+    public function purchaseOrderLines(): HasMany
+    {
+        return $this->hasMany(PurchaseOrderLine::class, 'purchase_order_id');
+    }
+
+    // Shipments
+    public function purchaseShipments(): HasMany
+    {
+        return $this->hasMany(PurchaseShipment::class, 'purchase_order_id');
+    }
+
 }

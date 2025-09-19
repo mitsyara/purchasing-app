@@ -11,7 +11,7 @@ use Illuminate\Contracts\Support\Htmlable;
 enum OrderStatusEnum: string implements HasLabel, HasIcon, HasColor
 {
     case Draft = 'draft';
-    case Sent = 'sent';
+    case Inprogress = 'inprogress';
     case Canceled = 'canceled';
     case Completed = 'completed';
 
@@ -19,7 +19,7 @@ enum OrderStatusEnum: string implements HasLabel, HasIcon, HasColor
     {
         return match ($this) {
             self::Draft => __('Draft'),
-            self::Sent => __('Sent'),
+            self::Inprogress => __('Inprogress'),
             self::Canceled => __('Canceled'),
             self::Completed => __('Completed'),
         };
@@ -29,8 +29,8 @@ enum OrderStatusEnum: string implements HasLabel, HasIcon, HasColor
     {
         return match ($this) {
             self::Draft => 'heroicon-o-document-text',
-            self::Sent => 'heroicon-o-paper-airplane',
-            self::Canceled => 'heroicon-o-ban',
+            self::Inprogress => 'heroicon-o-paper-airplane',
+            self::Canceled => 'heroicon-o-x-circle',
             self::Completed => 'heroicon-o-check',
         };
     }
@@ -39,7 +39,7 @@ enum OrderStatusEnum: string implements HasLabel, HasIcon, HasColor
     {
         return match ($this) {
             self::Draft => 'gray',
-            self::Sent => 'info',
+            self::Inprogress => 'info',
             self::Canceled => 'red',
             self::Completed => 'green',
         };

@@ -15,9 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('assortment_code')->unique();
             $table->string('assortment_name')->unique();
+            $table->boolean('is_active')->default(true);
+            
             $table->longText('assortment_description')->nullable();
             $table->foreignId('category_id')->nullable()->constrained('categories')->cascadeOnDelete();
-            $table->longText('assortment_notes')->nullable();
+            $table->longText('notes')->nullable();
             $table->timestamps();
         });
     }

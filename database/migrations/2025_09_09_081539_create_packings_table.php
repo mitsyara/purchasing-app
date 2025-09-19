@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('packing_name')->unique();
             $table->unsignedInteger('unit_conversion_value')->nullable();
             $table->foreignId('unit_id')->constrained('units')->cascadeOnDelete();
-            $table->longText('packing_notes')->nullable();
+            $table->longText('notes')->nullable();
             $table->timestamps();
         });
     }

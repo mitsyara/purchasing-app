@@ -37,9 +37,7 @@ class PackingTableView extends Component implements HasActions, HasSchemas, HasT
         return $table
             ->query(Packing::query())
             ->columns([
-                T\TextColumn::make('index')->label('#')
-                    ->rowIndex()
-                    ->toggleable(),
+                __index(),
                 T\TextColumn::make('packing_name')
                     ->searchable(),
 

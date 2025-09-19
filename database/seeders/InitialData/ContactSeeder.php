@@ -27,7 +27,7 @@ class ContactSeeder extends Seeder
                 'country_id' => \App\Models\Country::where('alpha3', 'VNM')->first()?->id,
                 'region' => \App\Enums\RegionEnum::Other->value,
 
-                'contact_notes' => 'Khách hàng lẻ tẻ',
+                'notes' => 'Khách hàng lẻ tẻ',
             ]);
             $this->command->info('  Seeded Complete!');
 
@@ -318,7 +318,7 @@ class ContactSeeder extends Seeder
                     'contact_name' => $contact['contact_name'],
                     'country_id' => $countryMap[$contact['country_code']] ?? null,
                     'region' => \App\Enums\RegionEnum::Other->value,
-                    'contact_notes' => 'Trader & Manufacturers',
+                    'notes' => 'Trader & Manufacturers',
                 ];
                 $filtered = array_filter($data, fn($item) => !is_null($item));
 
@@ -466,7 +466,7 @@ class ContactSeeder extends Seeder
                     'rep_name' => $customer['rep_name'],
                     'bank_infos' => $customer['bank_info'],
 
-                    'contact_notes' => 'Khách Nội địa (VN)',
+                    'notes' => 'Khách Nội địa (VN)',
                 ];
                 $filtered = array_filter($data, fn($v) => !is_null($v));
 

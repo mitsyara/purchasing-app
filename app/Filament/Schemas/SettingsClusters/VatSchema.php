@@ -27,9 +27,7 @@ class VatSchema
                 ])
                     ->columns(),
 
-                F\Textarea::make('vat_notes')
-                    ->label('VAT Notes')
-                    ->rows(4),
+                __notes(),
             ]);
     }
 }

@@ -101,10 +101,7 @@ class PortResource extends Resource
     {
         return $table
             ->columns([
-                T\TextColumn::make('index')
-                    ->label('#')
-                    ->rowIndex()
-                    ->toggleable(),
+                __index(),
 
                 T\TextColumn::make('port_type')
                     ->label('Type')

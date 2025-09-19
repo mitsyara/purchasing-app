@@ -65,10 +65,7 @@ class WarehouseResource extends Resource
     {
         return $table
             ->columns([
-                T\TextColumn::make('index')
-                    ->label('#')
-                    ->rowIndex()
-                    ->sortable(),
+                __index(),
                 T\TextColumn::make('warehouse_code')
                     ->label(__('Code'))
                     ->sortable()

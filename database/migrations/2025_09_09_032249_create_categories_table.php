@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('vat_id')->nullable()->constrained('vats')->nullOnDelete();
             $table->boolean('is_gmp_required')->default(false);
             $table->longText('category_keywords')->nullable();
-            $table->longText('category_notes')->nullable();
+            $table->longText('notes')->nullable();
             $table->unsignedBigInteger('category_index')->default(0);
             $table->timestamps();
         });

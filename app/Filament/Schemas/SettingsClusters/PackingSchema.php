@@ -34,9 +34,7 @@ class PackingSchema
                     ->label('Conversion')
                     ->columns(2),
 
-                F\Textarea::make('packing_notes')
-                    ->label('Packing Notes')
-                    ->rows(4),
+                __notes(),
             ]);
     }
 }

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('vat_name')->unique();
             $table->unsignedBigInteger('vat_value')->unique()->nullable();
-            $table->longText('vat_notes')->nullable();
+            $table->longText('notes')->nullable();
             $table->timestamps();
         });
     }
