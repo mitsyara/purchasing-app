@@ -5,6 +5,7 @@ namespace App\Filament\Resources\PurchaseShipments\Pages;
 use App\Filament\Resources\PurchaseShipments\PurchaseShipmentResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ManageRecords;
+use Filament\Support\Enums\Width;
 
 class ManagePurchaseShipments extends ManageRecords
 {
@@ -13,7 +14,9 @@ class ManagePurchaseShipments extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->modal()->slideOver()
+                ->modalWidth(Width::SevenExtraLarge),
         ];
     }
 }

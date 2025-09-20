@@ -20,7 +20,7 @@ class PurchaseOrder extends Model
         // contract supplier
         'supplier_contract_id',
         // money receiver
-        'shipper_id',
+        'supplier_payment_id',
 
         'import_warehouse_id',
         'import_port_id',
@@ -82,14 +82,14 @@ class PurchaseOrder extends Model
         return $this->belongsTo(Contact::class, 'supplier_id');
     }
 
-    public function contractSupplier(): BelongsTo
+    public function supplierContract(): BelongsTo
     {
         return $this->belongsTo(Contact::class, 'supplier_contract_id');
     }
 
-    public function shipper(): BelongsTo
+    public function supplierPayment(): BelongsTo
     {
-        return $this->belongsTo(Contact::class, 'shipper_id');
+        return $this->belongsTo(Contact::class, 'supplier_payment_id');
     }
 
     public function importWarehouse(): BelongsTo

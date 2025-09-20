@@ -21,7 +21,7 @@ return new class extends Migration
             $table->foreignId('company_id')->nullable()->constrained('companies')->nullOnDelete();
             $table->foreignId('supplier_id')->nullable()->constrained('contacts')->nullOnDelete();
             $table->foreignId('supplier_contract_id')->nullable()->constrained('contacts')->nullOnDelete();
-            $table->foreignId('shipper_id')->nullable()->constrained('contacts')->nullOnDelete();
+            $table->foreignId('supplier_payment_id')->nullable()->constrained('contacts')->nullOnDelete();
 
             $table->foreignId('import_warehouse_id')->nullable()->constrained('warehouses')->nullOnDelete();
             $table->foreignId('import_port_id')->nullable()->constrained('ports')->nullOnDelete();

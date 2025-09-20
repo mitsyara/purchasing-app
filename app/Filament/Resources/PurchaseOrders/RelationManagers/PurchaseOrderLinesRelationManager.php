@@ -3,9 +3,11 @@
 namespace App\Filament\Resources\PurchaseOrders\RelationManagers;
 
 use App\Filament\Schemas\POProductForm;
-use App\Services\PurchaseOrder\SyncOrderLineInfo;
+use App\Services\PurchaseOrder\SyncOrderLinesInfo;
 use Filament\Resources\RelationManagers\RelationManager;
 
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
@@ -13,11 +15,20 @@ use Filament\Tables\Table;
 use Filament\Tables\Columns as T;
 use Filament\Actions as A;
 use Filament\Forms\Components as F;
-use Illuminate\Database\Eloquent\Builder;
 
 class PurchaseOrderLinesRelationManager extends RelationManager
 {
     protected static string $relationship = 'purchaseOrderLines';
+
+    public static function getTitle(Model $ownerRecord, string $pageClass): string
+    {
+        return static::title();
+    }
+
+    public static function title(): string
+    {
+        return __('Products');
+    }
 
     public function form(Schema $schema): Schema
     {
@@ -28,6 +39,8 @@ class PurchaseOrderLinesRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->modelLabel(fn(): string => __('Product'))
+            ->pluralModelLabel(static::title())
             ->modifyQueryUsing(
                 fn(Builder $query): Builder
                 => $query
@@ -51,7 +64,8 @@ class PurchaseOrderLinesRelationManager extends RelationManager
                     ->money(fn($record) => $record->currency)
                     ->sortable(),
 
-                T\TextColumn::make('contract_price')
+                T\TextColumn::make('display_contract_price')
+                    ->label(__('Contract price'))
                     ->money(fn($record) => $record->currency)
                     ->sortable(),
 
@@ -68,11 +82,10 @@ class PurchaseOrderLinesRelationManager extends RelationManager
             ])
             ->headerActions([
                 A\CreateAction::make()
-                    ->label(__('Add Product'))
                     ->after(function () {
                         // Sync Purchase Order Info
                         $purchaseOrder = $this->getOwnerRecord();
-                        new SyncOrderLineInfo($purchaseOrder);
+                        new SyncOrderLinesInfo($purchaseOrder);
                     }),
             ])
             ->recordActions([
@@ -80,7 +93,7 @@ class PurchaseOrderLinesRelationManager extends RelationManager
                     ->after(function () {
                         // Sync Purchase Order Info
                         $purchaseOrder = $this->getOwnerRecord();
-                        new SyncOrderLineInfo($purchaseOrder);
+                        new SyncOrderLinesInfo($purchaseOrder);
                     }),
                 A\DeleteAction::make(),
             ]);

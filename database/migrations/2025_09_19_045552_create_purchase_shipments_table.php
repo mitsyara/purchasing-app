@@ -38,13 +38,13 @@ return new class extends Migration
             $table->string('customs_clearance_status')->nullable();
             $table->date('customs_clearance_date')->nullable();
 
-            $table->decimal('exchange_rate', 15, 6)->nullable();
+            $table->decimal('exchange_rate', 15, 3)->nullable();
             $table->boolean('is_exchange_rate_final')->default(false);
 
-            $table->decimal('total_value', 15, 2)->nullable();
+            $table->decimal('total_value', 24, 6)->nullable();
             $table->json('extra_costs')->nullable();
-            $table->decimal('total_extra_cost', 15, 2)->nullable();
-            $table->decimal('average_cost', 15, 6)->nullable();
+            $table->decimal('total_extra_cost', 24, 6)->nullable();
+            $table->decimal('average_cost', 15, 3)->nullable();
 
             $table->text('notes')->nullable();
 

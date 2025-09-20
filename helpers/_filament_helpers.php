@@ -140,7 +140,7 @@ if (!function_exists('__eta_etd_fields')) {
 }
 
 if (!function_exists('__atd_ata_fields')) {
-    function __atd_ata_fields(): \Filament\Schemas\Components\Group
+    function __atd_ata_fields(int|array|null $columns = 2): \Filament\Schemas\Components\Group
     {
         return \Filament\Schemas\Components\Group::make([
             F\DatePicker::make('atd')->label(__('ATD'))
@@ -152,7 +152,7 @@ if (!function_exists('__atd_ata_fields')) {
                 ->extraInputAttributes(['data-custom-ata' => true]),
         ])
             ->grow(false)
-            ->columns();
+            ->columns($columns);
     }
 }
 

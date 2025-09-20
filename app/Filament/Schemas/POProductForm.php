@@ -4,19 +4,13 @@ namespace App\Filament\Schemas;
 
 use Filament\Resources\RelationManagers\RelationManager;
 
-use App\Models\AssortmentProduct;
-use App\Models\Product;
 use App\Models\PurchaseOrderLine;
 use Illuminate\Database\Eloquent\Builder;
 
 use Filament\Schemas\Schema;
 
-
 use Filament\Forms\Components as F;
-use Filament\Infolists\Components as I;
 use Filament\Schemas\JsContent;
-use Filament\Support\Enums\Width;
-use Filament\Support\Icons\Heroicon;
 
 class POProductForm
 {
@@ -24,61 +18,61 @@ class POProductForm
     {
         return $schema
             ->components([
-                F\Select::make('assortment_id')
-                    ->label(__('Assortment'))
-                    ->relationship(
-                        name: 'assortment',
-                        titleAttribute: 'assortment_name',
-                        modifyQueryUsing: function (
-                            Builder $query,
-                            string $operation,
-                            \Livewire\Component $livewire,
-                            ?PurchaseOrderLine $record,
-                        ): Builder {
-                            if ($livewire instanceof RelationManager) {
-                                $purchaseOrder = $livewire->getOwnerRecord();
-                                $assortmentIds = $purchaseOrder->purchaseOrderLines()
-                                    ->when($record, fn(Builder $q) => $q->whereNot('id', $record->id))
-                                    ->pluck('assortment_id')
-                                    ->filter();
-                                if ($assortmentIds) {
-                                    $query = $query->whereNotIn('id', $assortmentIds);
-                                }
-                            }
-                            return $operation === 'create' ? $query->where('is_active', true) : $query;
-                        }
-                    )
-                    ->searchable()
-                    ->preload()
-                    ->disableOptionsWhenSelectedInSiblingRepeaterItems()
-                    ->afterStateUpdatedJs(<<<'JS'
-                        $state ? $set('product_id', null) : null;
-                    JS)
-                    ->live()
-                    ->skipRenderAfterStateUpdated()
-                    ->suffixAction(
-                        \Filament\Actions\Action::make('viewProductList')
-                            ->modal()->icon(Heroicon::Eye)->color('primary')
-                            ->schema(fn(F\Field $component) => [
-                                I\RepeatableEntry::make('products')
-                                    ->hiddenLabel()
-                                    ->getStateUsing(
-                                        Product::whereIn('id', AssortmentProduct::whereAssortmentId($component->getState())->pluck('product_id'))
-                                            ->get()
-                                    )
-                                    ->schema([
-                                        I\TextEntry::make('product_full_name')
-                                            ->hiddenLabel()
-                                            ->copyable(),
-                                    ])
-                                    ->contained(false),
-                            ])
-                            ->modalSubmitAction(false)
-                            ->modalCancelActionLabel(__('Close'))
-                            ->disabled(fn(F\Field $component): bool => empty($component->getState())),
-                    )
-                    ->columnSpanFull()
-                    ->requiredWithout(['product_id']),
+                // F\Select::make('assortment_id')
+                //     ->label(__('Assortment'))
+                //     ->relationship(
+                //         name: 'assortment',
+                //         titleAttribute: 'assortment_name',
+                //         modifyQueryUsing: function (
+                //             Builder $query,
+                //             string $operation,
+                //             \Livewire\Component $livewire,
+                //             ?PurchaseOrderLine $record,
+                //         ): Builder {
+                //             if ($livewire instanceof RelationManager) {
+                //                 $purchaseOrder = $livewire->getOwnerRecord();
+                //                 $assortmentIds = $purchaseOrder->purchaseOrderLines()
+                //                     ->when($record, fn(Builder $q) => $q->whereNot('id', $record->id))
+                //                     ->pluck('assortment_id')
+                //                     ->filter();
+                //                 if ($assortmentIds) {
+                //                     $query = $query->whereNotIn('id', $assortmentIds);
+                //                 }
+                //             }
+                //             return $operation === 'create' ? $query->where('is_active', true) : $query;
+                //         }
+                //     )
+                //     ->searchable()
+                //     ->preload()
+                //     ->disableOptionsWhenSelectedInSiblingRepeaterItems()
+                //     ->afterStateUpdatedJs(<<<'JS'
+                //         $state ? $set('product_id', null) : null;
+                //     JS)
+                //     ->live()
+                //     ->skipRenderAfterStateUpdated()
+                //     ->suffixAction(
+                //         \Filament\Actions\Action::make('viewProductList')
+                //             ->modal()->icon(Heroicon::Eye)->color('primary')
+                //             ->schema(fn(F\Field $component) => [
+                //                 I\RepeatableEntry::make('products')
+                //                     ->hiddenLabel()
+                //                     ->getStateUsing(
+                //                         Product::whereIn('id', AssortmentProduct::whereAssortmentId($component->getState())->pluck('product_id'))
+                //                             ->get()
+                //                     )
+                //                     ->schema([
+                //                         I\TextEntry::make('product_full_name')
+                //                             ->hiddenLabel()
+                //                             ->copyable(),
+                //                     ])
+                //                     ->contained(false),
+                //             ])
+                //             ->modalSubmitAction(false)
+                //             ->modalCancelActionLabel(__('Close'))
+                //             ->disabled(fn(F\Field $component): bool => empty($component->getState())),
+                //     )
+                //     ->columnSpanFull()
+                //     ->requiredWithout(['product_id']),
 
                 F\Select::make('product_id')
                     ->label(__('Product'))
@@ -135,5 +129,22 @@ class POProductForm
                         $get('../../currency')
                     JS)),
             ]);
+    }
+
+    public static function repeaterHeaders(): array
+    {
+        return [
+            // F\Repeater\TableColumn::make('Assortment')
+            //     ->width('280px'),
+            F\Repeater\TableColumn::make('Product'),
+            F\Repeater\TableColumn::make('Qty')
+                ->markAsRequired()
+                ->width('180px'),
+            F\Repeater\TableColumn::make('Unit Price')
+                ->markAsRequired()
+                ->width('180px'),
+            F\Repeater\TableColumn::make('Contract Price')
+                ->width('180px'),
+        ];
     }
 }

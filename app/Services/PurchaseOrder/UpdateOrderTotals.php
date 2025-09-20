@@ -4,7 +4,7 @@ namespace App\Services\PurchaseOrder;
 
 use App\Models\PurchaseOrder;
 
-class CalculateOrderTotal
+class UpdateOrderTotals
 {
     /**
      * Create a new class instance.

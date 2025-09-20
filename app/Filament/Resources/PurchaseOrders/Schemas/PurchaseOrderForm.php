@@ -47,17 +47,7 @@ class PurchaseOrderForm
                             ->relationship()
                             ->hiddenLabel()
                             ->table([
-                                F\Repeater\TableColumn::make('Assortment')
-                                    ->width('280px'),
-                                F\Repeater\TableColumn::make('Product'),
-                                F\Repeater\TableColumn::make('Qty')
-                                    ->markAsRequired()
-                                    ->width('180px'),
-                                F\Repeater\TableColumn::make('Unit Price')
-                                    ->markAsRequired()
-                                    ->width('180px'),
-                                F\Repeater\TableColumn::make('Contract Price')
-                                    ->width('180px'),
+                                ...POProductForm::repeaterHeaders(),
                             ])
                             ->schema([
                                 ...POProductForm::configure(new Schema())->getComponents(),
@@ -102,20 +92,20 @@ class PurchaseOrderForm
                 ->label(__('Contract Supplier'))
                 ->afterLabel(__('* If applicable'))
                 ->relationship(
-                    name: 'contractSupplier',
+                    name: 'supplierContract',
                     titleAttribute: 'contact_name',
                     modifyQueryUsing: fn(Builder $query): Builder => $query->where('is_trader', true),
                 )
                 ->disableOptionWhen(fn($get, $value) => (int) $get('supplier_id') === (int) $value
-                    || (int) $get('shipper_id') === (int) $value)
+                    || (int) $get('supplier_payment_id') === (int) $value)
                 ->preload()
                 ->searchable(),
 
-            F\Select::make('shipper_id')
-                ->label(__('Shipper'))
+            F\Select::make('supplier_payment_id')
+                ->label(__('Payment Receiver'))
                 ->afterLabel(__('* If applicable'))
                 ->relationship(
-                    name: 'shipper',
+                    name: 'supplierPayment',
                     titleAttribute: 'contact_name',
                     modifyQueryUsing: fn(Builder $query): Builder => $query->where('is_trader', true),
                 )
@@ -148,11 +138,13 @@ class PurchaseOrderForm
                     F\TextInput::make('pay_term_days')
                         ->label(__('Payment Term Days'))
                         ->suffix(__('Days'))
-                        ->grow(false)
                         ->afterStateHydrated(fn(F\Field $component, $state)
                         => $component->state(abs($state)))
                         ->dehydrateStateUsing(fn($state, $get)
-                        => $get('before_after') === 'before' ? -abs($state) : abs($state)),
+                        => $get('before_after') === 'before' ? -abs($state) : abs($state))
+                        ->integer()
+                        ->datalist([0, 30, 60])
+                        ->grow(false),
 
                 ])
                     ->label(__('Payment Terms'))
@@ -230,7 +222,14 @@ class PurchaseOrderForm
 
             F\TextInput::make('order_number')
                 ->label(__('Order Number'))
-                ->unique(),
+                ->unique()
+                ->requiredIf('order_status', [
+                    \App\Enums\OrderStatusEnum::Inprogress->value,
+                    \App\Enums\OrderStatusEnum::Completed->value,
+                ])
+                ->validationMessages([
+                    'required_if' => __('Order Number is required!')
+                ]),
 
             F\DatePicker::make('order_date')
                 ->label(__('Order Date'))

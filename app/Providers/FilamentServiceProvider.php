@@ -28,5 +28,11 @@ class FilamentServiceProvider extends ServiceProvider
                 ->reorderableColumns()
             ;
         });
+
+        \Filament\Forms\Components\Repeater::configureUsing(function (\Filament\Forms\Components\Repeater $repeater) {
+            $repeater
+                ->reorderable(false)
+                ->addActionLabel(__('Add item'));
+        });
     }
 }

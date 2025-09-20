@@ -11,7 +11,7 @@ class CallAllServices
      */
     public function __construct(public PurchaseOrder $order)
     {
-        new CalculateOrderTotal($order);
-        new SyncOrderLineInfo($order);
+        new UpdateOrderTotals($order);
+        new SyncOrderLinesInfo($order);
     }
 }

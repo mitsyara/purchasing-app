@@ -4,19 +4,28 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PurchaseShipment extends Model
 {
     protected $fillable = [
         'purchase_order_id',
-        'port_id',
         'company_id',
+        'port_id',
         'warehouse_id',
         'currency',
+
+        // supplier (real)
+        'supplier_id',
+        // contract supplier
+        'supplier_contract_id',
+        // money receiver
+        'supplier_payment_id',
 
         'staff_buy_id',
         'staff_docs_id',
         'staff_declarant_id',
+        'staff_declarant_processing_id',
 
         'tracking_no',
         'shipment_status',
@@ -57,6 +66,7 @@ class PurchaseShipment extends Model
 
         'is_exchange_rate_final' => 'boolean',
 
+        'extra_costs' => 'array',
         'attachment_files' => 'array',
         'attachment_files_name' => 'array',
     ];
@@ -64,6 +74,27 @@ class PurchaseShipment extends Model
     public function purchaseOrder(): BelongsTo
     {
         return $this->belongsTo(PurchaseOrder::class);
+    }
+
+    public function purchaseShipmentLines(): HasMany
+    {
+        return $this->hasMany(PurchaseShipmentLine::class, 'purchase_shipment_id');
+    }
+
+    // Partners
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'supplier_id');
+    }
+
+    public function supplierContract(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'supplier_contract_id');
+    }
+
+    public function supplierPayment(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'supplier_payment_id');
     }
 
     public function port(): BelongsTo
