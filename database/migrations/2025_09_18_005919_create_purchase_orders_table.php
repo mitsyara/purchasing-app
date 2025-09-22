@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('order_status')->default(\App\Enums\OrderStatusEnum::Draft->value);
             $table->date('order_date')->nullable();
             $table->string('order_number')->unique()->nullable();
+            $table->string('order_description')->nullable();
 
             $table->foreignId('company_id')->nullable()->constrained('companies')->nullOnDelete();
             $table->foreignId('supplier_id')->nullable()->constrained('contacts')->nullOnDelete();

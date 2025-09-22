@@ -41,18 +41,18 @@ class PurchaseOrderLinesRelationManager extends RelationManager
         return $table
             ->modelLabel(fn(): string => __('Product'))
             ->pluralModelLabel(static::title())
-            ->modifyQueryUsing(
-                fn(Builder $query): Builder
-                => $query
-                    ->with(['product', 'assortment'])
-                    ->leftJoin('products', 'purchase_order_lines.product_id', '=', 'products.id')
-                    ->leftJoin('assortments', 'purchase_order_lines.assortment_id', '=', 'assortments.id')
-                    ->selectRaw('purchase_order_lines.*, COALESCE(products.product_full_name, assortments.assortment_name) as combined_product')
-            )
+            // ->modifyQueryUsing(
+            //     fn(Builder $query): Builder
+            //     => $query
+            //         ->with(['product', 'assortment'])
+            //         ->leftJoin('products', 'purchase_order_lines.product_id', '=', 'products.id')
+            //         ->leftJoin('assortments', 'purchase_order_lines.assortment_id', '=', 'assortments.id')
+            //         ->selectRaw('purchase_order_lines.*, COALESCE(products.product_full_name, assortments.assortment_name) as combined_product')
+            // )
             ->columns([
                 __index(),
 
-                T\TextColumn::make('combined_product')
+                T\TextColumn::make('product.product_full_name')
                     ->label(__('Product'))
                     ->sortable(),
 

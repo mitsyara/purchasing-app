@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -46,6 +47,7 @@ class PurchaseShipment extends Model
         'is_exchange_rate_final',
 
         'total_value',
+        'total_contract_value',
         'extra_costs',
         'total_extra_cost',
         'average_cost',
@@ -56,6 +58,9 @@ class PurchaseShipment extends Model
     ];
 
     protected $casts = [
+        'shipment_status' => \App\Enums\ShipmentStatusEnum::class,
+        'customs_clearance_status' => \App\Enums\CustomsClearanceStatusEnum::class,
+
         'etd_min' => 'date',
         'etd_max' => 'date',
         'eta_min' => 'date',
@@ -63,6 +68,7 @@ class PurchaseShipment extends Model
         'atd' => 'date',
         'ata' => 'date',
         'customs_declaration_date' => 'date',
+        'customs_clearance_date' => 'date',
 
         'is_exchange_rate_final' => 'boolean',
 
@@ -126,4 +132,12 @@ class PurchaseShipment extends Model
     {
         return $this->belongsTo(User::class, 'staff_declarant_id');
     }
+
+    public function staffDeclarantProcessing(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'staff_declarant_processing_id');
+    }
+
+    // Attributes
+
 }

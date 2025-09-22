@@ -1,0 +1,172 @@
+<?php
+
+namespace App\Services;
+
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
+use Carbon\Carbon;
+
+class VcbExchangeRatesService
+{
+    private string $xmlEndpoint = 'https://portal.vietcombank.com.vn/Usercontrols/TVPortal.TyGia/pXML.aspx';
+    private string $apiEndpoint = 'https://www.vietcombank.com.vn/api/exchangerates?date=';
+
+    private string $date;
+    public ?Carbon $timestamp = null;
+    public array $response = [];
+
+    public function __construct(string $date)
+    {
+        if (!self::isValidDate($date)) {
+            throw new \InvalidArgumentException("Invalid date format. Expected 'Y-m-d'.");
+        }
+
+        $this->date = $date;
+    }
+
+    public static function fetch(?string $date = null): array
+    {
+        $date = $date ?: today()->format('Y-m-d');
+
+        if (!self::isValidDate($date)) {
+            throw new \InvalidArgumentException("Invalid date format. Expected 'Y-m-d'.");
+        }
+
+        $cacheKey = "vcb_exchange_rates_{$date}";
+
+        return Cache::remember($cacheKey, now()->addMinutes(30), function () use ($date) {
+            $service = new self($date);
+            return $service->getExchangeRates()->response;
+        });
+    }
+
+    public function getExchangeRates(): static
+    {
+        return $this->isHistoricalDate()
+            ? $this->fetchHistoricalRates()
+            : $this->fetchCurrentRates();
+    }
+
+    private function fetchHistoricalRates(): static
+    {
+        try {
+            $response = Http::timeout(10)->get($this->apiEndpoint . $this->date);
+
+            if ($response->failed()) {
+                throw new \RuntimeException("VCB API request failed");
+            }
+
+            $data = $response->json();
+            $this->timestamp = Carbon::parse($data['UpdatedDate']);
+            $this->response = $this->transformHistoricalData($data, $this->timestamp);
+        } catch (\Throwable $e) {
+            Log::error('Failed to fetch historical exchange rates', [
+                'date' => $this->date,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return $this;
+    }
+
+    private function fetchCurrentRates(string $delimiter = ','): static
+    {
+        try {
+            $xmlContent = $this->sendRequest($this->xmlEndpoint);
+
+            if (empty($xmlContent)) {
+                throw new \RuntimeException("Empty XML response");
+            }
+
+            $parsed = $this->parseXml($xmlContent);
+            $transformed = $this->transformXmlData($parsed, $delimiter);
+
+            $this->timestamp = $transformed['timestamp'];
+            $this->response = $transformed['rates'] + [
+                'timestamp' => $this->timestamp->format('Y-m-d H:i:s'),
+            ];
+        } catch (\Throwable $e) {
+            Log::error('Failed to fetch current exchange rates', [
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return $this;
+    }
+
+    private function sendRequest(string $url): string
+    {
+        try {
+            return Http::timeout(10)->get($url)->body();
+        } catch (\Throwable $e) {
+            Log::error('Request to VCB failed', [
+                'url' => $url,
+                'error' => $e->getMessage()
+            ]);
+            throw new \RuntimeException("Request to VCB failed!");
+        }
+    }
+
+    private function parseXml(string $xml): array
+    {
+        $parser = xml_parser_create();
+        $result = [];
+        xml_parse_into_struct($parser, $xml, $result);
+        xml_parser_free($parser);
+
+        return $result;
+    }
+
+    private function transformHistoricalData(array $data, Carbon $timestamp): array
+    {
+        $rates = collect($data['Data'])->mapWithKeys(fn($item) => [
+            $item['currencyCode'] => [
+                'cash' => (float) $item['cash'],
+                'transfer' => (float) $item['transfer'],
+                'sell' => (float) $item['sell'],
+            ]
+        ])->toArray();
+
+        $rates['timestamp'] = $timestamp->format('Y-m-d H:i:s');
+        return $rates;
+    }
+
+    private function transformXmlData(array $xmlData, string $delimiter = ','): array
+    {
+        $rates = [];
+        $timestamp = now();
+
+        foreach ($xmlData as $item) {
+            if (($item['tag'] ?? '') === 'DATETIME' && isset($item['value'])) {
+                $timestamp = Carbon::createFromFormat('n/j/Y g:i:s A', $item['value'], 'Asia/Ho_Chi_Minh');
+            }
+
+            if (isset($item['attributes']['CURRENCYCODE'])) {
+                $attr = $item['attributes'];
+                $rates[$attr['CURRENCYCODE']] = [
+                    'cash' => (float) str_replace($delimiter, '', $attr['BUY']),
+                    'transfer' => (float) str_replace($delimiter, '', $attr['TRANSFER']),
+                    'sell' => (float) str_replace($delimiter, '', $attr['SELL']),
+                ];
+            }
+        }
+
+        return ['rates' => $rates, 'timestamp' => $timestamp];
+    }
+
+    private static function isValidDate(string $date, string $format = 'Y-m-d'): bool
+    {
+        try {
+            $d = Carbon::createFromFormat($format, $date);
+            return $d && $d->format($format) === $date;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    private function isHistoricalDate(): bool
+    {
+        return $this->date < today()->format('Y-m-d');
+    }
+}

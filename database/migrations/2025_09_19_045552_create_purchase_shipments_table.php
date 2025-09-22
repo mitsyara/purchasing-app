@@ -13,15 +13,23 @@ return new class extends Migration
     {
         Schema::create('purchase_shipments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('purchase_order_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->foreignId('port_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->foreignId('company_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->foreignId('warehouse_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('purchase_order_id')->nullable()->constrained('purchase_orders')->cascadeOnDelete();
+            $table->foreignId('port_id')->nullable()->constrained('ports')->cascadeOnDelete();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->cascadeOnDelete();
+            $table->foreignId('warehouse_id')->nullable()->constrained('warehouses')->cascadeOnDelete();
             $table->string('currency')->nullable();
+
+            // supplier (real)
+            $table->foreignId('supplier_id')->nullable()->constrained('contacts')->cascadeOnDelete();
+            // contract supplier
+            $table->foreignId('supplier_contract_id')->nullable()->constrained('contacts')->cascadeOnDelete();
+            // money receiver
+            $table->foreignId('supplier_payment_id')->nullable()->constrained('contacts')->cascadeOnDelete();
 
             $table->foreignId('staff_buy_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('staff_docs_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('staff_declarant_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('staff_declarant_processing_id')->nullable()->constrained('users')->nullOnDelete();
 
             $table->string('tracking_no')->nullable();
             $table->string('shipment_status')->nullable();
@@ -42,9 +50,11 @@ return new class extends Migration
             $table->boolean('is_exchange_rate_final')->default(false);
 
             $table->decimal('total_value', 24, 6)->nullable();
+            $table->decimal('total_contract_value', 24, 6)->nullable();
             $table->json('extra_costs')->nullable();
             $table->decimal('total_extra_cost', 24, 6)->nullable();
             $table->decimal('average_cost', 15, 3)->nullable();
+            $table->decimal('display_total_contract_value', 24, 6)->storedAs('COALESCE(total_contract_value, total_value)');
 
             $table->text('notes')->nullable();
 

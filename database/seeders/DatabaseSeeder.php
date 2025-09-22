@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -14,7 +12,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $initial = true;
-        $test = false;
+        $test = true;
 
         // Real data
         if ($initial) {
@@ -45,25 +43,23 @@ class DatabaseSeeder extends Seeder
             $skip = [
                 'UserSeeder',
             ];
-            $this->runSeeders('seeders\FakeData', $skip);
+            $this->runSeeders('FakeData', $skip);
         }
     }
 
-    /**
-     * Helper methods
-     */
-    public function getSeeders(string $path_to_seeders): \Illuminate\Support\Collection
+    // Helper methods
+
+    public function getSeeders(string $folder): \Illuminate\Support\Collection
     {
-        $this->command?->info('Discovering Seeders');
-        return collect(\Illuminate\Support\Facades\File::allFiles(database_path($path_to_seeders)))
-            ->map(function ($item) use ($path_to_seeders) {
-                $path = $item->getRelativePathname();
-                $folder_path = \Illuminate\Support\Str::after($path_to_seeders, 'seeders\\');
-                $class = __NAMESPACE__ . "\\{$folder_path}\\" . strtr(substr($path, 0, strrpos($path, '.')), '/', '\\');
-                $this->command?->info('---> ' . $path);
-                return $class . ' || ' . $folder_path;
-            })
-            ->values();
+        $this->command?->info("Discovering seeders in: {$folder}");
+
+        $files = \Illuminate\Support\Facades\File::allFiles(database_path("seeders/{$folder}"));
+
+        return collect($files)->map(function ($file) use ($folder) {
+            $className = __NAMESPACE__ . "\\{$folder}\\" . strtr($file->getFilenameWithoutExtension(), '/', '\\');
+            $this->command?->info("---> " . $file->getFilename());
+            return $className;
+        });
     }
 
     public function runSeeders(string $path_to_seeders, ?array $skip = []): void

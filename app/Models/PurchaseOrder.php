@@ -2,16 +2,22 @@
 
 namespace App\Models;
 
+use App\Services\PurchaseOrder\ProcessingOrder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class PurchaseOrder extends Model
 {
+    use \App\Traits\HasCustomQueryBuilder;
+
     protected $fillable = [
         'order_status',
         'order_date',
         'order_number',
+        // yyyy-mm-dd order_number [supplier_code]
+        'order_description',
 
         // buyer
         'company_id',
@@ -150,4 +156,32 @@ class PurchaseOrder extends Model
         return $this->hasMany(PurchaseShipment::class, 'purchase_order_id');
     }
 
+    public function purchaseShipmentLines(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            PurchaseShipmentLine::class,
+            PurchaseShipment::class,
+            'purchase_order_id',
+            'purchase_shipment_id'
+        );
+    }
+
+    // Helpers
+
+    public function syncOrderInfo(): void
+    {
+        new \App\Services\PurchaseOrder\CallAllServices($this);
+    }
+
+    public function processOrder(array $data): bool
+    {
+        return (new ProcessingOrder($this, $data))->handle();
+    }
+
+    public function cancelOrder(): bool
+    {
+        return $this->update([
+            'order_status' => \App\Enums\OrderStatusEnum::Canceled,
+        ]);
+    }
 }

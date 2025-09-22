@@ -3,10 +3,8 @@
 namespace App\Filament\Resources\PurchaseOrders\Tables;
 
 use App\Models\PurchaseOrder;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
+use Filament\Actions as A;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
 use Filament\Tables\Columns as T;
@@ -83,12 +81,62 @@ class PurchaseOrdersTable
                 //
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                A\ActionGroup::make([
+                    // Custom action
+                    A\ActionGroup::make([
+                        A\Action::make('processOrder')
+                            ->modal()
+                            ->icon(Heroicon::PlayCircle)
+                            ->color(fn(A\Action $action): string
+                            => match ($action->isDisabled()) {
+                                true => 'gray',
+                                default => 'info',
+                            })
+                            ->requiresConfirmation()
+                            ->schema([
+                                \Filament\Forms\Components\TextInput::make('order_number')
+                                    ->label(__('Order No.'))
+                                    ->unique()
+                                    ->required(),
+                                \Filament\Forms\Components\DatePicker::make('order_date')
+                                    ->label(__('Order Date'))
+                                    ->maxDate(today())
+                                    ->required(),
+                            ])
+                            ->fillForm(fn(PurchaseOrder $record): array => [
+                                'order_number' => $record->order_number,
+                                'order_date' => $record->order_date ?? today(),
+                            ])
+                            ->action(fn(array $data, PurchaseOrder $record) => $record->processOrder($data))
+                            ->disabled(fn(PurchaseOrder $record): bool
+                            => !in_array($record->order_status, [
+                                \App\Enums\OrderStatusEnum::Draft,
+                                \App\Enums\OrderStatusEnum::Canceled,
+                            ])),
+
+                            A\Action::make('cancelOrder')
+                                ->modal()
+                                ->icon(Heroicon::XCircle)
+                                ->color(fn(A\Action $action): string
+                                => match ($action->isDisabled()) {
+                                    true => 'gray',
+                                    default => 'danger',
+                                })
+                                ->requiresConfirmation()
+                                ->action(fn(PurchaseOrder $record) => $record->cancelOrder())
+                                ->disabled(fn(PurchaseOrder $record): bool
+                                => $record->order_status !== \App\Enums\OrderStatusEnum::Canceled),
+                    ])
+                        ->dropdown(false),
+
+                    A\ViewAction::make(),
+                    A\EditAction::make(),
+                    A\DeleteAction::make(),
+                ]),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                A\BulkActionGroup::make([
+                    A\DeleteBulkAction::make(),
                 ]),
             ]);
     }

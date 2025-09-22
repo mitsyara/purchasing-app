@@ -4,7 +4,7 @@ namespace App\Services\PurchaseOrder;
 
 use App\Models\PurchaseOrder;
 
-class SyncOrderLinesInfo
+class SyncShipmentsInfo
 {
     /**
      * Create a new class instance.

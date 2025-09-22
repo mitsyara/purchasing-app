@@ -178,19 +178,19 @@ if (!function_exists('__tables_check')) {
                 'email_verified_at',
                 'remember_token',
             ],
-            \App\Models\Permission::class => [
-                'name',
-                'guard_name',
-            ],
-            \App\Models\Role::class => [
-                'name',
-                'guard_name',
-            ],
-            // pivot table
-            \App\Models\CompanyContact::class => [
-                'company_id',
-                'contact_id',
-            ],
+            // \App\Models\Permission::class => [
+            //     'name',
+            //     'guard_name',
+            // ],
+            // \App\Models\Role::class => [
+            //     'name',
+            //     'guard_name',
+            // ],
+            // // pivot table
+            // \App\Models\CompanyContact::class => [
+            //     'company_id',
+            //     'contact_id',
+            // ],
         ];
         foreach ($models as $model) {
             /** @var \Illuminate\Database\Eloquent\Model $instance */

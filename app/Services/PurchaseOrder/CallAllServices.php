@@ -13,5 +13,6 @@ class CallAllServices
     {
         new UpdateOrderTotals($order);
         new SyncOrderLinesInfo($order);
+        new SyncShipmentsInfo($order);
     }
 }

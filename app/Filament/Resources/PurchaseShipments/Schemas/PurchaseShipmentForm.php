@@ -34,18 +34,21 @@ class PurchaseShipmentForm
 
                         S\Tabs\Tab::make(__('Clearance & Exchange Rate'))
                             ->schema([
-                                ...static::clearanceInfoFields(),
-                            ]),
+                                ...static::clearanceAndExchangeRateFields(),
+                            ])
+                            ->disabled(fn(callable $get) => !$get('purchase_order_id')),
 
                         S\Tabs\Tab::make(__('Products'))
                             ->schema([
                                 ...static::shipmentLines(),
-                            ]),
+                            ])
+                            ->disabled(fn(callable $get) => !$get('purchase_order_id')),
 
                         S\Tabs\Tab::make(__('Costs & Notes'))
                             ->schema([
                                 ...static::costsAndNotes(),
-                            ]),
+                            ])
+                            ->disabled(fn(callable $get) => !$get('purchase_order_id')),
                     ])
                     ->columnSpanFull(),
             ]);
@@ -60,11 +63,15 @@ class PurchaseShipmentForm
                     ->relationship(
                         name: 'purchaseOrder',
                         titleAttribute: 'order_number',
-                        modifyQueryUsing: function (Builder $query): Builder {
+                        modifyQueryUsing: function (Builder $query, string $operation): Builder {
                             // TODO: calculate only orders which are not fully shipped
-                            return $query
+                            $query = $query
                                 ->where('order_status', \App\Enums\OrderStatusEnum::Inprogress->value)
                                 ->whereNotNull('order_number');
+
+                            return $operation === 'create'
+                                ? $query->incompleteShipmentsQty()
+                                : $query;
                         }
                     )
                     ->visibleOn([
@@ -142,13 +149,64 @@ class PurchaseShipmentForm
 
             ...__eta_etd_fields(true),
 
-            __atd_ata_fields(),
+            S\Fieldset::make(__('Actual Arrival/Departure'))
+                ->schema([
+                    __atd_ata_fields()->columnSpanFull(),
+                ]),
         ];
     }
 
-    public static function clearanceInfoFields(): array
+    public static function clearanceAndExchangeRateFields(): array
     {
         return [
+            S\Fieldset::make(__('Staff In Charge'))
+                ->schema([
+                    F\Select::make('staff_declarant_id')
+                        ->label(__('Declarant'))
+                        ->relationship(
+                            name: 'staffDeclarant',
+                            titleAttribute: 'name',
+                        ),
+
+                    F\Select::make('staff_declarant_processing_id')
+                        ->label(__('Processing Staff'))
+                        ->relationship(
+                            name: 'staffDeclarantProcessing',
+                            titleAttribute: 'name',
+                        ),
+
+                    F\TextInput::make('currency')
+                        ->label(__('Currency'))
+                        ->dehydrated(false)
+                        ->afterStateHydrated(fn(F\Field $component, ?PurchaseShipment $record)
+                        => $component->state($record?->currency ?? $record?->purchaseOrder?->currency))
+                        ->readOnly()
+                        ->grow(false)
+
+                        ->hidden(),
+
+                    __number_field('exchange_rate')
+                        ->label(__('Exchange Rate'))
+                        ->suffix(JsContent::make(<<<'JS'
+                            $get('currency') && $get('currency') !== 'VND' ? 'VND/' + $get('currency') : null
+                        JS))
+                        ->prefixActions([
+                            Action::make('getExchangeRate')
+                                ->label(__('Get Rate'))
+                                ->icon(Heroicon::Banknotes)
+                                ->action(fn($get, $set) => static::getExchangeRate($get, $set))
+                                ->link()
+                        ]),
+
+                    F\Toggle::make('is_exchange_rate_final')->label(__('Final Rate?'))
+                        ->inline(false)
+                        ->inlineLabel(false)
+                        ->disabled(fn($get) => $get('currency') === 'VND'),
+
+                ])
+                ->columns()
+                ->columnSpanFull(),
+
             S\Fieldset::make('Customs Declaration')
                 ->schema([
                     F\Checkbox::make('declaration_required')
@@ -176,39 +234,11 @@ class PurchaseShipmentForm
 
                     F\DatePicker::make('customs_clearance_date')
                         ->label(__('Clearance Date'))
-                        ->placeholder('YYYY-MM-DD')
-                        ->format('Y-m-d')
-                        ->displayFormat('Y-m-d'),
+                        ->maxDate(today()),
                 ])
                 ->columns()
                 ->columnSpanFull()
                 ->disabled(fn($get) => !$get('declaration_required')),
-
-            S\Fieldset::make(__('Currency & Exchange Rate'))
-                ->schema([
-                    F\TextInput::make('currency')
-                        ->label(__('Currency'))
-                        ->dehydrated(false)
-                        ->afterStateHydrated(fn(F\Field $component, ?PurchaseShipment $record)
-                        => $component->state($record?->currency ?? $record?->purchaseOrder?->currency))
-                        ->readOnly()
-                        ->grow(false)
-                        ->suffixActions([
-                            Action::make('getExchangeRate')
-                                ->label(__('Get Rate'))
-                                ->icon(Heroicon::Banknotes)
-                                ->action(fn($get, $set) => static::getExchangeRate($get, $set))
-                                ->link()
-                        ]),
-
-                    __number_field('exchange_rate')
-                        ->label(__('Exchange Rate'))
-                        ->suffix(JsContent::make(<<<'JS'
-                        $get('currency') && $get('currency') !== 'VND' ? 'VND/' + $get('currency') : null
-                    JS)),
-                ])
-                ->columnSpanFull()
-                ->columns(),
         ];
     }
 
@@ -216,8 +246,8 @@ class PurchaseShipmentForm
     {
         return [
             F\Repeater::make('purchaseShipmentLines')
-                ->label(__('Products in this Shipment'))
-                // ->relationship('purchaseShipmentLines')
+                ->label(__('Products'))
+                ->relationship('purchaseShipmentLines')
                 ->hiddenLabel()
                 ->table([
                     ...PSProductForm::repeaterHeaders(),
@@ -226,7 +256,15 @@ class PurchaseShipmentForm
                     ...PSProductForm::configure(new Schema())->getComponents(),
                 ])
                 ->minItems(1)
+                ->itemLabel(function (array $state): string {
+                    $productName = $state['product_id']
+                        ? \App\Models\Product::find($state['product_id'])?->product_full_name
+                        : __('(Select Product)');
+                    $qty = $state['qty'] ?? 0;
+                    return "{$productName} - Qty: {$qty}";
+                })
                 ->columnSpanFull()
+                ->addActionLabel(__('Add Product'))
                 ->required(),
         ];
     }
@@ -245,7 +283,7 @@ class PurchaseShipmentForm
                         )
                         ->reorderable(false)
                         ->defaultItems(0)
-                        ->grid(3)
+                        ->grid(4)
                         ->columnSpanFull(),
                 ])
                 ->columns(1)
@@ -280,15 +318,23 @@ class PurchaseShipmentForm
             'eta_min',
             'eta_max',
         ];
-
         foreach ($fields as $field) {
-            $set($field, $order->$field ?? null);
+            if ($field === 'port_id' || $field === 'warehouse_id') {
+                $set($field, $order->{'import_' . $field} ?? null);
+            } else {
+                $set($field, $order->$field ?? null);
+            }
         }
     }
 
     public static function getExchangeRate(Get $get, Set $set): void
     {
-        dd($get('currency'));
-        return;
+        $currency = $get('currency');
+        $date = $get('customs_clearance_date') ?? $get('customs_declaration_date') ?? null;
+        if ($date && $currency && $currency !== 'VND') {
+            $rate = \App\Services\VcbExchangeRatesService::fetch($date)[$currency][VCB_RATE_TARGET] ?? null;
+            if ($rate) $rate = __number_string_converter_vi($rate);
+            $set('exchange_rate', $rate);
+        }
     }
 }

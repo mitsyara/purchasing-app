@@ -177,13 +177,17 @@ if (!function_exists('__date_range_column')) {
             ->getStateUsing(function ($record) use ($field_min, $field_max): string {
                 if (!$record->$field_min && !$record->$field_max) {
                     return __('N/A');
-                } else if (($record->$field_min
+                }
+                if (($record->$field_min
                     && ($record->$field_max === $record->$field_min || !$record->$field_max))) {
                     return $record->$field_min?->format('d/m/Y');
-                } else {
-                    return $record->$field_min?->format('d/m/Y') . ' - '
-                        . $record->$field_max?->format('d/m/Y');
                 }
+                if (($record->$field_max
+                    && ($record->$field_max === $record->$field_min || !$record->$field_min))) {
+                    return $record->$field_max?->format('d/m/Y');
+                }
+                return $record->$field_min?->format('d/m/Y')
+                    . ' - ' . $record->$field_max?->format('d/m/Y');
             })
             ->sortable(
                 condition: true,

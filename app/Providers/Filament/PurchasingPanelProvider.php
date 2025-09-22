@@ -30,6 +30,8 @@ class PurchasingPanelProvider extends PanelProvider
             ->path('purchasing')
             ->login()
 
+            ->databaseTransactions()
+
             ->topNavigation()
             ->maxContentWidth(Width::Full)
 

@@ -3,12 +3,36 @@
 namespace App\Services\PurchaseShipment;
 
 use App\Models\PurchaseShipment;
+use App\Services\VcbExchangeRatesService;
 
 class SyncShipmentInfo
 {
     public function __construct(public PurchaseShipment $shipment)
     {
         $order = $shipment->purchaseOrder;
+
+        // Update exchange rate based on Shipment Declaration Date
+        if (!$shipment->is_exchange_rate_final) {
+            if ($shipment->currency !== 'VND') {
+                if ($shipment->customs_clearance_date) {
+                    $date = $shipment->customs_clearance_date;
+                    $exchangeRate = VcbExchangeRatesService::fetch($date->format('Y-m-d'))[$order->currency][VCB_RATE_TARGET];
+                }
+                // Then declaration date
+                else if ($shipment->customs_declaration_date && !$shipment->customs_clearance_date) {
+                    $date = $shipment->customs_declaration_date;
+                    $exchangeRate = VcbExchangeRatesService::fetch($date->format('Y-m-d'))[$order->currency][VCB_RATE_TARGET];
+                }
+
+                $shipment->updateQuietly([
+                    'exchange_rate' => $exchangeRate ?? null,
+                ]);
+            } else {
+                $shipment->updateQuietly([
+                    'exchange_rate' => 1,
+                ]);
+            }
+        }
 
         $shipment->updateQuietly([
             'company_id' => $order->company_id,
