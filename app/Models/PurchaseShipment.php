@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Casts\Attribute;
+use App\Services\PurchaseShipment\MarkShipmentDelivered;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -138,6 +138,9 @@ class PurchaseShipment extends Model
         return $this->belongsTo(User::class, 'staff_declarant_processing_id');
     }
 
-    // Attributes
-
+    // Helpers
+    public function markAsDelivered(): void
+    {
+        new MarkShipmentDelivered($this);
+    }
 }

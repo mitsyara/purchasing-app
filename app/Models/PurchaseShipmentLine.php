@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\HasInventoryTransactions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PurchaseShipmentLine extends Model
 {
+    use HasInventoryTransactions;
+
     protected $fillable = [
         'purchase_shipment_id',
         'purchase_order_id',
@@ -32,6 +35,7 @@ class PurchaseShipmentLine extends Model
         'contract_price' => 'decimal:2',
         'average_cost' => 'decimal:2',
         'break_price' => 'decimal:2',
+        'qty' => 'decimal:2',
 
         'is_ready' => 'boolean',
     ];
@@ -72,5 +76,4 @@ class PurchaseShipmentLine extends Model
     {
         return $this->belongsTo(Product::class, 'product_id');
     }
-
 }

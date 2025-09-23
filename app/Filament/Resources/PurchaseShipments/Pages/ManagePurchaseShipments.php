@@ -21,7 +21,8 @@ class ManagePurchaseShipments extends ManageRecords
                 ->modalWidth(Width::SevenExtraLarge)
                 ->after(function (PurchaseShipment $record) {
                     new CallAllServices($record);
-                }),
+                })
+                ->visible(false),
         ];
     }
 }

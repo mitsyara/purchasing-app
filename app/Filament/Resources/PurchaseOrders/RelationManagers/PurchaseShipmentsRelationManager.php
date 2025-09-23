@@ -38,6 +38,14 @@ class PurchaseShipmentsRelationManager extends RelationManager
     {
         return PurchaseShipmentTable::configure($table)
             ->modelLabel(fn(): string => __('Shipment'))
-            ->pluralModelLabel(static::title());
+            ->pluralModelLabel(static::title())
+            ->headerActions([
+                \Filament\Actions\CreateAction::make()
+                    ->after(function () {
+                        // Sync Purchase Order Info
+                        $purchaseOrder = $this->getOwnerRecord();
+                        // new SyncOrderLinesInfo($purchaseOrder);
+                    }),
+            ]);
     }
 }

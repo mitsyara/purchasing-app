@@ -35,20 +35,17 @@ class PurchaseShipmentForm
                         S\Tabs\Tab::make(__('Clearance & Exchange Rate'))
                             ->schema([
                                 ...static::clearanceAndExchangeRateFields(),
-                            ])
-                            ->disabled(fn(callable $get) => !$get('purchase_order_id')),
+                            ]),
 
                         S\Tabs\Tab::make(__('Products'))
                             ->schema([
                                 ...static::shipmentLines(),
-                            ])
-                            ->disabled(fn(callable $get) => !$get('purchase_order_id')),
+                            ]),
 
                         S\Tabs\Tab::make(__('Costs & Notes'))
                             ->schema([
                                 ...static::costsAndNotes(),
-                            ])
-                            ->disabled(fn(callable $get) => !$get('purchase_order_id')),
+                            ]),
                     ])
                     ->columnSpanFull(),
             ]);

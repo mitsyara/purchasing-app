@@ -20,13 +20,14 @@ return new class extends Migration
             $table->foreignId('supplier_contract_id')->nullable()->constrained('contacts')->cascadeOnDelete();
             $table->foreignId('supplier_payment_id')->nullable()->constrained('contacts')->cascadeOnDelete();
 
-            $table->string('payment_method', 50);
-            $table->date('payment_date');
-            $table->string('status', 50);
-            $table->decimal('amount', 15, 2);
-            $table->string('currency', 10);
-            $table->decimal('exchange_rate', 15, 4)->nullable();
+            $table->string('payment_status', 50)->default(\App\Enums\PaymentStatusEnum::Pending->value);
+            $table->date('due_date')->nullable();
+            $table->decimal('total_amount', 24, 6)->nullable();
+            $table->string('currency', 10)->nullable();
+            $table->decimal('average_exchange_rate', 15, 3)->nullable();
             $table->text('note')->nullable();
+
+            $table->boolean('payment_type')->nullable()->comment('0: out, 1: in');
 
             $table->foreignId('created_by')->nullable()->constrained('users')->cascadeOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->cascadeOnDelete();
