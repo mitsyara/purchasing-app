@@ -170,7 +170,7 @@ class PurchaseOrder extends Model
 
     public function syncOrderInfo(): void
     {
-        new \App\Services\PurchaseOrder\CallAllServices($this);
+        new \App\Services\PurchaseOrder\CallAllPurchaseOrderServices($this);
     }
 
     public function processOrder(array $data): bool

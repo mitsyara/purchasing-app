@@ -4,6 +4,7 @@ namespace App\Filament\Resources\PurchaseOrders\RelationManagers;
 
 use App\Filament\Schemas\POProductForm;
 use App\Services\PurchaseOrder\SyncOrderLinesInfo;
+use App\Services\PurchaseOrder\UpdateOrderTotals;
 use Filament\Resources\RelationManagers\RelationManager;
 
 use Illuminate\Database\Eloquent\Builder;
@@ -82,20 +83,27 @@ class PurchaseOrderLinesRelationManager extends RelationManager
             ])
             ->headerActions([
                 A\CreateAction::make()
-                    ->after(function () {
+                    ->after(function (): void {
                         // Sync Purchase Order Info
                         $purchaseOrder = $this->getOwnerRecord();
                         new SyncOrderLinesInfo($purchaseOrder);
+                        new UpdateOrderTotals($purchaseOrder);
                     }),
             ])
             ->recordActions([
                 A\EditAction::make()
-                    ->after(function () {
+                    ->after(function (): void {
                         // Sync Purchase Order Info
                         $purchaseOrder = $this->getOwnerRecord();
                         new SyncOrderLinesInfo($purchaseOrder);
+                        new UpdateOrderTotals($purchaseOrder);
                     }),
-                A\DeleteAction::make(),
+                A\DeleteAction::make()
+                    ->after(function (): void {
+                        // Sync Purchase Order Info
+                        $purchaseOrder = $this->getOwnerRecord();
+                        new UpdateOrderTotals($purchaseOrder);
+                    }),
             ]);
     }
 }

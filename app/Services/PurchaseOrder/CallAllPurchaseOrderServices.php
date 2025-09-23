@@ -4,15 +4,14 @@ namespace App\Services\PurchaseOrder;
 
 use App\Models\PurchaseOrder;
 
-class CallAllServices
+class CallAllPurchaseOrderServices
 {
-    /**
-     * Create a new class instance.
-     */
     public function __construct(public PurchaseOrder $order)
     {
-        new UpdateOrderTotals($order);
         new SyncOrderLinesInfo($order);
         new SyncShipmentsInfo($order);
+        new UpdateOrderTotals($order);
+
+        // TODO: calculate order's received / paid values
     }
 }

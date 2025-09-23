@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\PurchaseShipments\Schemas;
 
 use App\Filament\Resources\PurchaseOrders\Pages\ViewPurchaseOrder;
+use App\Filament\Resources\PurchaseOrders\RelationManagers\PurchaseShipmentsRelationManager;
 use App\Filament\Resources\PurchaseShipments\Pages\ManagePurchaseShipments;
 use App\Filament\Resources\PurchaseShipments\PurchaseShipmentResource;
 use App\Filament\Schemas\PSProductForm;
@@ -39,8 +40,9 @@ class PurchaseShipmentForm
 
                         S\Tabs\Tab::make(__('Products'))
                             ->schema([
-                                ...static::shipmentLines(),
-                            ]),
+                                static::shipmentLines(),
+                            ])
+                            ->columns(3),
 
                         S\Tabs\Tab::make(__('Costs & Notes'))
                             ->schema([
@@ -71,29 +73,11 @@ class PurchaseShipmentForm
                                 : $query;
                         }
                     )
-                    ->visibleOn([
-                        PurchaseShipmentResource::class,
-                        ManagePurchaseShipments::class,
-                    ])
                     ->afterStateUpdatedJs(<<<'JS'
                         !$state ? $set('port_id', null) : null;
                     JS)
-                    ->searchable()
-                    ->preload()
-                    ->live()
-                    ->afterStateUpdated(fn($get, $set)
-                    => static::populateShipmentFieldsFromOrder($get, $set))
-                    ->suffixAction(Action::make('viewOrder')
-                        ->icon(fn(Action $action)
-                        => match ($action->isDisabled()) {
-                            default => Heroicon::Eye,
-                            true => Heroicon::EyeSlash,
-                        })
-                        ->url(fn($get) => $get('purchase_order_id')
-                            ? ViewPurchaseOrder::getUrl(['record' => (int) $get('purchase_order_id')])
-                            : null, true)
-                        ->disabled(fn($get) => !$get('purchase_order_id')))
-                    ->required(),
+                    ->suffixAction(static::viewOrderAction())
+                    ->disabled(),
 
                 F\ToggleButtons::make('shipment_status')
                     ->label(__('Shipment Status'))
@@ -105,7 +89,6 @@ class PurchaseShipmentForm
                     => $operation === 'create'
                         && $value === \App\Enums\ShipmentStatusEnum::Cancelled->value)
                     ->required(),
-
             ])
                 ->columnSpanFull(),
 
@@ -116,6 +99,9 @@ class PurchaseShipmentForm
                     titleAttribute: 'port_name',
                     modifyQueryUsing: fn(Builder $query): Builder => $query
                 )
+                ->default(fn($livewire) => $livewire instanceof PurchaseShipmentsRelationManager
+                    ? $livewire->getOwnerRecord()?->import_port_id
+                    : null)
                 ->required(function (callable $get): bool {
                     /** @var \App\Models\PurchaseOrder $order */
                     $order = \App\Models\PurchaseOrder::find($get('purchase_order_id'));
@@ -129,6 +115,9 @@ class PurchaseShipmentForm
                     titleAttribute: 'warehouse_name',
                     modifyQueryUsing: fn(Builder $query): Builder => $query
                 )
+                ->default(fn($livewire) => $livewire instanceof PurchaseShipmentsRelationManager
+                    ? $livewire->getOwnerRecord()?->import_warehouse_id
+                    : null)
                 ->required(),
 
             F\Select::make('staff_docs_id')
@@ -136,9 +125,7 @@ class PurchaseShipmentForm
                 ->relationship(
                     name: 'staffDocs',
                     titleAttribute: 'name',
-                )
-                ->searchable()
-                ->preload(),
+                ),
 
             F\TextInput::make('tracking_no')
                 ->label(__('Tracking Number'))
@@ -163,14 +150,20 @@ class PurchaseShipmentForm
                         ->relationship(
                             name: 'staffDeclarant',
                             titleAttribute: 'name',
-                        ),
+                        )
+                        ->default(fn($livewire) => $livewire instanceof PurchaseShipmentsRelationManager
+                            ? $livewire->getOwnerRecord()?->staff_declarant_id
+                            : null),
 
                     F\Select::make('staff_declarant_processing_id')
                         ->label(__('Processing Staff'))
                         ->relationship(
                             name: 'staffDeclarantProcessing',
                             titleAttribute: 'name',
-                        ),
+                        )
+                        ->default(fn($livewire) => $livewire instanceof PurchaseShipmentsRelationManager
+                            ? $livewire->getOwnerRecord()?->staff_declarant_processing_id
+                            : null),
 
                     F\TextInput::make('currency')
                         ->label(__('Currency'))
@@ -179,7 +172,6 @@ class PurchaseShipmentForm
                         => $component->state($record?->currency ?? $record?->purchaseOrder?->currency))
                         ->readOnly()
                         ->grow(false)
-
                         ->hidden(),
 
                     __number_field('exchange_rate')
@@ -227,7 +219,7 @@ class PurchaseShipmentForm
                     F\Select::make('customs_clearance_status')
                         ->label(__('Clearance Status'))
                         ->options(\App\Enums\CustomsClearanceStatusEnum::class)
-                        ->required(),
+                        ->required(fn($livewire): bool => $livewire instanceof ManagePurchaseShipments),
 
                     F\DatePicker::make('customs_clearance_date')
                         ->label(__('Clearance Date'))
@@ -239,31 +231,27 @@ class PurchaseShipmentForm
         ];
     }
 
-    public static function shipmentLines(): array
+    public static function shipmentLines(): F\Repeater
     {
-        return [
-            F\Repeater::make('purchaseShipmentLines')
-                ->label(__('Products'))
-                ->relationship('purchaseShipmentLines')
-                ->hiddenLabel()
-                ->table([
-                    ...PSProductForm::repeaterHeaders(),
-                ])
-                ->schema([
-                    ...PSProductForm::configure(new Schema())->getComponents(),
-                ])
-                ->minItems(1)
-                ->itemLabel(function (array $state): string {
-                    $productName = $state['product_id']
-                        ? \App\Models\Product::find($state['product_id'])?->product_full_name
-                        : __('(Select Product)');
-                    $qty = $state['qty'] ?? 0;
-                    return "{$productName} - Qty: {$qty}";
-                })
-                ->columnSpanFull()
-                ->addActionLabel(__('Add Product'))
-                ->required(),
-        ];
+        return F\Repeater::make('purchaseShipmentLines')
+            ->label(__('Products'))
+            ->relationship('purchaseShipmentLines')
+            ->hiddenLabel()
+            ->schema([
+                //
+            ])
+            ->itemLabel(function (array $state): string {
+                $productName = $state['product_id']
+                    ? \App\Models\Product::find($state['product_id'])?->product_full_name
+                    : __('(Select Product)');
+                $qty = $state['qty'] ?? 0;
+                return "{$productName} - Qty: {$qty}";
+            })
+            ->addable(false)
+            ->deletable(false)
+            ->minItems(1)
+            ->columnSpanFull()
+        ;
     }
 
     public static function costsAndNotes(): array
@@ -291,39 +279,20 @@ class PurchaseShipmentForm
         ];
     }
 
-    // Helper functions
-
-    public static function populateShipmentFieldsFromOrder(Get $get, Set $set): void
+    public static function viewOrderAction(): Action
     {
-        /** @var \App\Models\PurchaseOrder $order */
-        $order = \App\Models\PurchaseOrder::find($get('purchase_order_id'));
-
-        // Virtual fields
-        $set('declaration_required', $order?->is_foreign && !$order?->is_skip_invoice ? true : false);
-
-        // Actual fields
-        $fields = [
-            'port_id',
-            'warehouse_id',
-            'currency',
-            'staff_buy_id',
-            'staff_docs_id',
-            'staff_declarant_id',
-            'staff_declarant_processing_id',
-            'etd_min',
-            'etd_max',
-            'eta_min',
-            'eta_max',
-        ];
-        foreach ($fields as $field) {
-            if ($field === 'port_id' || $field === 'warehouse_id') {
-                $set($field, $order->{'import_' . $field} ?? null);
-            } else {
-                $set($field, $order->$field ?? null);
-            }
-        }
+        return Action::make('viewOrder')
+            ->icon(fn(Action $action)
+            => match ($action->isDisabled()) {
+                default => Heroicon::Eye,
+                true => Heroicon::EyeSlash,
+            })
+            ->url(fn($get) => $get('purchase_order_id')
+                ? ViewPurchaseOrder::getUrl(['record' => (int) $get('purchase_order_id')])
+                : null, true);
     }
 
+    // Helper functions
     public static function getExchangeRate(Get $get, Set $set): void
     {
         $currency = $get('currency');

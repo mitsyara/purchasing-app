@@ -6,9 +6,6 @@ use App\Models\PurchaseOrder;
 
 class SyncOrderLinesInfo
 {
-    /**
-     * Create a new class instance.
-     */
     public function __construct(public PurchaseOrder $order)
     {
         $order->purchaseOrderLines()

@@ -4,11 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Payment extends Model
 {
     protected $fillable = [
-        'purchase_shipment_id',
+        'payable_id',
+        'payable_type',
+
         'company_id',
         'supplier_id',
         'supplier_contract_id',
@@ -32,11 +35,6 @@ class Payment extends Model
         'average_exchange_rate' => 'decimal:4',
     ];
 
-    public function purchaseShipment(): BelongsTo
-    {
-        return $this->belongsTo(PurchaseShipment::class, 'purchase_shipment_id');
-    }
-
     public function company(): BelongsTo
     {
         return $this->belongsTo(Company::class, 'company_id');
@@ -55,5 +53,10 @@ class Payment extends Model
     public function supplierPayment(): BelongsTo
     {
         return $this->belongsTo(Contact::class, 'supplier_payment_id');
+    }
+
+    public function payable(): MorphTo
+    {
+        return $this->morphTo();
     }
 }

@@ -11,15 +11,15 @@ class PurchaseOrderInfolist
     {
         return $schema
             ->components([
-                I\TextEntry::make('order_number')
-                    ->label(__('Order No.')),
-                I\TextEntry::make('order_date')
-                    ->label(__('Order Date'))
-                    ->date('d/m/Y'),
-                I\TextEntry::make('supplier.contact_name')
-                    ->label(__('Supplier')),
-                I\TextEntry::make('company.company_code')
-                    ->label(__('Company')),
+                // I\TextEntry::make('order_number')
+                //     ->label(__('Order No.')),
+                // I\TextEntry::make('order_date')
+                //     ->label(__('Order Date'))
+                //     ->date('d/m/Y'),
+                // I\TextEntry::make('supplier.contact_name')
+                //     ->label(__('Supplier')),
+                // I\TextEntry::make('company.company_code')
+                //     ->label(__('Company')),
             ]);
     }
 }

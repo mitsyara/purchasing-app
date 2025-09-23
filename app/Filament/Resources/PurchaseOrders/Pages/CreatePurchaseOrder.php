@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\PurchaseOrders\Pages;
 
 use App\Filament\Resources\PurchaseOrders\PurchaseOrderResource;
-use App\Services\PurchaseOrder\CallAllServices;
+use App\Services\PurchaseOrder\CallAllPurchaseOrderServices;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreatePurchaseOrder extends CreateRecord
@@ -22,6 +22,6 @@ class CreatePurchaseOrder extends CreateRecord
         ]);
 
         // Call Services
-        new CallAllServices($record);
+        new CallAllPurchaseOrderServices($record);
     }
 }

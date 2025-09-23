@@ -7,7 +7,7 @@ use App\Filament\Resources\PurchaseShipments\Pages\ManagePurchaseShipments;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\PurchaseShipment;
 use App\Models\PurchaseShipmentLine;
-use App\Services\PurchaseShipment\CallAllServices;
+use App\Services\PurchaseShipment\CallAllPurchaseShipmentServices;
 use Filament\Tables\Table;
 
 use Filament\Forms\Components as F;
@@ -105,28 +105,18 @@ class PurchaseShipmentTable
 
                         static::assignLotAction()
                             ->modalWidth(Width::FourExtraLarge),
-
                     ])
-                        ->dropdown(false)
-                        ->visible(fn($livewire) => $livewire instanceof ManagePurchaseShipments),
+                        ->dropdown(false),
 
                     A\ViewAction::make(),
                     A\EditAction::make()
                         ->modal()->slideOver()
-                        ->modalWidth(Width::SevenExtraLarge)
                         ->after(function (PurchaseShipment $record) {
-                            new CallAllServices($record);
+                            new CallAllPurchaseShipmentServices($record);
                         }),
-                    A\DeleteAction::make()
-                        ->visible(fn($livewire) => $livewire instanceof PurchaseShipmentsRelationManager),
                 ])
             ])
-            ->toolbarActions([
-                A\BulkActionGroup::make([
-                    A\DeleteBulkAction::make()
-                        ->visible(fn($livewire) => $livewire instanceof PurchaseShipmentsRelationManager),
-                ]),
-            ]);
+            ->toolbarActions([]);
     }
 
     public static function assignLotAction(): A\Action
@@ -170,7 +160,7 @@ class PurchaseShipmentTable
                             ->schema([
                                 F\TextInput::make('lot_no')
                                     ->label(__('Lot/Batch No'))
-                                    ->unique(modifyRuleUsing: function(callable $get, Unique $rule): Unique {
+                                    ->unique(modifyRuleUsing: function (callable $get, Unique $rule): Unique {
                                         return $rule->where('product_id', $get('../../product_id'));
                                     })
                                     ->required(),

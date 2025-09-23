@@ -4,7 +4,7 @@ namespace App\Services\PurchaseShipment;
 
 use App\Models\PurchaseShipment;
 
-class CallAllServices
+class CallAllPurchaseShipmentServices
 {
     public function __construct(public PurchaseShipment $shipment)
     {

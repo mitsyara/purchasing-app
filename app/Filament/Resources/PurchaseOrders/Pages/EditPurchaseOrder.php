@@ -3,7 +3,8 @@
 namespace App\Filament\Resources\PurchaseOrders\Pages;
 
 use App\Filament\Resources\PurchaseOrders\PurchaseOrderResource;
-use App\Services\PurchaseOrder\CallAllServices;
+use App\Services\PurchaseOrder\CallAllPurchaseOrderServices;
+use App\Services\PurchaseOrder\UpdateOrderTotals;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
@@ -55,6 +56,6 @@ class EditPurchaseOrder extends EditRecord
         }
 
         // Call Services
-        new CallAllServices($record);
+        new CallAllPurchaseOrderServices($record);
     }
 }

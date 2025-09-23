@@ -6,9 +6,6 @@ use App\Models\PurchaseOrder;
 
 class ProcessingOrder
 {
-    /**
-     * Create a new class instance.
-     */
     public function __construct(public PurchaseOrder $order, public array $data)
     {
         $this->validateData($data);

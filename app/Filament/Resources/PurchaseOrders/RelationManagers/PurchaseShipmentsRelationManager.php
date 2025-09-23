@@ -2,13 +2,25 @@
 
 namespace App\Filament\Resources\PurchaseOrders\RelationManagers;
 
-use App\Filament\Resources\PurchaseShipments\Schemas\PurchaseShipmentForm;
-use App\Filament\Resources\PurchaseShipments\Schemas\PurchaseShipmentInfolist;
 use App\Filament\Resources\PurchaseShipments\Tables\PurchaseShipmentTable;
+use App\Models\PurchaseShipment;
+use App\Models\PurchaseShipmentLine;
+use App\Services\PurchaseOrder\CallAllPurchaseOrderServices;
+use App\Services\PurchaseShipment\CallAllPurchaseShipmentServices;
 use Filament\Resources\RelationManagers\RelationManager;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+
+use Livewire\Component as Livewire;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Illuminate\Database\Eloquent\Model;
+
+use Filament\Actions as A;
+use Filament\Forms\Components as F;
+use Filament\Schemas\Components as S;
 
 class PurchaseShipmentsRelationManager extends RelationManager
 {
@@ -26,26 +38,300 @@ class PurchaseShipmentsRelationManager extends RelationManager
 
     public function form(Schema $schema): Schema
     {
-        return PurchaseShipmentForm::configure($schema);
+        return $schema->schema([
+            S\Tabs::make(__('Shipment'))
+                ->tabs([
+                    S\Tabs\Tab::make(__('Shipment Info'))
+                        ->schema([...static::shipmentInfoFields()])
+                        ->columns([
+                            'default' => 1,
+                            'md' => 2,
+                        ]),
+
+                    S\Tabs\Tab::make(__('Products'))
+                        ->schema([static::shipmentLines()])
+                        ->columns(),
+                ])
+                ->columnSpanFull(),
+
+        ])
+            ->columns(2);
     }
 
     public function infolist(Schema $schema): Schema
     {
-        return PurchaseShipmentInfolist::configure($schema);
+        return $schema;
     }
 
     public function table(Table $table): Table
     {
-        return PurchaseShipmentTable::configure($table)
-            ->modelLabel(fn(): string => __('Shipment'))
-            ->pluralModelLabel(static::title())
+        return
+            $table->columns([
+                ...PurchaseShipmentTable::configure($table)->getColumns(),
+            ])
+            // PurchaseShipmentTable::configure($table)
+            ->modelLabel(__('Shipment'))
+            ->pluralModelLabel(__('Shipments'))
             ->headerActions([
-                \Filament\Actions\CreateAction::make()
+                A\CreateAction::make()
+                    ->after(function (PurchaseShipment $record): void {
+                        new CallAllPurchaseShipmentServices($record);
+                    })
+                    ->modal()->slideOver(),
+            ])
+            ->recordActions([
+                A\EditAction::make()
+                    ->after(function (PurchaseShipment $record): void {
+                        new CallAllPurchaseShipmentServices($record);
+                    })
+                    ->modal()->slideOver(),
+                A\DeleteAction::make()
                     ->after(function () {
-                        // Sync Purchase Order Info
-                        $purchaseOrder = $this->getOwnerRecord();
-                        // new SyncOrderLinesInfo($purchaseOrder);
+                        new CallAllPurchaseOrderServices($this->getOwnerRecord());
                     }),
             ]);
+    }
+
+    public static function shipmentInfoFields(): array
+    {
+        return [
+            S\Flex::make([
+                F\ToggleButtons::make('shipment_status')
+                    ->label(__('Shipment Status'))
+                    ->options(\App\Enums\ShipmentStatusEnum::class)
+                    ->default(\App\Enums\ShipmentStatusEnum::Pending->value)
+                    ->grouped()
+                    ->grow(false)
+                    ->disableOptionWhen(fn(string $value, string $operation): bool
+                    => $operation === 'create'
+                        && $value === \App\Enums\ShipmentStatusEnum::Cancelled->value)
+                    ->columnSpanFull()
+                    ->required(),
+
+                F\TextInput::make('tracking_no')
+                    ->label(__('Tracking Number')),
+            ])
+                ->from('lg')
+                ->columnSpanFull(),
+
+            S\Group::make([
+                F\Select::make('staff_docs_id')
+                    ->label(__('Docs Staff'))
+                    ->relationship(
+                        name: 'staffDocs',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: fn(Builder $query): Builder => $query
+                    )
+                    ->default(fn($livewire) => $livewire->getOwnerRecord()?->staff_docs_id)
+                    ->required(),
+                F\Select::make('staff_declarant_id')
+                    ->relationship(
+                        name: 'staffDeclarant',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: fn(Builder $query): Builder => $query
+                    )
+                    ->default(fn($livewire) => $livewire->getOwnerRecord()?->staff_declarant_id)
+                    ->required(),
+                F\Select::make('staff_declarant_processing_id')
+                    ->relationship(
+                        name: 'staffDeclarantProcessing',
+                        titleAttribute: 'name',
+                        modifyQueryUsing: fn(Builder $query): Builder => $query
+                    )
+                    ->default(fn($livewire) => $livewire->getOwnerRecord()?->staff_declarant_processing_id)
+                    ->required(),
+            ])
+                ->columns([
+                    'default' => 2,
+                    'lg' => 3,
+                ])
+                ->columnSpanFull(),
+
+            F\Select::make('port_id')
+                ->label(__('Port'))
+                ->relationship(
+                    name: 'port',
+                    titleAttribute: 'port_name',
+                    modifyQueryUsing: fn(Builder $query): Builder => $query
+                )
+                ->default(fn($livewire) => $livewire->getOwnerRecord()?->import_warehouse_id)
+                ->required(function ($livewire): bool {
+                    /** @var \App\Models\PurchaseOrder $order */
+                    $order = $livewire->getOwnerRecord();
+                    return !$order?->is_skip_invoice && $order?->is_foreign;
+                }),
+
+            F\Select::make('warehouse_id')
+                ->label(__('Warehouse'))
+                ->relationship(
+                    name: 'warehouse',
+                    titleAttribute: 'warehouse_name',
+                    modifyQueryUsing: fn(Builder $query): Builder => $query
+                )
+                ->default(fn($livewire) => $livewire->getOwnerRecord()?->import_warehouse_id)
+                ->required(),
+
+            \Filament\Schemas\Components\Fieldset::make(__('ETD'))
+                ->schema([
+                    F\DatePicker::make('etd_min')->label(__('From'))
+                        ->default(fn($livewire) => $livewire->getOwnerRecord()?->etd_min)
+                        ->requiredWithoutAll(fn() => ['etd_max', 'eta_min', 'eta_max', 'atd', 'ata'])
+                        ->validationMessages([
+                            'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
+                        ])
+                        ->extraInputAttributes(['id' => 'data-custom-etd_min']),
+
+                    F\DatePicker::make('etd_max')->label(__('To'))
+                        ->default(fn($livewire) => $livewire->getOwnerRecord()?->etd_max)
+                        ->requiredWithoutAll(fn() => ['etd_min', 'eta_min', 'eta_max', 'atd', 'ata'])
+                        ->validationMessages([
+                            'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
+                        ])
+                        ->extraInputAttributes(['id' => 'data-custom-etd_max']),
+                ])
+                ->columns([
+                    'default' => 2,
+                    'lg' => 1,
+                    'xl' => 2,
+                ]),
+
+            \Filament\Schemas\Components\Fieldset::make(__('ETA'))
+                ->schema([
+                    F\DatePicker::make('eta_min')->label(__('From'))
+                        ->default(fn($livewire) => $livewire->getOwnerRecord()?->eta_min)
+                        ->requiredWithoutAll(fn() => ['etd_min', 'etd_max', 'eta_max', 'atd', 'ata'])
+                        ->validationMessages([
+                            'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
+                        ])
+                        ->extraInputAttributes(['id' => 'data-custom-eta_min']),
+
+                    F\DatePicker::make('eta_max')->label(__('To'))
+                        ->default(fn($livewire) => $livewire->getOwnerRecord()?->eta_max)
+                        ->requiredWithoutAll(fn() => ['etd_min', 'etd_max', 'eta_min', 'atd', 'ata'])
+                        ->validationMessages([
+                            'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
+                        ])
+                        ->extraInputAttributes(['id' => 'data-custom-eta_max']),
+                ])
+                ->columns([
+                    'default' => 2,
+                    'lg' => 1,
+                    'xl' => 2,
+                ]),
+        ];
+    }
+
+
+    public static function shipmentLines(): F\Repeater
+    {
+        return F\Repeater::make('purchaseShipmentLines')
+            ->label(__('Products'))
+            ->relationship('purchaseShipmentLines')
+            ->hiddenLabel()
+            ->table(static::shipmentLinesRepeaterHeaders())
+            ->schema([
+                F\Select::make('product_id')
+                    ->label(__('Product'))
+                    ->relationship(
+                        name: 'product',
+                        titleAttribute: 'product_full_name',
+                        modifyQueryUsing: fn(Builder $query, Livewire $livewire): Builder
+                        => $query->whereIn(
+                            'id',
+                            $livewire->getOwnerRecord()
+                                ?->purchaseOrderLines()
+                                ->pluck('product_id') ?? []
+                        ),
+                    )
+                    ->afterStateUpdated(fn($state, Set $set, Livewire $livewire, ?PurchaseShipmentLine $record)
+                    => static::recommendShipmentLineQty($state, $set, $livewire, $record))
+                    ->disableOptionsWhenSelectedInSiblingRepeaterItems()
+                    ->required(),
+
+                __number_field('qty')
+                    ->rules([
+                        fn(Get $get, ?PurchaseShipmentLine $record, Livewire $livewire): \Closure =>
+                        fn(string $attribute, mixed $value, \Closure $fail) =>
+                        static::validateQty($get, $livewire, $record, $value, $fail),
+                    ])
+                    ->required(),
+
+            ])
+            ->minItems(1)
+            ->columnSpanFull()
+            ->addActionLabel(__('Add Product'))
+            ->required()
+        ;
+    }
+    // Repeater Table Headers
+    public static function shipmentLinesRepeaterHeaders(): array
+    {
+        return [
+            F\Repeater\TableColumn::make('Product')
+                ->markAsRequired(),
+            F\Repeater\TableColumn::make('Qty')
+                ->markAsRequired()
+                ->width('180px'),
+        ];
+    }
+
+    // Helper methods
+    public static function recommendShipmentLineQty(
+        ?string $state,
+        Set $set,
+        Livewire $livewire,
+        ?PurchaseShipmentLine $record
+    ): void {
+        $productId = (int) $state;
+        $order = $livewire->getOwnerRecord();
+
+        if ($productId && $order) {
+            $shippedQty = $order->purchaseShipments()
+                ->whereHas('purchaseShipmentLines', fn(Builder $query) => $query->where('product_id', $productId))
+                ->withSum(['purchaseShipmentLines as total_qty' => fn(Builder $query)
+                => $query->whereNotIn('id', [$record?->id])
+                    ->where('product_id', $productId)], 'qty')
+                ->first()
+                ?->total_qty ?? 0;
+
+            $orderedQty = $order->purchaseOrderLines()
+                ->where('product_id', $productId)
+                ->first()
+                ?->qty ?? 0;
+
+            $recommendedQty = max($orderedQty - $shippedQty, 0);
+
+            if ($recommendedQty > 0) {
+                $set('qty', $recommendedQty);
+            } else {
+                $set('qty', null);
+            }
+        } else {
+            $set('qty', null);
+        }
+    }
+
+    public static function validateQty(Get $get, Livewire $livewire, ?PurchaseShipmentLine $record, $value, \Closure $fail): void
+    {
+        if (!($livewire instanceof static)) {
+            throw new \Exception('Livewire component is not an instance of the expected RelationManager.');
+        }
+
+        $orderLineQty = \App\Models\PurchaseOrderLine::where('purchase_order_id', $livewire->getOwnerRecord()->id)
+            ->where('product_id', $get('product_id'))
+            ->first()?->qty ?? 0;
+
+        // Exclude current record qty
+        $shippedQty = $livewire->getOwnerRecord()
+            ->purchaseShipments()
+            ->whereHas('purchaseShipmentLines', fn(Builder $query) => $query->where('product_id', $get('product_id')))
+            ->withSum(['purchaseShipmentLines as total_qty' => fn(Builder $query)
+            => $query->whereNotIn('id', [$record?->id])
+                ->where('product_id', $get('product_id'))], 'qty')
+            ->first()?->total_qty ?? 0;
+
+        if ($value + $shippedQty > $orderLineQty) {
+            $fail(__('Remaining: :qty', ['qty' => $orderLineQty - $shippedQty]));
+        }
     }
 }

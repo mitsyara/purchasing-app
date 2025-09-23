@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('purchase_shipment_id')->nullable()->constrained('purchase_shipments')->cascadeOnDelete();
+            $table->morphs('payable');
+
             $table->foreignId('company_id')->nullable()->constrained('companies')->cascadeOnDelete();
             $table->foreignId('supplier_id')->nullable()->constrained('contacts')->cascadeOnDelete();
             $table->foreignId('supplier_contract_id')->nullable()->constrained('contacts')->cascadeOnDelete();

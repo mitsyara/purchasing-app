@@ -108,9 +108,8 @@ class PurchaseOrdersTable
                                 'order_date' => $record->order_date ?? today(),
                             ])
                             ->action(fn(array $data, PurchaseOrder $record) => $record->processOrder($data))
-                            ->disabled(fn(PurchaseOrder $record): bool
-                            => !in_array($record->order_status, [
-                                \App\Enums\OrderStatusEnum::Draft,
+                            ->disabled(fn(PurchaseOrder $record): bool => in_array($record->order_status, [
+                                \App\Enums\OrderStatusEnum::Completed,
                                 \App\Enums\OrderStatusEnum::Canceled,
                             ])),
 
@@ -125,7 +124,7 @@ class PurchaseOrdersTable
                                 ->requiresConfirmation()
                                 ->action(fn(PurchaseOrder $record) => $record->cancelOrder())
                                 ->disabled(fn(PurchaseOrder $record): bool
-                                => $record->order_status !== \App\Enums\OrderStatusEnum::Canceled),
+                                => $record->order_status === \App\Enums\OrderStatusEnum::Canceled),
                     ])
                         ->dropdown(false),
 
