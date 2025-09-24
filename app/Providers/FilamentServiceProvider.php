@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Filament\Tables\Enums\RecordActionsPosition;
 use Illuminate\Support\ServiceProvider;
 
 class FilamentServiceProvider extends ServiceProvider
@@ -21,6 +22,7 @@ class FilamentServiceProvider extends ServiceProvider
     {
         \Filament\Tables\Table::configureUsing(function (\Filament\Tables\Table $table) {
             $table
+                ->recordActionsPosition(RecordActionsPosition::BeforeColumns)
                 ->searchOnBlur()
                 ->persistSearchInSession()
                 ->persistColumnSearchesInSession()
@@ -33,6 +35,11 @@ class FilamentServiceProvider extends ServiceProvider
             $repeater
                 ->reorderable(false)
                 ->addActionLabel(__('Add'));
+        });
+
+        \Filament\Forms\Components\Select::configureUsing(function (\Filament\Forms\Components\Select $select) {
+            $select
+                ->optionsLimit(10);
         });
     }
 }

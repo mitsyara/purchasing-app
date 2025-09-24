@@ -110,7 +110,8 @@ class PurchaseShipmentForm
             F\TextInput::make('tracking_no')
                 ->label(__('Tracking Number')),
 
-            S\Group::make(fn(PurchaseShipment $record) => __eta_etd_fields(true, $record?->purchaseOrder->is_foreign)),
+            S\Group::make(fn(PurchaseShipment $record): array
+            => __eta_etd_fields(true, $record?->purchaseOrder->is_foreign)),
 
             S\Fieldset::make(__('Actual Arrival/Departure'))
                 ->schema([

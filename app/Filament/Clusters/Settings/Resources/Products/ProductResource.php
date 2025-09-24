@@ -23,6 +23,7 @@ use Filament\Tables\Filters as TF;
 use Filament\Forms\Components as F;
 use Filament\Actions as A;
 use Filament\Schemas\Components as S;
+use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
@@ -86,6 +87,32 @@ class ProductResource extends Resource
                     ->label(__('Product Life Circle'))
                     ->suffix(__('days'))
                     ->numeric()
+                    ->prefixAction(
+                        A\Action::make('dayConverter')
+                            ->modal()->icon(Heroicon::ArrowPathRoundedSquare)
+                            ->modalWidth(Width::Medium)
+                            ->schema([
+                                S\FusedGroup::make([
+                                    __number_field('number')
+                                        ->integer()
+                                        ->required(),
+                                    F\Select::make('of')
+                                        ->options([
+                                            1 => __('Days'),
+                                            30 => __('Months'),
+                                            365 => __('Years'),
+                                        ])
+                                        ->default(1)
+                                        ->selectablePlaceholder(false)
+                                        ->required(),
+                                ])
+                                    ->label(__('Duration'))
+                                    ->columns(['default' => 2]),
+                            ])
+                            ->action(function (array $data, F\TextInput $component): void {
+                                $component->state($data['number'] * $data['of']);
+                            })
+                    )
                     ->minValue(0),
 
                 F\TagsInput::make('product_certificates')
@@ -112,7 +139,7 @@ class ProductResource extends Resource
                         name: 'mfg',
                         titleAttribute: 'contact_name',
                         modifyQueryUsing: fn(Builder $query) => $query->where('is_mfg', true)
-                        ->whereIn('id', Product::distinct()->pluck('mfg_id')->filter()->toArray()),
+                            ->whereIn('id', Product::distinct()->pluck('mfg_id')->filter()->toArray()),
                     )
                     ->searchable(['contact_code', 'contact_name'])
                     ->preload(),

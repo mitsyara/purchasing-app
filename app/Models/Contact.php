@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Traits\HasComments;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -11,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Contact extends Model
 {
+    use HasComments;
+
     protected $fillable = [
         'is_mfg',
         'is_cus',
@@ -40,6 +44,9 @@ class Contact extends Model
     ];
 
     protected $casts = [
+        'region' => \App\Enums\RegionEnum::class,
+        'rep_gender' => \App\Enums\ContactGenderEnum::class,
+
         'is_mfg' => 'boolean',
         'is_cus' => 'boolean',
         'is_trader' => 'boolean',
@@ -74,20 +81,36 @@ class Contact extends Model
             ]);
     }
 
-    // Comments
-    public function comments(): MorphMany
+    // Staff in charge
+    public function staff(): BelongsToMany
     {
-        return $this->morphMany(Comment::class, 'commentable');
+        return $this->belongsToMany(User::class, 'contact_user', 'contact_id', 'user_id')
+            ->withPivot(['id']);
     }
 
     // Attributes
 
+    public function contactInfo(): Attribute
+    {
+        return Attribute::get(fn(): array
+        => [
+            $this->office_email,
+            $this->office_phone,
+        ]);
+    }
+
+    public function repInfo(): Attribute
+    {
+        return Attribute::get(fn(): string
+        => "{$this->rep_gender?->getLabel()} {$this->rep_name}");
+    }
+
     public function companyTypes(): Attribute
     {
-        return Attribute::get(fn() => collect([
+        return Attribute::get(fn(): array => collect([
+            $this->is_trader ? 'Trader' : null,
             $this->is_mfg ? 'Manufacturer' : null,
             $this->is_cus ? 'Customer' : null,
-            $this->is_trader ? 'Trader' : null,
         ])->filter()->values()->all());
     }
 }
