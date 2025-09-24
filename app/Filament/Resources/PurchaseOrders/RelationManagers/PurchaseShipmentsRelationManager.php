@@ -51,6 +51,9 @@ class PurchaseShipmentsRelationManager extends RelationManager
                     S\Tabs\Tab::make(__('Products'))
                         ->schema([static::shipmentLines()])
                         ->columns(),
+
+                    S\Tabs\Tab::make(__('Costs & Notes'))
+                        ->schema([...static::costsAndNotesFields()]),
                 ])
                 ->columnSpanFull(),
 
@@ -272,6 +275,31 @@ class PurchaseShipmentsRelationManager extends RelationManager
             F\Repeater\TableColumn::make('Qty')
                 ->markAsRequired()
                 ->width('180px'),
+        ];
+    }
+
+    public static function costsAndNotesFields(): array
+    {
+        return [
+            S\Fieldset::make(__('Extra Costs'))
+                ->schema([
+                    F\Repeater::make('extra_costs')
+                        ->hiddenLabel()
+                        ->simple(
+                            __number_field('extra_cost')
+                                ->suffix('VND')
+                                ->required(),
+                        )
+                        ->reorderable(false)
+                        ->defaultItems(0)
+                        ->grid(3)
+                        ->columnSpanFull(),
+                ])
+                ->columns(1)
+                ->columnSpanFull(),
+
+            __notes()
+                ->rows(5),
         ];
     }
 

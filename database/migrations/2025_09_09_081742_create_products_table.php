@@ -29,7 +29,7 @@ return new class extends Migration
             $table->longText('notes')->nullable();
 
             $table->longText('product_full_name')->nullable();
-            $table->string('product_unit_label')->nullable();
+            $table->string('product_uom')->nullable();
             $table->timestamps();
         });
     }

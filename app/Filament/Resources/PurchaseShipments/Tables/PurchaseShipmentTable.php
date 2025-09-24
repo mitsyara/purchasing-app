@@ -102,9 +102,6 @@ class PurchaseShipmentTable
                                 \App\Enums\ShipmentStatusEnum::Delivered,
                                 \App\Enums\ShipmentStatusEnum::Cancelled,
                             ])),
-
-                        static::assignLotAction()
-                            ->modalWidth(Width::FourExtraLarge),
                     ])
                         ->dropdown(false),
 
@@ -132,10 +129,10 @@ class PurchaseShipmentTable
                         F\Hidden::make('id'),
                         F\Hidden::make('product_id'),
                         F\Hidden::make('qty'),
-                        F\Hidden::make('product_unit_label')
+                        F\Hidden::make('product_uom')
                             ->dehydrated(false)
                             ->afterStateHydrated(fn(PurchaseShipmentLine $record, F\Hidden $component)
-                            => $component->state($record->product->product_unit_label)),
+                            => $component->state($record->product->product_uom)),
                         F\Hidden::make('product_life_cycle')
                             ->dehydrated(false)
                             ->afterStateHydrated(fn(PurchaseShipmentLine $record, F\Hidden $component)
@@ -167,7 +164,7 @@ class PurchaseShipmentTable
 
                                 __number_field('qty')
                                     ->suffix(fn() => JsContent::make(<<<'JS'
-                                        $get('../../product_unit_label')
+                                        $get('../../product_uom')
                                     JS))
                                     ->rules([
                                         //
@@ -199,7 +196,7 @@ class PurchaseShipmentTable
                         $productId = $state['product_id'] ?? null;
                         $product = \App\Models\Product::find($productId);
                         $qty = $state['qty'] ? __number_string_converter_vi($state['qty']) : 0;
-                        return $product->product_full_name . SPACING . " Qty: ({$qty} {$product->product_unit_label})" ?? 'N/A';
+                        return $product->product_full_name . SPACING . " Qty: ({$qty} {$product->product_uom})" ?? 'N/A';
                     })
                     ->collapsible(),
             ])

@@ -89,7 +89,7 @@ if (!function_exists('__order_date_fields')) {
     }
 }
 if (!function_exists('__eta_etd_fields')) {
-    function __eta_etd_fields(bool $isRequired = false): array
+    function __eta_etd_fields(bool $isRequired = false, bool $isVisible = true): array
     {
         return [
             \Filament\Schemas\Components\Fieldset::make(__('ETD'))
@@ -112,7 +112,8 @@ if (!function_exists('__eta_etd_fields')) {
                     'default' => 2,
                     'lg' => 1,
                     'xl' => 2,
-                ]),
+                ])
+                ->visible($isVisible),
 
             \Filament\Schemas\Components\Fieldset::make(__('ETA'))
                 ->schema([
@@ -134,7 +135,8 @@ if (!function_exists('__eta_etd_fields')) {
                     'default' => 2,
                     'lg' => 1,
                     'xl' => 2,
-                ]),
+                ])
+                ->visible($isVisible),
         ];
     }
 }

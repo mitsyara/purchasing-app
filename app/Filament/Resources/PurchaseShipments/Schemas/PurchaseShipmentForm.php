@@ -8,6 +8,7 @@ use App\Filament\Resources\PurchaseShipments\Pages\ManagePurchaseShipments;
 use App\Filament\Resources\PurchaseShipments\PurchaseShipmentResource;
 use App\Filament\Schemas\PSProductForm;
 use App\Models\PurchaseShipment;
+use App\Models\PurchaseShipmentLine;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 
@@ -16,6 +17,7 @@ use Filament\Forms\Components as F;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\JsContent;
+use Filament\Support\Enums\Alignment;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -46,7 +48,7 @@ class PurchaseShipmentForm
 
                         S\Tabs\Tab::make(__('Costs & Notes'))
                             ->schema([
-                                ...static::costsAndNotes(),
+                                ...static::costsAndNotesFields(),
                             ]),
                     ])
                     ->columnSpanFull(),
@@ -56,82 +58,59 @@ class PurchaseShipmentForm
     public static function shipmentInfoFields(): array
     {
         return [
+
+            F\ToggleButtons::make('shipment_status')
+                ->label(__('Shipment Status'))
+                ->options(\App\Enums\ShipmentStatusEnum::class)
+                ->grouped()
+                ->grow(false)
+                ->columnSpanFull()
+                ->required(),
+
             S\Flex::make([
                 F\Select::make('purchase_order_id')
                     ->label(__('Purchase Order'))
                     ->relationship(
                         name: 'purchaseOrder',
                         titleAttribute: 'order_number',
-                        modifyQueryUsing: function (Builder $query, string $operation): Builder {
-                            // TODO: calculate only orders which are not fully shipped
-                            $query = $query
-                                ->where('order_status', \App\Enums\OrderStatusEnum::Inprogress->value)
-                                ->whereNotNull('order_number');
-
-                            return $operation === 'create'
-                                ? $query->incompleteShipmentsQty()
-                                : $query;
-                        }
+                        modifyQueryUsing: fn(Builder $query): Builder => $query
                     )
-                    ->afterStateUpdatedJs(<<<'JS'
-                        !$state ? $set('port_id', null) : null;
-                    JS)
                     ->suffixAction(static::viewOrderAction())
                     ->disabled(),
 
-                F\ToggleButtons::make('shipment_status')
-                    ->label(__('Shipment Status'))
-                    ->options(\App\Enums\ShipmentStatusEnum::class)
-                    ->default(\App\Enums\ShipmentStatusEnum::Pending->value)
-                    ->grouped()
-                    ->grow(false)
-                    ->disableOptionWhen(fn(string $value, string $operation): bool
-                    => $operation === 'create'
-                        && $value === \App\Enums\ShipmentStatusEnum::Cancelled->value)
+                F\Select::make('port_id')
+                    ->label(__('Port'))
+                    ->relationship(
+                        name: 'port',
+                        titleAttribute: 'port_name',
+                        modifyQueryUsing: fn(Builder $query): Builder => $query
+                    )
+                    ->required(fn(callable $get): bool => (bool) $get('declaration_required')),
+
+                F\Select::make('warehouse_id')
+                    ->label(__('Warehouse'))
+                    ->relationship(
+                        name: 'warehouse',
+                        titleAttribute: 'warehouse_name',
+                        modifyQueryUsing: fn(Builder $query): Builder => $query
+                    )
                     ->required(),
+
             ])
                 ->columnSpanFull(),
-
-            F\Select::make('port_id')
-                ->label(__('Port'))
-                ->relationship(
-                    name: 'port',
-                    titleAttribute: 'port_name',
-                    modifyQueryUsing: fn(Builder $query): Builder => $query
-                )
-                ->default(fn($livewire) => $livewire instanceof PurchaseShipmentsRelationManager
-                    ? $livewire->getOwnerRecord()?->import_port_id
-                    : null)
-                ->required(function (callable $get): bool {
-                    /** @var \App\Models\PurchaseOrder $order */
-                    $order = \App\Models\PurchaseOrder::find($get('purchase_order_id'));
-                    return !$order?->is_skip_invoice && $order?->is_foreign;
-                }),
-
-            F\Select::make('warehouse_id')
-                ->label(__('Warehouse'))
-                ->relationship(
-                    name: 'warehouse',
-                    titleAttribute: 'warehouse_name',
-                    modifyQueryUsing: fn(Builder $query): Builder => $query
-                )
-                ->default(fn($livewire) => $livewire instanceof PurchaseShipmentsRelationManager
-                    ? $livewire->getOwnerRecord()?->import_warehouse_id
-                    : null)
-                ->required(),
 
             F\Select::make('staff_docs_id')
                 ->label(__('Docs Staff'))
                 ->relationship(
                     name: 'staffDocs',
                     titleAttribute: 'name',
-                ),
+                )
+                ->required(),
 
             F\TextInput::make('tracking_no')
-                ->label(__('Tracking Number'))
-                ->maxLength(255),
+                ->label(__('Tracking Number')),
 
-            ...__eta_etd_fields(true),
+            S\Group::make(fn(PurchaseShipment $record) => __eta_etd_fields(true, $record?->purchaseOrder->is_foreign)),
 
             S\Fieldset::make(__('Actual Arrival/Departure'))
                 ->schema([
@@ -151,9 +130,8 @@ class PurchaseShipmentForm
                             name: 'staffDeclarant',
                             titleAttribute: 'name',
                         )
-                        ->default(fn($livewire) => $livewire instanceof PurchaseShipmentsRelationManager
-                            ? $livewire->getOwnerRecord()?->staff_declarant_id
-                            : null),
+                        ->required(fn(callable $get): bool
+                        => (bool) $get('declaration_required')),
 
                     F\Select::make('staff_declarant_processing_id')
                         ->label(__('Processing Staff'))
@@ -161,9 +139,8 @@ class PurchaseShipmentForm
                             name: 'staffDeclarantProcessing',
                             titleAttribute: 'name',
                         )
-                        ->default(fn($livewire) => $livewire instanceof PurchaseShipmentsRelationManager
-                            ? $livewire->getOwnerRecord()?->staff_declarant_processing_id
-                            : null),
+                        ->required(fn(callable $get): bool
+                        => (bool) $get('declaration_required')),
 
                     F\TextInput::make('currency')
                         ->label(__('Currency'))
@@ -171,7 +148,6 @@ class PurchaseShipmentForm
                         ->afterStateHydrated(fn(F\Field $component, ?PurchaseShipment $record)
                         => $component->state($record?->currency ?? $record?->purchaseOrder?->currency))
                         ->readOnly()
-                        ->grow(false)
                         ->hidden(),
 
                     __number_field('exchange_rate')
@@ -185,6 +161,7 @@ class PurchaseShipmentForm
                                 ->icon(Heroicon::Banknotes)
                                 ->action(fn($get, $set) => static::getExchangeRate($get, $set))
                                 ->link()
+                                ->disabled(fn($get): bool => $get('currency') === 'VND')
                         ]),
 
                     F\Toggle::make('is_exchange_rate_final')->label(__('Final Rate?'))
@@ -219,7 +196,7 @@ class PurchaseShipmentForm
                     F\Select::make('customs_clearance_status')
                         ->label(__('Clearance Status'))
                         ->options(\App\Enums\CustomsClearanceStatusEnum::class)
-                        ->required(fn($livewire): bool => $livewire instanceof ManagePurchaseShipments),
+                        ->required(),
 
                     F\DatePicker::make('customs_clearance_date')
                         ->label(__('Clearance Date'))
@@ -238,23 +215,78 @@ class PurchaseShipmentForm
             ->relationship('purchaseShipmentLines')
             ->hiddenLabel()
             ->schema([
-                //
+                __number_field('break_price')
+                    ->label(__('Break Price'))
+                    ->inlineLabel()
+                    ->suffix('VND')
+                    ->required(),
+
+                F\Hidden::make('product_life_cycle')
+                    ->afterStateHydrated(fn(F\Field $component, ?PurchaseShipmentLine $record)
+                    => $component->state($record?->product?->product_life_cycle)),
+                F\Hidden::make('uom')
+                    ->afterStateHydrated(fn(F\Field $component, ?PurchaseShipmentLine $record)
+                    => $component->state($record?->product?->product_uom)),
+
+                F\Repeater::make('transactions')
+                    ->hiddenLabel()
+                    ->relationship()
+                    ->table([
+                        F\Repeater\TableColumn::make('Lot/Batch No.')
+                            ->markAsRequired(),
+                        F\Repeater\TableColumn::make(fn() => static::getUomJs())
+                            ->width('130px')
+                            ->markAsRequired(),
+                        F\Repeater\TableColumn::make('Mfg Date')
+                            ->width('130px')
+                            ->markAsRequired(),
+                        F\Repeater\TableColumn::make('Exp Date')
+                            ->width('130px')
+                            ->markAsRequired(),
+                    ])
+                    ->schema([
+                        F\TextInput::make('lot_no')
+                            ->label(__('Lot No.'))
+                            ->required(),
+
+                        __number_field('qty')
+                            ->label(__('Quantity'))
+                            ->rules([
+                                fn(Get $get): \Closure => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                    $availableQty = $get('../../qty');
+                                    dd($availableQty - 0, $value - 0);
+                                    $fail("The {$attribute} is invalid.");
+                                },
+                            ])
+                            ->required(),
+
+                        F\DatePicker::make('mfg_date')
+                            ->label(__('Mfg Date'))
+                            ->maxDate(today())
+                            ->afterStateUpdatedJs(fn() => static::setProductExpDateByJs())
+                            ->required(),
+
+                        F\DatePicker::make('exp_date')
+                            ->label(__('Exp Date'))
+                            ->required(),
+
+                    ])
+                    ->defaultItems(1)
+                    ->addActionLabel(__('Add Lot/Batch'))
+                    ->compact()
+                    ->columnSpanFull(),
             ])
-            ->itemLabel(function (array $state): string {
-                $productName = $state['product_id']
-                    ? \App\Models\Product::find($state['product_id'])?->product_full_name
-                    : __('(Select Product)');
-                $qty = $state['qty'] ?? 0;
-                return "{$productName} - Qty: {$qty}";
-            })
+            ->itemLabel(fn(array $state) => static::getShipmentLineLabel($state))
             ->addable(false)
             ->deletable(false)
             ->minItems(1)
+            ->columns()
             ->columnSpanFull()
+            ->collapsible()
         ;
     }
 
-    public static function costsAndNotes(): array
+    public static function costsAndNotesFields(): array
     {
         return [
             S\Fieldset::make(__('Extra Costs'))
@@ -268,7 +300,7 @@ class PurchaseShipmentForm
                         )
                         ->reorderable(false)
                         ->defaultItems(0)
-                        ->grid(4)
+                        ->grid(3)
                         ->columnSpanFull(),
                 ])
                 ->columns(1)
@@ -293,6 +325,19 @@ class PurchaseShipmentForm
     }
 
     // Helper functions
+    public static function getShipmentLineLabel(array $state): string
+    {
+        $product = \App\Models\Product::find($state['product_id']);
+        $productName = $product?->product_full_name ?? __('(Select Product)');
+        $uom = $product?->product_uom;
+        $unitPrice = \Illuminate\Support\Number::currency(($state['unit_price'] ?? 0),
+            $state['currency'] ?? 'VND',
+            locale: app()->getLocale()
+        );
+        $qty = __number_string_converter_vi($state['qty'] ?? 0);
+        return "{$productName} " . SPACING . " Qty: {$qty} {$uom} " . SPACING . " Price: {$unitPrice}";
+    }
+
     public static function getExchangeRate(Get $get, Set $set): void
     {
         $currency = $get('currency');
@@ -300,7 +345,35 @@ class PurchaseShipmentForm
         if ($date && $currency && $currency !== 'VND') {
             $rate = \App\Services\VcbExchangeRatesService::fetch($date)[$currency][VCB_RATE_TARGET] ?? null;
             if ($rate) $rate = __number_string_converter_vi($rate);
-            $set('exchange_rate', $rate);
+            if ($rate) {
+                $set('exchange_rate', $rate);
+            }
+        } else {
+            \Filament\Notifications\Notification::make()
+                ->title(__('Cannot fetch exchange rate'))
+                ->body(__('Please ensure that Declaration Date or Clearance Date is set.'))
+                ->warning()
+                ->send();
         }
+    }
+
+    // Js helpers
+    public static function getUomJs(): JsContent
+    {
+        return JsContent::make(<<<'JS'
+            $get('uom') ? 'Qty (' + $get('uom') + ')' : 'Qty';
+        JS);
+    }
+    public static function setProductExpDateByJs(): string
+    {
+        return <<<'JS'
+            const mfgDate = new Date($state);
+            const lifeCycle = $get('../../product_life_cycle');
+            const expDate = new Date(mfgDate);
+            expDate.setDate(expDate.getDate() + lifeCycle - 1);
+            if ($state && lifeCycle) {
+                $set('exp_date', expDate.toISOString().split("T")[0]);
+            }
+        JS;
     }
 }

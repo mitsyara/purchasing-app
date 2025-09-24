@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Services\PurchaseShipment\MarkShipmentDelivered;
+use App\Traits\HasInventoryTransactions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PurchaseShipment extends Model
 {
+    use HasInventoryTransactions;
+    
     protected $fillable = [
         'purchase_order_id',
         'company_id',

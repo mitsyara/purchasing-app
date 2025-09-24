@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
+#[ObservedBy([\App\Observers\ProductObserver::class])]
 class Product extends Model
 {
     protected $fillable = [
@@ -27,7 +29,7 @@ class Product extends Model
         'notes',
 
         'product_full_name',
-        'product_unit_label',
+        'product_uom',
     ];
 
     // Manufacturer
@@ -110,7 +112,7 @@ class Product extends Model
     public function setUnitLabel(): static
     {
         $this->updateQuietly([
-            'product_unit_label' => $this->packing?->unit?->unit_code
+            'product_uom' => $this->packing?->unit?->unit_code
         ]);
         return $this;
     }
