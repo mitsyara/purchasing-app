@@ -85,7 +85,7 @@ class Contact extends Model
     public function staff(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'contact_user', 'contact_id', 'user_id')
-            ->withPivot(['id']);
+            ->withTimestamps();
     }
 
     // Attributes

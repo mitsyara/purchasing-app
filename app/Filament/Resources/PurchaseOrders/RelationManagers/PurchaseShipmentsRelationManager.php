@@ -5,10 +5,9 @@ namespace App\Filament\Resources\PurchaseOrders\RelationManagers;
 use App\Filament\Resources\PurchaseShipments\Tables\PurchaseShipmentTable;
 use App\Models\PurchaseShipment;
 use App\Models\PurchaseShipmentLine;
-use App\Services\PurchaseOrder\CallAllPurchaseOrderServices;
-use App\Services\PurchaseShipment\CallAllPurchaseShipmentServices;
 use Filament\Resources\RelationManagers\RelationManager;
 use Illuminate\Database\Eloquent\Builder;
+use App\Services\PurchaseShipment\CallAllPurchaseShipmentServices;
 
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
@@ -72,13 +71,13 @@ class PurchaseShipmentsRelationManager extends RelationManager
             $table->columns([
                 ...PurchaseShipmentTable::configure($table)->getColumns(),
             ])
-            // PurchaseShipmentTable::configure($table)
             ->modelLabel(__('Shipment'))
             ->pluralModelLabel(__('Shipments'))
             ->headerActions([
                 A\CreateAction::make()
                     ->after(function (PurchaseShipment $record): void {
                         new CallAllPurchaseShipmentServices($record);
+                        $this->dispatch('refresh-order-status');
                     })
                     ->modal()->slideOver(),
             ])
@@ -86,12 +85,11 @@ class PurchaseShipmentsRelationManager extends RelationManager
                 A\EditAction::make()
                     ->after(function (PurchaseShipment $record): void {
                         new CallAllPurchaseShipmentServices($record);
+                        $this->dispatch('refresh-order-status');
                     })
                     ->modal()->slideOver(),
-                A\DeleteAction::make()
-                    ->after(function () {
-                        new CallAllPurchaseOrderServices($this->getOwnerRecord());
-                    }),
+
+                A\DeleteAction::make(),
             ]);
     }
 

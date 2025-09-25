@@ -10,6 +10,12 @@ class CreatePurchaseOrder extends CreateRecord
 {
     protected static string $resource = PurchaseOrderResource::class;
 
+    #[\Livewire\Attributes\On('refresh-order-status')]
+    public function refreshOrderStatus(): void
+    {
+        $this->fillForm();
+    }
+
     protected function afterCreate(): void
     {
         // Get Purchase Order

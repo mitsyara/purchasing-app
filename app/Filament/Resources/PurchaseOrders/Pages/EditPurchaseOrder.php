@@ -13,6 +13,12 @@ class EditPurchaseOrder extends EditRecord
 {
     protected static string $resource = PurchaseOrderResource::class;
 
+    #[\Livewire\Attributes\On('refresh-order-status')]
+    public function refreshOrderStatus(): void
+    {
+        $this->fillForm();
+    }
+
     protected function getHeaderActions(): array
     {
         return [

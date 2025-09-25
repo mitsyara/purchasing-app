@@ -27,7 +27,9 @@ class PortResource extends Resource
 {
     protected static ?string $model = Port::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static ?int $navigationSort = 13;
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMapPin;
 
     protected static ?string $cluster = SettingsCluster::class;
 
@@ -91,8 +93,8 @@ class PortResource extends Resource
                                 ->email(),
                         ),
                 ])
-                ->columns()
-                ->columnSpanFull(),
+                    ->columns()
+                    ->columnSpanFull(),
 
             ]);
     }

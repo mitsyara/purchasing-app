@@ -53,17 +53,17 @@ class User extends Authenticatable
     }
 
     // Model relationships
+
     public function companies(): BelongsToMany
     {
         return $this->belongsToMany(Company::class, 'company_user', 'user_id', 'company_id')
-            ->withPivot([
-                'id',
-            ])
             ->withTimestamps();
     }
-    public function staffCompanies(): HasMany
+
+    public function contacts(): BelongsToMany
     {
-        return $this->hasMany(CompanyUser::class, 'user_id', 'id');
+        return $this->belongsToMany(Contact::class, 'contact_user', 'user_id', 'contact_id')
+            ->withTimestamps();
     }
 
     /**
@@ -74,7 +74,7 @@ class User extends Authenticatable
         return Str::of($this->name)
             ->explode(' ')
             ->take(2)
-            ->map(fn ($word) => Str::substr($word, 0, 1))
+            ->map(fn($word) => Str::substr($word, 0, 1))
             ->implode('');
     }
 }

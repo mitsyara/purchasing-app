@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
                 InitialData\ContactSeeder::class,
                 InitialData\ProductSeeder::class,
                 InitialData\AssortmentSeeder::class,
+                InitialData\CustomsDataCategorySeeder::class,
             ];
 
             foreach ($seeders as $seeder) {

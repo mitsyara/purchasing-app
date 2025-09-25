@@ -25,7 +25,9 @@ class CompanyResource extends Resource
 {
     protected static ?string $model = Company::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static ?int $navigationSort = 11;
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBriefcase;
 
     protected static ?string $cluster = SettingsCluster::class;
 
@@ -140,22 +142,16 @@ class CompanyResource extends Resource
 
                         S\Tabs\Tab::make('Staffs')
                             ->schema([
-                                F\Repeater::make('companyStaffs')
-                                    ->hiddenLabel()
-                                    ->relationship()
-                                    ->simple(
-                                        F\Select::make('user_id')
-                                            ->label('Staff')
-                                            ->relationship(
-                                                name: 'staff',
-                                                titleAttribute: 'name',
-                                            )
-                                            ->searchable()
-                                            ->preload()
-                                            ->disableOptionsWhenSelectedInSiblingRepeaterItems()
-                                            ->required(),
+                                F\CheckboxList::make('user_id')
+                                    ->label('Select Staff')
+                                    ->relationship(
+                                        name: 'staffs',
+                                        titleAttribute: 'name',
+                                        modifyQueryUsing: fn($query) => $query->where('status', \App\Enums\UserStatusEnum::Active)->orderBy('name')
                                     )
-                                    ->addActionLabel('Add Staff'),
+                                    ->searchable()
+                                    ->bulkToggleable()
+                                    ->columns(),
                             ]),
                     ])
                     ->columnSpanFull()

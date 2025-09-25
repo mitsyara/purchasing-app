@@ -4,10 +4,12 @@ namespace App\Models;
 
 use App\Services\PurchaseShipment\MarkShipmentDelivered;
 use App\Traits\HasInventoryTransactions;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[ObservedBy([\App\Observers\PurchaseShipmentObserver::class])]
 class PurchaseShipment extends Model
 {
     use HasInventoryTransactions;

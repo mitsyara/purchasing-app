@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Contacts\Schemas;
 
+use App\Filament\Schemas\CommentForm;
+use App\Models\Comment;
 use Filament\Schemas\Schema;
 
 use Filament\Schemas\Components as S;
@@ -28,7 +30,7 @@ class ContactForm
 
                         S\Tabs\Tab::make(__('Comments'))
                             ->schema([
-                                //
+                                CommentForm::commentFormFields(),
                             ]),
                     ])
                     ->contained(false)
@@ -56,48 +58,6 @@ class ContactForm
 
         ];
     }
-
-    public static function warehouseAndOtherFields(): array
-    {
-        return [
-            S\Fieldset::make(__('Warehouses'))
-                ->columns(1)
-                ->schema([
-                    F\Repeater::make('warehouse_addresses')
-                        ->label(__('Warehouse Addresses'))
-                        ->hiddenLabel()
-                        ->simple(F\TextInput::make('address')
-                            ->label(__('Address'))
-                            ->columnSpanFull()),
-                ])
-                ->columnSpanFull(),
-
-            S\Fieldset::make(__('Bank Info'))
-                ->columns(1)
-                ->schema([
-                    F\Repeater::make('bank_infos')
-                        ->label(__('Bank Information'))
-                        ->simple(F\TextInput::make('info')
-                            ->label(__('Information'))
-                            ->columnSpanFull()),
-                ]),
-
-            S\Fieldset::make(__('Other Info'))
-                ->columns(1)
-                ->schema([
-                    F\Repeater::make('other_infos')
-                        ->label(__('Other Information'))
-                        ->simple(F\TextInput::make('info')
-                            ->label(__('Information'))
-                            ->columnSpanFull()),
-                ]),
-
-            __notes()
-                ->rows(4)
-                ->columnSpanFull(),
-        ];
-    }
-
     // Basic Information Fields
     public static function basicInfoFields(): array
     {
@@ -114,7 +74,7 @@ class ContactForm
             S\Group::make([
                 F\TextInput::make('tax_code')
                     ->label(__('Tax Code'))
-                    ->requiredWith('is_cus'),
+                    ->requiredIfAccepted('is_cus'),
 
                 F\TextInput::make('office_email')
                     ->label(__('Email'))
@@ -163,7 +123,6 @@ class ContactForm
                 ->columnSpanFull(),
         ];
     }
-
     // Additional Information Fields
     public static function additionalInfoFields(): array
     {
@@ -204,4 +163,46 @@ class ContactForm
 
         ];
     }
+
+    public static function warehouseAndOtherFields(): array
+    {
+        return [
+            S\Fieldset::make(__('Warehouses'))
+                ->columns(1)
+                ->schema([
+                    F\Repeater::make('warehouse_addresses')
+                        ->label(__('Warehouse Addresses'))
+                        ->hiddenLabel()
+                        ->simple(F\TextInput::make('address')
+                            ->label(__('Address'))
+                            ->columnSpanFull()),
+                ])
+                ->columnSpanFull(),
+
+            S\Fieldset::make(__('Bank Info'))
+                ->columns(1)
+                ->schema([
+                    F\Repeater::make('bank_infos')
+                        ->label(__('Bank Information'))
+                        ->simple(F\TextInput::make('info')
+                            ->label(__('Information'))
+                            ->columnSpanFull()),
+                ]),
+
+            S\Fieldset::make(__('Other Info'))
+                ->columns(1)
+                ->schema([
+                    F\Repeater::make('other_infos')
+                        ->label(__('Other Information'))
+                        ->simple(F\TextInput::make('info')
+                            ->label(__('Information'))
+                            ->columnSpanFull()),
+                ]),
+
+            __notes()
+                ->rows(4)
+                ->columnSpanFull(),
+        ];
+    }
+
 }

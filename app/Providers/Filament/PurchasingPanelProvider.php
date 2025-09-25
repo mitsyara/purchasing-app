@@ -30,6 +30,8 @@ class PurchasingPanelProvider extends PanelProvider
             ->path('purchasing')
             ->login()
 
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
             ->databaseTransactions()
 
             ->topNavigation()

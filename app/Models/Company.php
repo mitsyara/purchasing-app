@@ -45,14 +45,7 @@ class Company extends Model
     public function staffs(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'company_user', 'company_id', 'user_id')
-            ->withPivot([
-                'id',
-            ])
             ->withTimestamps();
-    }
-    public function companyStaffs(): HasMany
-    {
-        return $this->hasMany(CompanyUser::class, 'company_id');
     }
 
     // Purchase Orders

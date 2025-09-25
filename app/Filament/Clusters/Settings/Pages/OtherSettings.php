@@ -18,7 +18,7 @@ class OtherSettings extends Page
 {
     protected string $view = 'filament.clusters.settings.pages.other-settings';
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 9;
 
     protected static ?string $cluster = SettingsCluster::class;
 

@@ -12,10 +12,7 @@ class SyncShipmentInfo
         /** @var \App\Models\PurchaseOrder $order */
         $order = $shipment->purchaseOrder;
 
-        if (!in_array($shipment->shipment_status, [
-            \App\Enums\ShipmentStatusEnum::Pending,
-            \App\Enums\ShipmentStatusEnum::Cancelled,
-        ]) && $order->order_status === \App\Enums\OrderStatusEnum::Draft) {
+        if ($order->order_status === \App\Enums\OrderStatusEnum::Draft) {
             $order->updateQuietly([
                 'order_status' => \App\Enums\OrderStatusEnum::Inprogress,
             ]);

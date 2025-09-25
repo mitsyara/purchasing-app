@@ -17,10 +17,9 @@ class ContactTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->query(fn(): Builder => Contact::query())
+            ->query(fn(): Builder => Contact::query()->whereNot('contact_code', 'KL'))
             ->columns([
                 __index(),
-
                 T\TextColumn::make('contact_name')
                     ->label(__('Name'))
                     ->description(fn(Contact $record): string => $record->contact_code . ' / ' . $record->contact_short_name)
