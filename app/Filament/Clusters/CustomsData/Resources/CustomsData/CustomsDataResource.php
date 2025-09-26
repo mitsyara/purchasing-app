@@ -22,9 +22,16 @@ class CustomsDataResource extends Resource
 {
     protected static ?string $model = CustomsData::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedQueueList;
 
     protected static ?string $cluster = CustomsDataCluster::class;
+
+    protected static ?int $navigationSort = 0;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return CustomsDataResource::getNavigationLabel();
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -139,7 +146,7 @@ class CustomsDataResource extends Resource
                     ->sortable()
                     ->toggleable(),
 
-                T\TextColumn::make('total')
+                T\TextColumn::make('value')
                     ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label(__('Total'))
                     ->money('USD')
@@ -211,9 +218,30 @@ class CustomsDataResource extends Resource
                         ->label(__('Export selected to CSV'))
                         ->columnMappingColumns(2)
                         ->maxRows(1000)
-                        ->chunkSize(200),
-                    A\DeleteBulkAction::make()
-                        ->visible(fn() => auth()->user()->id === 1),
+                        ->chunkSize(200)
+                        ->requiresConfirmation(),
+
+                    A\BulkAction::make('deleteBulk')
+                        ->label(__('Delete selected'))
+                        ->color('danger')->icon(Heroicon::OutlinedTrash)
+                        ->action(fn(\Illuminate\Support\Collection $records)
+                        => \App\Models\CustomsData::destroy($records->pluck('id')))
+                        ->after(function ($livewire) {
+                            \App\Jobs\RecalculateCustomsDataAggregatesJob::dispatch();
+                            // event('customs-data.import.completed');
+                            $livewire->getTableRecords()->fresh();
+                            \Filament\Notifications\Notification::make()
+                                ->title(__('Deleted.'))
+                                ->success()
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion()
+                        ->modalDescription(fn(\Illuminate\Support\Collection $records): string
+                        => __(
+                            'Are you sure you want to delete the selected :count records? This action cannot be undone.',
+                            ['count' => $records->count()]
+                        ))
+                        ->requiresConfirmation(),
                 ]),
             ]);
     }
@@ -237,7 +265,7 @@ class CustomsDataResource extends Resource
             'qty',
             'unit',
             'price',
-            'total',
+            'value',
             'export_country',
             'exporter',
             'incoterm',

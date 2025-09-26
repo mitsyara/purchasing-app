@@ -44,7 +44,7 @@ class ProductTable
 
                 T\TextColumn::make('category.category_name')
                     ->label(__('Category'))
-                    ->visibleOn(ProductResource::class)
+                    // ->visibleOn(ProductResource::class)
                     ->sortable()
                     ->searchable(),
 
@@ -64,7 +64,13 @@ class ProductTable
                     ->searchable(),
             ])
             ->filters([
-                //
+                TF\SelectFilter::make('category_id')
+                    ->label(__('Category'))
+                    ->relationship(
+                        name: 'category',
+                        titleAttribute: 'category_name',
+                        modifyQueryUsing: fn($query) => $query
+                    ),
             ])
             ->headerActions([
                 //

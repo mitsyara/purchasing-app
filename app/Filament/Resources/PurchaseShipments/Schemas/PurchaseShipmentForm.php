@@ -253,10 +253,24 @@ class PurchaseShipmentForm
                         __number_field('qty')
                             ->label(__('Quantity'))
                             ->rules([
-                                fn(Get $get): \Closure => function (string $attribute, $value, \Closure $fail) use ($get) {
-                                    $availableQty = $get('../../qty');
-                                    dd($availableQty - 0, $value - 0);
-                                    $fail("The {$attribute} is invalid.");
+                                fn(Get $get, F\Field $component): \Closure
+                                => function (string $attribute, $value, \Closure $fail) use ($get, $component) {
+                                    $availableQty = (float) $get('../../qty'); // tổng qty còn lại
+                                    $transactions = $get('../') ?? []; // tất cả dòng trong repeater
+                                    $key = \Illuminate\Support\Str::of($component->getStatePath())
+                                        ->after($component->getParentRepeater()->getStatePath() . '.')
+                                        ->before('.')
+                                        ->toString();
+
+                                    $sumQty = 0;
+                                    foreach ($transactions as $uuid => $transaction) {
+                                        $sumQty += __number_string_converter_vi($transaction['qty'] ?? 0, false);
+                                        if ($uuid === $key) break; // dừng khi tới dòng hiện tại
+                                    }
+
+                                    if ($sumQty > $availableQty) {
+                                        $fail(__("Total qty cannot exceed :qty.", ['qty' => $availableQty]));
+                                    }
                                 },
                             ])
                             ->required(),

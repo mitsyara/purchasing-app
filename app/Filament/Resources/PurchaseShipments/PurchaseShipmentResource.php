@@ -16,7 +16,7 @@ class PurchaseShipmentResource extends Resource
 {
     protected static ?string $model = PurchaseShipment::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedTruck;
 
     protected static string|\UnitEnum|null $navigationGroup = 'purchasing';
 

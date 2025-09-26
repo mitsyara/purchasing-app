@@ -8,16 +8,21 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 #[ObservedBy([\App\Observers\CustomsDataCategoryObserver::class])]
 class CustomsDataCategory extends Model
 {
+    protected $connection = 'mysql_customs_data';
+
     protected $fillable = [
         'name',
         'keywords',
         'description',
         'current_index',
+        'count',
     ];
 
     public function customsDatas(): HasMany
@@ -65,4 +70,40 @@ class CustomsDataCategory extends Model
             ->implode(';');
         return md5($raw);
     }
+
+    /**
+     * Recalculate count of related customsDatas for all categories
+     * and update cache for each category.
+     */
+    public static function recalculateAggregates(): void
+    {
+        // Count Category's customsDatas
+        $counts = \App\Models\CustomsData::query()
+            ->select('customs_data_category_id', DB::raw('count(*) as total'))
+            ->groupBy('customs_data_category_id')
+            ->pluck('total', 'customs_data_category_id'); // [customs_data_category_id => total]
+
+        // Update DB & cache with 1 transaction
+        DB::transaction(function () use ($counts) {
+            foreach ($counts as $categoryId => $total) {
+                DB::table('customs_data_categories')
+                    ->where('id', $categoryId)
+                    ->update(['count' => $total]);
+
+                // Update cache
+                Cache::put("customs_data_category:{$categoryId}", $total, now()->addDay());
+            }
+        });
+
+        // set count = 0 for categories with no related customsDatas
+        $allCategoryIds = self::pluck('id');
+        $missingIds = $allCategoryIds->diff($counts->keys());
+        foreach ($missingIds as $id) {
+            DB::table('customs_data_categories')
+                ->where('id', $id)
+                ->update(['count' => 0]);
+            Cache::put("customs_data_category:{$id}", 0, now()->addDay());
+        }
+    }
+
 }

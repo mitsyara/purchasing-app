@@ -7,12 +7,14 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    protected $connection = 'mysql_customs_data';
+
     /**
      * Run the migrations.
      */
     public function up(): void
     {
-        Schema::create('customs_data', function (Blueprint $table) {
+        Schema::connection('mysql_customs_data')->create('customs_data', function (Blueprint $table) {
             $table->id();
             // $table->foreignId('category_id')->nullable()->constrained('customs_data_categories')->nullOnDelete();
             $table->foreignId('customs_data_category_id')->nullable()->constrained('customs_data_categories')->nullOnDelete();
@@ -22,7 +24,7 @@ return new class extends Migration
             $table->string('unit')->nullable();
             $table->decimal('qty', 24, 3)->nullable();
             $table->decimal('price', 24, 3)->nullable();
-            $table->decimal('total', 24, 6)->storedAs('COALESCE(qty, 0) * COALESCE(price, 0)');
+            $table->decimal('value', 24, 6)->storedAs('COALESCE(qty, 0) * COALESCE(price, 0)');
             $table->string('export_country')->nullable();
             $table->longText('exporter')->nullable();
             $table->string('incoterm')->nullable();
@@ -41,6 +43,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('customs_data');
+        Schema::connection('mysql_customs_data')->dropIfExists('customs_data');
     }
 };

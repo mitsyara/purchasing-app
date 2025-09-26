@@ -12,6 +12,8 @@ use Illuminate\Support\Str;
 #[ObservedBy([\App\Observers\CustomsDataObserver::class])]
 class CustomsData extends Model
 {
+    protected $connection = 'mysql_customs_data';
+    
     protected $fillable = [
         'customs_data_category_id',
         'import_date',

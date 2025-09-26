@@ -15,11 +15,13 @@ class CustomsDataImporter extends Importer
     {
         return [
             \Filament\Schemas\Components\Group::make([
-                \Filament\Forms\Components\Checkbox::make('localeDelimiter')
-                    ->label('Dấu thập phân là dấu phẩy (,)'),
-                \Filament\Forms\Components\Checkbox::make('forceRecordCreate'),
+                // \Filament\Forms\Components\Checkbox::make('noHeader')
+                //     ->label(__('File has no header row')),
+                \Filament\Forms\Components\Checkbox::make('separator')
+                    ->label('Comma Thousand separator (e.g. 1,000.25)')
+                    ->default(true),
             ])
-                ->columns()
+                ->columns(1)
                 ->columnSpanFull(),
         ];
     }
@@ -27,11 +29,6 @@ class CustomsDataImporter extends Importer
     public static function getColumns(): array
     {
         return [
-            ImportColumn::make('category')
-                ->example('Amoxicillin')
-                ->ignoreBlankState()
-                ->relationship(),
-
             ImportColumn::make('import_date')
                 ->example('2025-01-20')
                 ->guess(['import_date', 'ngaynhap'])
@@ -60,14 +57,18 @@ class CustomsDataImporter extends Importer
             ImportColumn::make('qty')
                 ->example('1000')
                 ->guess(['qty', 'kl', 'quantity', 'soluong', 'so_luong'])
-                ->castStateUsing(fn($state) => static::convertToFloat($state))
+                ->castStateUsing(fn($state, $options) => $options['separator']
+                    ? static::convertToFloat($state, ',')
+                    : static::convertToFloat($state, '.'))
                 ->rules(['numeric'])
                 ->requiredMapping(),
 
             ImportColumn::make('price')
                 ->example('42.5')
                 ->guess(['price', 'gia', 'unit_price', 'unit price'])
-                ->castStateUsing(fn($state) => static::convertToFloat($state))
+                ->castStateUsing(fn($state, $options) => $options['separator']
+                    ? static::convertToFloat($state, ',')
+                    : static::convertToFloat($state, '.'))
                 ->rules(['numeric'])
                 ->requiredMapping(),
 
@@ -96,27 +97,30 @@ class CustomsDataImporter extends Importer
                 ->ignoreBlankState()
                 ->rules(['max:255'])
                 ->requiredMapping(),
+
+            ImportColumn::make('category')
+                ->example('Amoxicillin')
+                ->ignoreBlankState()
+                ->relationship(resolveUsing: ['name', 'keywords']),
         ];
     }
 
-    public function resolveRecord(): ?CustomsData
+    public function resolveRecord(): CustomsData
     {
-        // default: , <> null|false
-        $isSeparator = $this->options['localeDelimiter'];
-
-        if ($this->options['forceRecordCreate'] ?? false) {
-            // Update existing records, matching them by `$this->data['column_name']`
-            return CustomsData::firstOrNew([
-                'import_date' => $this->data['import_date'],
-                'importer' => $this->data['importer'],
-                'product' => $this->data['product'],
-                'qty' => $isSeparator ? $this->data['qty'] : static::convertToFloat($this->data['qty']),
-                'price' => $isSeparator ? $this->data['price'] : static::convertToFloat($this->data['price']),
-                'exporter' => $this->data['exporter'],
-            ]);
-        } else {
-            return new CustomsData();
-        }
+        return CustomsData::firstOrNew([
+            'import_date' => $this->data['import_date'],
+            'importer' => $this->data['importer'],
+            'product' => $this->data['product'],
+            'exporter' => $this->data['exporter'],
+        ], [
+            'unit' => $this->data['unit'],
+            'qty' => $this->data['qty'],
+            'price' => $this->data['price'],
+            'export_country' => $this->data['export_country'],
+            'incoterm' => $this->data['incoterm'],
+            'hscode' => $this->data['hscode'],
+            'category_id' => $this->data['category']?->id,
+        ]);
     }
 
     public static function getCompletedNotificationBody(Import $import): string
@@ -144,11 +148,18 @@ class CustomsDataImporter extends Importer
     }
 
     // Helper methods
-    public static function convertToFloat($value): ?float
+    public static function convertToFloat(string|float|int $value, ?string $thousandSeparator = ','): ?float
     {
         if (blank($value)) return null;
-        
-        $value = str_replace(',', '.', $value);
+
+        // Remove thousand separators
+        if ($thousandSeparator === ',') {
+            $value = str_replace($thousandSeparator, '', $value);
+        } else {
+            $value = str_replace('.', '', $value);
+            $value = str_replace(',', '.', $value);
+        }
+
         return round(floatval($value), 3);
     }
 }

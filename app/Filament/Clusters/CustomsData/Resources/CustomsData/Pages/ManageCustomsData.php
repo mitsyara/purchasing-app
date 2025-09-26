@@ -14,9 +14,6 @@ class ManageCustomsData extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
-            // A\CreateAction::make()
-            //     ->label('Add new')
-            //     ->modal()->slideOver(),
             A\ImportAction::make()
                 ->label('Import from CSV')
                 ->icon(Heroicon::ArrowUpTray)
