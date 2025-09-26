@@ -26,6 +26,7 @@ class CommentForm
             ->mutateRelationshipDataBeforeCreateUsing(fn(array $data): array => [
                 ...$data,
                 'user_id' => auth()->id(),
-            ]);
+            ])
+            ->grid();
     }
 }

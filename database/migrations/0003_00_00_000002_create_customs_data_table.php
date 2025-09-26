@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -13,11 +14,11 @@ return new class extends Migration
     {
         Schema::create('customs_data', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('category_id')->nullable()->constrained('customs_data_categories')->nullOnDelete();
+            // $table->foreignId('category_id')->nullable()->constrained('customs_data_categories')->nullOnDelete();
             $table->foreignId('customs_data_category_id')->nullable()->constrained('customs_data_categories')->nullOnDelete();
             $table->date('import_date')->nullable()->index();
-            $table->longText('importer')->nullable()->index();
-            $table->longText('product')->index();
+            $table->longText('importer')->nullable();
+            $table->longText('product');
             $table->string('unit')->nullable();
             $table->decimal('qty', 24, 3)->nullable();
             $table->decimal('price', 24, 3)->nullable();
@@ -27,6 +28,10 @@ return new class extends Migration
             $table->string('incoterm')->nullable();
             $table->string('hscode')->nullable();
             $table->string('category_keywords_hash')->nullable();
+
+            $table->index([DB::raw('importer(191)')], 'customs_data_importer_index');
+            $table->index([DB::raw('product(191)')], 'customs_data_product_index');
+
             $table->timestamps();
         });
     }

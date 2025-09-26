@@ -56,14 +56,12 @@ class User extends Authenticatable
 
     public function companies(): BelongsToMany
     {
-        return $this->belongsToMany(Company::class, 'company_user', 'user_id', 'company_id')
-            ->withTimestamps();
+        return $this->belongsToMany(Company::class, 'company_user', 'user_id', 'company_id');
     }
 
     public function contacts(): BelongsToMany
     {
-        return $this->belongsToMany(Contact::class, 'contact_user', 'user_id', 'contact_id')
-            ->withTimestamps();
+        return $this->belongsToMany(Contact::class, 'contact_user', 'user_id', 'contact_id');
     }
 
     /**

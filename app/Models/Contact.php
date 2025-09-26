@@ -75,17 +75,19 @@ class Contact extends Model
     }
     public function strongProducts(): BelongsToMany
     {
-        return $this->belongsToMany(Product::class, 'product_trader', 'contact_id', 'product_id')
-            ->withPivot([
-                'id',
-            ]);
+        return $this->belongsToMany(
+            Product::class,
+            'product_trader',
+            'contact_id',
+            'product_id'
+        )
+            ->withPivot(['id']);
     }
 
     // Staff in charge
     public function staff(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'contact_user', 'contact_id', 'user_id')
-            ->withTimestamps();
+        return $this->belongsToMany(User::class, 'contact_user', 'contact_id', 'user_id');
     }
 
     // Attributes

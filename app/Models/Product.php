@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 #[ObservedBy([\App\Observers\ProductObserver::class])]
@@ -50,6 +51,19 @@ class Product extends Model
         return $this->belongsTo(Packing::class, 'packing_id');
     }
 
+    // Vat
+    public function vat(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Vat::class,
+            Category::class,
+            'id', // Foreign key on Category table
+            'id', // Foreign key on Vat table
+            'category_id', // Local key on Product table
+            'vat_id' // Local key on Category table
+        );
+    }
+
     // Product Assortments
     public function productAssortments(): HasMany
     {
@@ -78,7 +92,8 @@ class Product extends Model
             'product_trader',
             'product_id',
             'contact_id'
-        );
+        )
+            ->withPivot(['id']);
     }
     // Product strong Traders
     public function productStrongTraders(): HasMany
@@ -104,7 +119,7 @@ class Product extends Model
         $packingName = $this->packing?->packing_name ?? 'N/A';
         $this->updateQuietly([
             'product_full_name' => $this->product_name . ' [' . $shortName . ']'
-            . ' ; ' . $packingName
+                . ' ; ' . $packingName
         ]);
         return $this;
     }
@@ -116,5 +131,4 @@ class Product extends Model
         ]);
         return $this;
     }
-
 }

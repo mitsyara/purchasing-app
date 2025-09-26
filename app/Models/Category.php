@@ -2,17 +2,23 @@
 
 namespace App\Models;
 
+use App\Traits\HasCustomRecursiveQueryBuilder;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[ObservedBy([\App\Observers\CategoryObserver::class])]
 class Category extends Model
 {
+    use HasCustomRecursiveQueryBuilder;
+
     protected $fillable = [
         'category_code',
         'category_name',
         'vat_id',
         'is_gmp_required',
+        'parent_id',
         'category_keywords',
         'notes',
         'category_index',

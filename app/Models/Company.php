@@ -44,8 +44,7 @@ class Company extends Model
     // Staffs
     public function staffs(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'company_user', 'company_id', 'user_id')
-            ->withTimestamps();
+        return $this->belongsToMany(User::class, 'company_user', 'company_id', 'user_id');
     }
 
     // Purchase Orders

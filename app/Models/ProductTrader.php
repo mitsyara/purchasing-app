@@ -2,26 +2,19 @@
 
 namespace App\Models;
 
+use App\Traits\HasComments;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class ProductTrader extends Pivot
 {
+    use HasComments;
     public $incrementing = true;
-    public $timestamps = false;
 
     protected $fillable = [
         'product_id',
         'contact_id',
-        'commentable_id',
-        'commentable_type',
     ];
-
-    public function comments(): MorphMany
-    {
-        return $this->morphMany(Comment::class, 'commentable');
-    }
 
     public function product(): BelongsTo
     {

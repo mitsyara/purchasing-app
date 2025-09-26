@@ -3,11 +3,14 @@
 namespace App\Filament\Resources\Contacts\Schemas;
 
 use App\Filament\Schemas\CommentForm;
+use App\Filament\Tables\ProductTable;
 use App\Models\Comment;
+use App\Models\Contact;
 use Filament\Schemas\Schema;
 
 use Filament\Schemas\Components as S;
 use Filament\Forms\Components as F;
+use Illuminate\Database\Eloquent\Builder;
 
 class ContactForm
 {
@@ -28,10 +31,16 @@ class ContactForm
                             ])
                             ->columns(),
 
+                        S\Tabs\Tab::make(__('Specialized Products'))
+                            ->schema([
+                                ...static::specializedProductsFields(),
+                            ]),
+
                         S\Tabs\Tab::make(__('Comments'))
                             ->schema([
                                 CommentForm::commentFormFields(),
                             ]),
+
                     ])
                     ->contained(false)
                     ->columnSpanFull(),
@@ -205,4 +214,21 @@ class ContactForm
         ];
     }
 
+    // strong products
+    public static function specializedProductsFields(): array
+    {
+        return [
+            F\ModalTableSelect::make('strongProducts')
+                ->label(__('Specialized Products'))
+                ->relationship(
+                    name: 'strongProducts',
+                    titleAttribute: 'product_full_name',
+                    modifyQueryUsing: fn(Builder $query, string $operation): Builder
+                    => $operation === 'create' ? $query->where('is_active', true) : $query
+                )
+                ->tableConfiguration(ProductTable::class)
+                // ->badge(false)
+                ->multiple()
+        ];
+    }
 }
