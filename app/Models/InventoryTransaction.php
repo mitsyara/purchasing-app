@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -22,6 +23,8 @@ class InventoryTransaction extends Model
         'lot_no',
         'mfg_date',
         'exp_date',
+
+        'import_price',
 
         'is_checked',
         'checked_by',
@@ -62,4 +65,5 @@ class InventoryTransaction extends Model
     {
         return $this->morphTo();
     }
+
 }

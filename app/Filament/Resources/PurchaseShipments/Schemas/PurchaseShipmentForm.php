@@ -288,6 +288,9 @@ class PurchaseShipmentForm
                     ])
                     ->defaultItems(1)
                     ->addActionLabel(__('Add Lot/Batch'))
+                    ->after(function(PurchaseShipmentLine $record) {
+                        new \App\Services\InventoryLine\SyncFromShipmentLine($record);
+                    })
                     ->compact()
                     ->columnSpanFull(),
             ])

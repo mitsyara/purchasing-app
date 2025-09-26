@@ -10,4 +10,6 @@ class SettingsCluster extends Cluster
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedCog8Tooth;
 
     protected static string|\UnitEnum|null $navigationGroup = 'other';
+
+    protected static ?int $navigationSort = 99;
 }

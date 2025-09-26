@@ -26,6 +26,8 @@ return new class extends Migration
             $table->date('mfg_date')->nullable();
             $table->date('exp_date')->nullable();
 
+            $table->decimal('import_price', 15, 4)->nullable();
+
             $table->boolean('is_checked')->default(false);
             $table->foreignId('checked_by')->nullable()->constrained('users')->nullOnDelete();
             $table->longText('notes')->nullable();

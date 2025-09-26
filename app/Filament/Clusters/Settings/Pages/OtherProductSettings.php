@@ -14,9 +14,9 @@ use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Model;
 use UnitEnum;
 
-class OtherSettings extends Page
+class OtherProductSettings extends Page
 {
-    protected string $view = 'filament.clusters.settings.pages.other-settings';
+    protected string $view = 'filament.clusters.settings.pages.other-product-settings';
 
     protected static ?int $navigationSort = 9;
 
@@ -26,7 +26,6 @@ class OtherSettings extends Page
     {
         return __('Product Settings');
     }
-
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSquares2x2;
 

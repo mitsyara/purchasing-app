@@ -10,6 +10,6 @@ class CallAllPurchaseShipmentServices
     {
         new SyncShipmentInfo($shipment);
         new SyncShipmentLinesInfo($shipment);
-        new UpdateShipmentTotals($shipment);
+        new UpdateShipmentTotals($shipment);        
     }
 }

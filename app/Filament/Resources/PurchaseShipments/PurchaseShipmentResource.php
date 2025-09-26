@@ -20,6 +20,8 @@ class PurchaseShipmentResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'purchasing';
 
+    protected static ?int $navigationSort = 11;
+
     public static function form(Schema $schema): Schema
     {
         return PurchaseShipmentForm::configure($schema);
