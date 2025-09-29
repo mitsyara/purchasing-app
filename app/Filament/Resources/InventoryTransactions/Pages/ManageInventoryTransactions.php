@@ -3,8 +3,9 @@
 namespace App\Filament\Resources\InventoryTransactions\Pages;
 
 use App\Filament\Resources\InventoryTransactions\InventoryTransactionResource;
-use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ManageRecords;
+
+use Filament\Actions as A;
 
 class ManageInventoryTransactions extends ManageRecords
 {
@@ -13,7 +14,7 @@ class ManageInventoryTransactions extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            //
         ];
     }
 }

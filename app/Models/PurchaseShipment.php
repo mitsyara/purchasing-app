@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class PurchaseShipment extends Model
 {
     use HasInventoryTransactions;
-    
+
     protected $fillable = [
         'purchase_order_id',
         'company_id',
@@ -84,7 +84,7 @@ class PurchaseShipment extends Model
 
     public function purchaseOrder(): BelongsTo
     {
-        return $this->belongsTo(PurchaseOrder::class);
+        return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
     }
 
     public function purchaseShipmentLines(): HasMany
@@ -147,5 +147,47 @@ class PurchaseShipment extends Model
     public function markAsDelivered(): void
     {
         new MarkShipmentDelivered($this);
+    }
+
+    public function getEtd(?string $format = 'd/m/Y'): ?string
+    {
+        if (!$this->etd_min && !$this->etd_max) return 'N/A';
+
+        if ($this->etd_min && $this->etd_max && $this->etd_min !== $this->etd_max) {
+            return $this->etd_min->format($format) . ' - ' . $this->etd_max->format($format);
+        }
+
+        if ($this->etd_min && (!$this->etd_max || $this->etd_min === $this->etd_max)) {
+            return $this->etd_min->format($format);
+        }
+
+        return $this->etd_max->format($format) ?? 'N/A';
+    }
+
+    public function getEtdColor(): ?string
+    {
+        if (($this->etd_min && $this->etd_min->isPast() && !$this->ata) || $this->etd_max->isToday()) {
+            return 'danger';
+        }
+        if ($this->etd_min && $this->etd_min->isToday() || $this->etd_max->addDays(6)->isToday()) {
+            return 'warning';
+        }
+
+        return null;
+    }
+
+    public function getEta(?string $format = 'd/m/Y'): ?string
+    {
+        if (!$this->eta_min && !$this->eta_max) return 'N/A';
+
+        if ($this->eta_min && $this->eta_max && $this->eta_min !== $this->eta_max) {
+            return $this->eta_min->format($format) . ' - ' . $this->eta_max->format($format);
+        }
+
+        if ($this->eta_min && (!$this->eta_max || $this->eta_min === $this->eta_max)) {
+            return $this->eta_min->format($format);
+        }
+
+        return $this->eta_max->format($format) ?? 'N/A';
     }
 }

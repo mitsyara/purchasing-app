@@ -117,12 +117,9 @@ class InventoryTransactionResource extends Resource
             ])
             ->recordActions([
                 // A\ViewAction::make(),
-                // EditAction::make(),
-                // DeleteAction::make(),
             ])
             ->toolbarActions([
-                // BulkActionGroup::make([
-                //     DeleteBulkAction::make(),
+                // A\BulkActionGroup::make([
                 // ]),
             ]);
     }
