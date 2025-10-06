@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('contacts', function (Blueprint $table) {
             $table->id();
-            $table->boolean('is_mfg')->nullable();
-            $table->boolean('is_cus')->nullable();
-            $table->boolean('is_trader')->nullable();
-            $table->boolean('is_fav')->nullable();
+            $table->boolean('is_mfg')->default(false)->index();
+            $table->boolean('is_cus')->default(false)->index();
+            $table->boolean('is_trader')->default(false)->index();
+            $table->boolean('is_fav')->default(false)->index();
 
             $table->string('contact_name')->unique();
             $table->string('contact_code')->unique()->nullable();
@@ -42,6 +42,8 @@ return new class extends Migration
 
             $table->longText('certificates')->nullable();
             $table->longText('notes')->nullable();
+
+            $table->longText('contact_code_name')->storedAs('CONCAT(contact_code, " - ", contact_name)');
 
             $table->timestamps();
         });

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class InventoryTransaction extends Model
 {
+    use \App\Traits\HasLoggedActivity;
     protected $fillable = [
         'company_id',
         'warehouse_id',

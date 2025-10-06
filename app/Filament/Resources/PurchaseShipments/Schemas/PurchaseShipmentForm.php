@@ -219,8 +219,7 @@ class PurchaseShipmentForm
                 __number_field('break_price')
                     ->label(__('Break Price'))
                     ->inlineLabel()
-                    ->suffix('VND')
-                    ->required(),
+                    ->suffix('VND'),
 
                 F\Hidden::make('product_life_cycle')
                     ->afterStateHydrated(fn(F\Field $component, ?PurchaseShipmentLine $record)

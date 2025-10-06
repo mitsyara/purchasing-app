@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PurchaseShipmentLine extends Model
 {
     use HasInventoryTransactions;
+    use \App\Traits\HasLoggedActivity;
 
     protected $fillable = [
         'purchase_shipment_id',
@@ -75,5 +76,12 @@ class PurchaseShipmentLine extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class, 'product_id');
+    }
+
+    // Helpers
+
+    public function getFormatedUnitPrice(): string
+    {
+        return \Illuminate\Support\Number::currency($this->unit_price, $this->currency, app()->getLocale());
     }
 }

@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 #[ObservedBy([\App\Observers\ProductObserver::class])]
 class Product extends Model
 {
+    use \App\Traits\HasLoggedActivity;
     protected $fillable = [
         'product_code',
         'product_name',

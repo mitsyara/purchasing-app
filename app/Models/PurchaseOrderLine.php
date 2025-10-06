@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[ObservedBy([PurchaseOrderLineObserver::class])]
 class PurchaseOrderLine extends Model
 {
+    use \App\Traits\HasLoggedActivity;
     protected $fillable = [
         'purchase_order_id',
         'company_id',

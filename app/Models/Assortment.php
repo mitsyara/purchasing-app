@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Assortment extends Model
 {
+    use \App\Traits\HasLoggedActivity;
+
     protected $fillable = [
         'assortment_code',
         'assortment_name',

@@ -12,8 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('contact_user', function (Blueprint $table) {
+            $table->id();
             $table->foreignId('contact_id')->constrained('contacts')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->unique(['contact_id', 'user_id']);
         });
     }
 

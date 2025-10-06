@@ -17,6 +17,10 @@ class SyncShipmentsInfo
                 'supplier_id' => $order->supplier_id,
                 'supplier_contract_id' => $order->supplier_contract_id,
                 'supplier_payment_id' => $order->supplier_payment_id,
+
+                // CIF end_user
+                'staff_sales_id' => $order->staff_sales_id,
+                'end_user_id' => $order->end_user_id,
             ]);
     }
 }

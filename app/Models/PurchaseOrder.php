@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\PurchaseOrder\ProcessingOrder;
 use App\Traits\HasCustomQueryBuilder;
+use App\Traits\HasPayment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 class PurchaseOrder extends Model
 {
     use HasCustomQueryBuilder;
+    use HasPayment;
+    use \App\Traits\HasLoggedActivity;
 
     protected $fillable = [
         'order_status',
@@ -28,6 +31,9 @@ class PurchaseOrder extends Model
         'supplier_contract_id',
         // money receiver
         'supplier_payment_id',
+
+        // CIF end_user
+        'end_user_id',
 
         'import_warehouse_id',
         'import_port_id',
@@ -97,6 +103,11 @@ class PurchaseOrder extends Model
     public function supplierPayment(): BelongsTo
     {
         return $this->belongsTo(Contact::class, 'supplier_payment_id');
+    }
+
+    public function endUser(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'end_user_id');
     }
 
     public function importWarehouse(): BelongsTo
@@ -176,7 +187,31 @@ class PurchaseOrder extends Model
 
     public function processOrder(array $data): bool
     {
-        return (new ProcessingOrder($this, $data))->handle();
+        $supplierCode = $this->order->supplier->contact_short_name
+            ?? $this->order->supplier->contact_code
+            ?? 'N/A';
+
+        $this->validateOrderData($data);
+
+        return $this->order->update([
+            'order_status' => \App\Enums\OrderStatusEnum::Inprogress,
+            'order_number' => $data['order_number'],
+            'order_date' => $data['order_date'],
+            'order_description' => $data['order_date'] . ' ' . $data['order_number'] . ' [' . $supplierCode . ']',
+        ]);
+    }
+    // validate date
+    public function validateOrderData(array $data, ?string $format = 'Y-m-d'): void
+    {
+        if (!$data['order_number'] || !$data['order_date']) {
+            throw new \Exception('Order number and order date are required.');
+        }
+
+        $date = \Carbon\Carbon::createFromFormat($format, $data['order_date']);
+
+        if (!$date || $date->format($format) !== $data['order_date']) {
+            throw new \Exception('Invalid order date format. Expected format: ' . $format);
+        }
     }
 
     public function cancelOrder(): bool

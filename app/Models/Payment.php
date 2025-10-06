@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Payment extends Model
 {
+    use \App\Traits\HasLoggedActivity;
     protected $fillable = [
         'payable_id',
         'payable_type',
@@ -59,4 +61,10 @@ class Payment extends Model
     {
         return $this->morphTo();
     }
+
+    public function paymentLines(): HasMany
+    {
+        return $this->hasMany(PaymentLine::class, 'payment_id');
+    }
+
 }

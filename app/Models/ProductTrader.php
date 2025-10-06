@@ -8,8 +8,10 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class ProductTrader extends Pivot
 {
+    use \App\Traits\HasLoggedActivity;
     use HasComments;
     public $incrementing = true;
+    public $timestamps = false;
 
     protected $fillable = [
         'product_id',

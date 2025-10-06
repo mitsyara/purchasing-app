@@ -27,7 +27,11 @@ class PurchasingPanelProvider extends PanelProvider
             ->default()
             ->id('purchasing')
             ->path('purchasing')
+
             ->login()
+            ->passwordReset()
+            ->emailVerification()
+            ->emailChangeVerification()
 
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
@@ -35,6 +39,7 @@ class PurchasingPanelProvider extends PanelProvider
 
             ->topNavigation()
             ->maxContentWidth(Width::Full)
+            ->viteTheme('resources/css/filament/purchasing/theme.css')
             ->colors([
                 'primary' => \Filament\Support\Colors\Color::Fuchsia,
                 'secondary' => \Filament\Support\Colors\Color::Cyan,
@@ -51,14 +56,21 @@ class PurchasingPanelProvider extends PanelProvider
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\Filament\Clusters')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
-            ->pages([
-                Dashboard::class,
-            ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 AccountWidget::class,
                 FilamentInfoWidget::class,
             ])
+
+            ->plugins([
+                // Application's Log Viewer (laravel log channels)
+                \Boquizo\FilamentLogViewer\FilamentLogViewerPlugin::make()
+                    ->navigationGroup('other')
+                    ->navigationSort(99)
+                    ->authorize(fn(): bool =>  auth()->id() === 1),
+
+            ])
+
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -84,7 +96,7 @@ class PurchasingPanelProvider extends PanelProvider
             'other' => \Filament\Support\Icons\Heroicon::OutlinedBars3,
             'settings' => \Filament\Support\Icons\Heroicon::OutlinedCog8Tooth,
         ];
-        return collect($navGroups)->mapWithKeys(function($icon, $title): array {
+        return collect($navGroups)->mapWithKeys(function ($icon, $title): array {
             $label = \Illuminate\Support\Str::of($title)->headline()->toString();
             return [$title => \Filament\Navigation\NavigationGroup::make()->label($label)];
         })->toArray();

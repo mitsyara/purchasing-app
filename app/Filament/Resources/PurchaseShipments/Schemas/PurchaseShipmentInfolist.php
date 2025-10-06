@@ -33,9 +33,11 @@ class PurchaseShipmentInfolist
                                     ->columnSpanFull(),
                             ]),
 
-                        S\Tabs\Tab::make('Products')
-                            ->schema([
-                                // static::productFields(),
+                        S\Tabs\Tab::make('Products Info')
+                            ->schema(fn(?PurchaseShipment $record): array => [
+                                S\Livewire::make(\App\Livewire\PurchaseShipmentProductTable::class, [
+                                    'shipment' => $record,
+                                ]),
                             ])
                             ->columnSpanFull(),
                     ])
@@ -113,5 +115,22 @@ class PurchaseShipmentInfolist
                 ->columnSpanFull(),
 
         ];
+    }
+
+    public static function productFields(): I\RepeatableEntry
+    {
+        return I\RepeatableEntry::make('purchaseShipmentLines')
+            ->schema([
+                S\Flex::make([
+                    I\TextEntry::make('product.product_full_name')
+                        ->label('Product'),
+                    I\TextEntry::make('qty')
+                        ->label('Quantity')
+                        ->numeric()
+                        ->suffix(fn($record) => ' ' . $record->product?->product_uom)
+                        ->grow(false),
+                ])
+                    ->from('sm'),
+            ]);
     }
 }

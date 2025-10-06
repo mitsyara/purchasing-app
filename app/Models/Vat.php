@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Vat extends Model
 {
+    use \App\Traits\HasLoggedActivity;
     protected $fillable = [
         'vat_name',
         'vat_value',

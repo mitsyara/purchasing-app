@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\PurchaseShipment\MarkShipmentDelivered;
 use App\Traits\HasInventoryTransactions;
+use App\Traits\HasPayment;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +14,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class PurchaseShipment extends Model
 {
     use HasInventoryTransactions;
+    use HasPayment;
+    use \App\Traits\HasLoggedActivity;
 
     protected $fillable = [
         'purchase_order_id',
@@ -27,11 +30,14 @@ class PurchaseShipment extends Model
         'supplier_contract_id',
         // money receiver
         'supplier_payment_id',
+        // CIF end_user
+        'end_user_id',
 
         'staff_buy_id',
         'staff_docs_id',
         'staff_declarant_id',
         'staff_declarant_processing_id',
+        'staff_sales_id',
 
         'tracking_no',
         'shipment_status',
@@ -108,6 +114,11 @@ class PurchaseShipment extends Model
         return $this->belongsTo(Contact::class, 'supplier_payment_id');
     }
 
+    public function endUser(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'end_user_id');
+    }
+
     public function port(): BelongsTo
     {
         return $this->belongsTo(Port::class);
@@ -166,10 +177,10 @@ class PurchaseShipment extends Model
 
     public function getEtdColor(): ?string
     {
-        if (($this->etd_min && $this->etd_min->isPast() && !$this->ata) || $this->etd_max->isToday()) {
+        if (($this->etd_min && $this->etd_min?->isPast() && !$this->ata) || $this->etd_max?->isToday()) {
             return 'danger';
         }
-        if ($this->etd_min && $this->etd_min->isToday() || $this->etd_max->addDays(6)->isToday()) {
+        if ($this->etd_min && $this->etd_min?->isToday() || $this->etd_max?->addDays(6)->isToday()) {
             return 'warning';
         }
 

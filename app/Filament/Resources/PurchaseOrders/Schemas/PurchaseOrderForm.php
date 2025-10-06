@@ -114,6 +114,17 @@ class PurchaseOrderForm
                 ->preload()
                 ->searchable(),
 
+            F\Select::make('end_user_id')
+                ->label(__('End User'))
+                ->afterLabel(__('* If applicable'))
+                ->relationship(
+                    name: 'endUser',
+                    titleAttribute: 'contact_name',
+                    modifyQueryUsing: fn(Builder $query): Builder => $query->where('is_cus', true),
+                )
+                ->preload()
+                ->searchable(),
+
             S\Group::make([
                 S\FusedGroup::make([
                     F\Select::make('before_after')

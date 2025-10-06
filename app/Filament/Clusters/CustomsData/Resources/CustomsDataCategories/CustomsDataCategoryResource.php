@@ -3,6 +3,7 @@
 namespace App\Filament\Clusters\CustomsData\Resources\CustomsDataCategories;
 
 use App\Filament\Clusters\CustomsData\CustomsDataCluster;
+use App\Filament\Clusters\CustomsData\Resources\CustomsData\CustomsDataResource;
 use App\Filament\Clusters\CustomsData\Resources\CustomsDataCategories\Pages\ManageCustomsDataCategories;
 use App\Models\CustomsDataCategory;
 use Filament\Support\Icons\Heroicon;
@@ -25,6 +26,11 @@ class CustomsDataCategoryResource extends Resource
     protected static ?string $cluster = CustomsDataCluster::class;
 
     protected static ?int $navigationSort = 3;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return CustomsDataResource::getNavigationLabel();
+    }
 
     public static function getModelLabel(): string
     {

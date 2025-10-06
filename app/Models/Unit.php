@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Unit extends Model
 {
+    use \App\Traits\HasLoggedActivity;
     protected $fillable = [
         'parent_id',
         'unit_code',

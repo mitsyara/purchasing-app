@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Company extends Model
 {
+    use \App\Traits\HasLoggedActivity;
     protected $fillable = [
         'company_code',
         'company_name',

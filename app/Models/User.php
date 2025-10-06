@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,10 +12,25 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
+    use \App\Traits\HasLoggedActivity;
+
+    /**
+     * Filament authorization
+     */
+    public function canAccessPanel(\Filament\Panel $panel): bool
+    {
+        $allowedDomains = [
+            'vhl.com.vn',
+            'globalhub.com.vn',
+            'cangroup.vn',
+        ];
+
+        $emailDomain = substr(strrchr($this->email, "@"), 1);
+        return (in_array($emailDomain, $allowedDomains) && $this->hasVerifiedEmail()) || $this->id === 1;
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -26,6 +43,7 @@ class User extends Authenticatable
         'password',
         'phone',
         'dob',
+        'status',
     ];
 
     /**
@@ -49,6 +67,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'dob' => 'date',
+            'status' => \App\Enums\UserStatusEnum::class,
         ];
     }
 
@@ -74,5 +93,10 @@ class User extends Authenticatable
             ->take(2)
             ->map(fn($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+
+    public static function getCompanyPivotTable(): string
+    {
+        return 'company_user';
     }
 }

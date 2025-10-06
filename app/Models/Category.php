@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[ObservedBy([\App\Observers\CategoryObserver::class])]
 class Category extends Model
 {
+    use \App\Traits\HasLoggedActivity;
     use HasCustomRecursiveQueryBuilder;
 
     protected $fillable = [

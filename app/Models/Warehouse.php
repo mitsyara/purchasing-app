@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 #[ObservedBy([WarehouseObserver::class])]
 class Warehouse extends Model
 {
+    use \App\Traits\HasLoggedActivity;
     protected $fillable = [
         'warehouse_code',
         'warehouse_name',

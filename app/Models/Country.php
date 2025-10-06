@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Country extends Model
 {
+    use \App\Traits\HasLoggedActivity;
     protected $fillable = [
         'alpha2',
         'alpha3',

@@ -28,7 +28,7 @@ class PurchaseShipmentObserver
     public function deleted(PurchaseShipment $purchaseShipment): void
     {
         $order = $purchaseShipment->purchaseOrder;
-        new \App\Services\PurchaseOrder\CallAllPurchaseOrderServices($order);
+        new \App\Services\PurchaseOrder\UpdateOrderTotals($order);
     }
 
     /**

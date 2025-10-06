@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Port extends Model
 {
+    use \App\Traits\HasLoggedActivity;
     protected $fillable = [
         'port_code',
         'port_name',

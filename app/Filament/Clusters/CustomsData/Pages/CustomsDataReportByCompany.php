@@ -55,6 +55,7 @@ class CustomsDataReportByCompany extends Page implements HasTable
                     ->groupBy('importer', 'customs_data_category_id')
             )
             ->defaultSort('total_value', 'desc')
+            ->deferLoading()
             ->columns([
                 T\TextColumn::make('index')->label('#')
                     ->rowIndex(),

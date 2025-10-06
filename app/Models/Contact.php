@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Contact extends Model
 {
+    use \App\Traits\HasLoggedActivity;
     use HasComments;
 
     protected $fillable = [
@@ -89,6 +90,16 @@ class Contact extends Model
     {
         return $this->belongsToMany(User::class, 'contact_user', 'contact_id', 'user_id');
     }
+
+    public function purchaseOrders(): HasMany
+    {
+        return $this->hasMany(PurchaseOrder::class, 'supplier_id');
+    }
+
+    // public function salesOrders(): HasMany
+    // {
+    //     return $this->hasMany(SalesOrder::class, 'contact_id');
+    // }
 
     // Attributes
 

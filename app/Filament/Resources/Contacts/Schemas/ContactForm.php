@@ -41,6 +41,13 @@ class ContactForm
                                 CommentForm::commentFormFields(),
                             ]),
 
+                        S\Tabs\Tab::make(__('Order History'))
+                            ->schema(fn(?Contact $record): array => [
+                                S\Livewire::make(\App\Livewire\ContactOrderHistory::class, [
+                                    'contact' => $record,
+                                ]),
+                            ])
+                            ->hidden(fn(string $operation): bool => $operation === 'create'),
                     ])
                     ->contained(false)
                     ->columnSpanFull(),

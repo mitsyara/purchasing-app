@@ -8,11 +8,6 @@ use App\Filament\Clusters\Settings\SettingsCluster;
 use App\Filament\Schemas\SettingsClusters\PackingSchema;
 use App\Filament\Tables\ProductTable;
 use App\Models\Product;
-use BackedEnum;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -25,6 +20,7 @@ use Filament\Actions as A;
 use Filament\Schemas\Components as S;
 use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\Rules\Unique;
 use UnitEnum;
 
 
@@ -34,98 +30,34 @@ class ProductResource extends Resource
 
     protected static ?int $navigationSort = 0;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCube;
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedCube;
 
-    protected static ?string $cluster = SettingsCluster::class;
+    // protected static ?string $cluster = SettingsCluster::class;
 
     public static function getNavigationGroup(): string|UnitEnum|null
     {
-        return __('Product Settings');
+        return 'other';
     }
 
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
-                F\TextInput::make('product_code')
-                    ->label(__('Product Code'))
-                    ->unique(),
-
-                F\TextInput::make('product_name')
-                    ->label(__('Product Name'))
-                    ->unique()
-                    ->required(),
-
-                F\Checkbox::make('is_active')
-                    ->label(__('Is Active'))
-                    ->default(true),
-                F\Checkbox::make('is_fav')
-                    ->label(__('Is Favorite'))
-                    ->default(false),
-
-                F\Select::make('mfg_id')
-                    ->label(__('Manufacturer'))
-                    ->relationship('mfg', 'contact_name')
-                    ->searchable()
-                    ->preload(),
-
-                F\Select::make('category_id')
-                    ->label(__('Category'))
-                    ->relationship('category', 'category_name')
-                    ->createOptionForm(fn($schema) => CategoryResource::form($schema)->getComponents())
-                    ->editOptionForm(fn($schema) => CategoryResource::form($schema)->getComponents())
-                    ->searchable()
-                    ->preload(),
-
-                F\Select::make('packing_id')
-                    ->label(__('Packing'))
-                    ->relationship('packing', 'packing_name')
-                    ->createOptionForm(fn($schema) => PackingSchema::configure($schema))
-                    ->editOptionForm(fn($schema) => PackingSchema::configure($schema))
-                    ->searchable()
-                    ->preload(),
-
-                F\TextInput::make('product_life_cycle')
-                    ->label(__('Product Life Circle'))
-                    ->suffix(__('days'))
-                    ->numeric()
-                    ->prefixAction(
-                        A\Action::make('dayConverter')
-                            ->modal()->icon(Heroicon::ArrowPathRoundedSquare)
-                            ->modalWidth(Width::Medium)
+                S\Tabs::make('Products')
+                    ->schema([
+                        S\Tabs\Tab::make(__('Product Info'))
                             ->schema([
-                                S\FusedGroup::make([
-                                    __number_field('number')
-                                        ->integer()
-                                        ->required(),
-                                    F\Select::make('of')
-                                        ->options([
-                                            1 => __('Days'),
-                                            30 => __('Months'),
-                                            365 => __('Years'),
-                                        ])
-                                        ->default(1)
-                                        ->selectablePlaceholder(false)
-                                        ->required(),
-                                ])
-                                    ->label(__('Duration'))
-                                    ->columns(['default' => 2]),
+                                ...static::productFields(),
                             ])
-                            ->action(function (array $data, F\TextInput $component): void {
-                                $component->state($data['number'] * $data['of']);
-                            })
-                    )
-                    ->minValue(0),
+                            ->columns(),
 
-                F\TagsInput::make('product_certificates')
-                    ->label(__('Product Certificates'))
-                    ->helperText(__('Enter certificates separated by commas.'))
+                        S\Tabs\Tab::make(__('Specialized Traders'))
+                            ->schema([
+                                static::specializedTraderRepeater(),
+                            ]),
+                    ])
+                    ->contained(false)
                     ->columnSpanFull()
-                    ->separator(',')
-                    ->splitKeys([',', ';', 'enter']),
-
-                __notes()
-                    ->columnSpanFull(),
             ])
             ->columns();
     }
@@ -153,12 +85,16 @@ class ProductResource extends Resource
                     ->preload(),
             ])
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
+                A\ActionGroup::make([
+                    A\EditAction::make()
+                        ->modal()
+                        ->slideOver(),
+                    A\DeleteAction::make(),
+                ]),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                A\BulkActionGroup::make([
+                    A\DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -168,5 +104,127 @@ class ProductResource extends Resource
         return [
             'index' => ManageProducts::route('/'),
         ];
+    }
+
+    // Helper methods
+
+    public static function productFields(): array
+    {
+        return [
+            F\TextInput::make('product_code')
+                ->label(__('Product Code'))
+                ->unique(),
+
+            F\TextInput::make('product_name')
+                ->label(__('Product Name'))
+                ->unique(
+                    ignoreRecord: true,
+                    modifyRuleUsing: fn(Unique $rule, callable $get): Unique
+                    => $rule
+                        ->when(
+                            $get('mfg_id'),
+                            fn(Unique $rule, $mfg_id)
+                            => $rule->where('mfg_id', $mfg_id)
+                        )
+                        ->when(
+                            $get('packing_id'),
+                            fn(Unique $rule, $packing_id)
+                            => $rule->where('packing_id', $packing_id)
+                        )
+                )
+                ->required(),
+
+            F\Checkbox::make('is_active')
+                ->label(__('Is Active'))
+                ->default(true),
+            F\Checkbox::make('is_fav')
+                ->label(__('Is Favorite'))
+                ->default(false),
+
+            F\Select::make('mfg_id')
+                ->label(__('Manufacturer'))
+                ->relationship('mfg', 'contact_name')
+                ->searchable()
+                ->preload(),
+
+            F\Select::make('category_id')
+                ->label(__('Category'))
+                ->relationship('category', 'category_name')
+                ->createOptionForm(fn($schema) => CategoryResource::form($schema)->getComponents())
+                ->editOptionForm(fn($schema) => CategoryResource::form($schema)->getComponents())
+                ->searchable()
+                ->preload(),
+
+            F\Select::make('packing_id')
+                ->label(__('Packing'))
+                ->relationship('packing', 'packing_name')
+                ->createOptionForm(fn($schema) => PackingSchema::configure($schema))
+                ->editOptionForm(fn($schema) => PackingSchema::configure($schema))
+                ->searchable()
+                ->preload(),
+
+            F\TextInput::make('product_life_cycle')
+                ->label(__('Product Life Circle'))
+                ->suffix(__('days'))
+                ->numeric()
+                ->prefixAction(
+                    A\Action::make('dayConverter')
+                        ->modal()->icon(Heroicon::ArrowPathRoundedSquare)
+                        ->modalWidth(Width::Medium)
+                        ->schema([
+                            S\FusedGroup::make([
+                                __number_field('number')
+                                    ->integer()
+                                    ->required(),
+                                F\Select::make('of')
+                                    ->options([
+                                        1 => __('Days'),
+                                        30 => __('Months'),
+                                        365 => __('Years'),
+                                    ])
+                                    ->default(1)
+                                    ->selectablePlaceholder(false)
+                                    ->required(),
+                            ])
+                                ->label(__('Duration'))
+                                ->columns(['default' => 2]),
+                        ])
+                        ->action(function (array $data, F\TextInput $component): void {
+                            $component->state($data['number'] * $data['of']);
+                        })
+                )
+                ->minValue(0),
+
+            F\TagsInput::make('product_certificates')
+                ->label(__('Product Certificates'))
+                ->helperText(__('Enter certificates separated by commas.'))
+                ->columnSpanFull()
+                ->separator(',')
+                ->splitKeys([',', ';', 'enter']),
+
+            __notes()
+                ->columnSpanFull(),
+
+        ];
+    }
+
+    public static function specializedTraderRepeater(): F\Repeater
+    {
+        return F\Repeater::make('productStrongTraders')
+            ->relationship()
+            ->hiddenLabel()
+            ->simple(
+                F\Select::make('contact_id')
+                    ->hiddenLabel()
+                    ->relationship(
+                        name: 'contact',
+                        titleAttribute: 'contact_code_name',
+                        modifyQueryUsing: fn(Builder $query) => $query->where('is_trader', true)
+                    )
+                    ->disableOptionsWhenSelectedInSiblingRepeaterItems()
+                    ->searchable()
+                    ->preload()
+                    ->required(),
+            );
     }
 }

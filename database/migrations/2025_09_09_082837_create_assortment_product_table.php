@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('assortment_product', function (Blueprint $table) {
+            $table->id();
             $table->foreignId('assortment_id')->constrained('assortments')->cascadeOnDelete();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
             $table->unique(['product_id', 'assortment_id']);

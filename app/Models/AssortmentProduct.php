@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class AssortmentProduct extends Pivot
 {
+    use \App\Traits\HasLoggedActivity;
+    public $incrementing = true;
+    
     protected $fillable = [
         'assortment_id',
         'product_id',
