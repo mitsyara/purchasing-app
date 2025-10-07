@@ -11,6 +11,7 @@
     "require": {
         "php": "^8.2",
         "filament/filament": "^4.0",
+        "filament/spatie-laravel-media-library-plugin": "^4.0",
         "gboquizosanchez/filament-log-viewer": "^2.1",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
@@ -18,6 +19,7 @@
         "livewire/volt": "^1.7.0",
         "pxlrbt/filament-activity-log": "^2.0",
         "spatie/laravel-activitylog": "^4.10",
+        "spatie/laravel-permission": "^6.21",
         "staudenmeir/laravel-adjacency-list": "^1.0"
     },
     "require-dev": {

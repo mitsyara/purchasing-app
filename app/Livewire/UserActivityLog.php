@@ -104,14 +104,6 @@ class UserActivityLog extends Component implements HasActions, HasSchemas, HasTa
                 //
             ])
             ->headerActions([
-                A\Action::make('refreshTable')
-                    ->label(__('Refresh'))
-                    ->icon(Heroicon::OutlinedArrowPath)
-                    ->color('info')
-                    ->action(function () {
-                        $this->dispatch('refresh-custom-table');
-                    }),
-
                 A\Action::make('clear')
                     ->label('Clear Logs')
                     ->icon(Heroicon::Trash)

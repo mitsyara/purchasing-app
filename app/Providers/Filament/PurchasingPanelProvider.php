@@ -10,6 +10,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Enums\Width;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -65,9 +66,29 @@ class PurchasingPanelProvider extends PanelProvider
             ->plugins([
                 // Application's Log Viewer (laravel log channels)
                 \Boquizo\FilamentLogViewer\FilamentLogViewerPlugin::make()
-                    ->navigationGroup('other')
-                    ->navigationSort(99)
+                    ->navigationGroup('system')
+                    ->navigationSort(2)
+                    ->navigationIcon(Heroicon::OutlinedDocumentText)
+                    ->navigationLabel(__('System Logs'))
                     ->authorize(fn(): bool =>  auth()->id() === 1),
+
+                // Shieldon Filament Spatie Roles & Permissions
+                // \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
+                //     ->navigationLabel('Label')
+                //     ->navigationIcon('heroicon-o-home')
+                //     ->activeNavigationIcon('heroicon-s-home')
+                //     ->navigationGroup('Group')
+                //     ->navigationSort(10)
+                //     ->navigationBadge()
+                //     // ->navigationBadgeColor('success')
+                //     // ->navigationParentItem('parent.item')
+                //     ->registerNavigation(true)
+                //     // Custom Role page
+                //     ->modelLabel('Model')
+                //     ->pluralModelLabel('Models')
+                //     ->recordTitleAttribute('name')
+                //     ->titleCaseModelLabel(false)
+                //     ->parentResource(null),
 
             ])
 
@@ -95,6 +116,7 @@ class PurchasingPanelProvider extends PanelProvider
             'inventory' => \Filament\Support\Icons\Heroicon::OutlinedHomeModern,
             'other' => \Filament\Support\Icons\Heroicon::OutlinedBars3,
             'settings' => \Filament\Support\Icons\Heroicon::OutlinedCog8Tooth,
+            'system' => \Filament\Support\Icons\Heroicon::OutlinedChartBar,
         ];
         return collect($navGroups)->mapWithKeys(function ($icon, $title): array {
             $label = \Illuminate\Support\Str::of($title)->headline()->toString();
