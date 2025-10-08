@@ -15,7 +15,7 @@ class ManageCustomsData extends ManageRecords
     {
         return [
             A\ImportAction::make()
-                ->label('Import from CSV')
+                ->label('Upload from CSV')
                 ->icon(Heroicon::ArrowUpTray)
                 ->importer(\App\Filament\Imports\CustomsDataImporter::class)
                 ->color('info')

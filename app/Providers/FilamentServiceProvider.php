@@ -20,8 +20,8 @@ class FilamentServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // $timezone = config('app.timezone', 'UTC');
-        // \Filament\Support\Facades\FilamentTimezone::set($timezone);
+        $timezone = config('app.timezone', 'UTC');
+        \Filament\Support\Facades\FilamentTimezone::set($timezone);
 
         \Filament\Tables\Table::configureUsing(function (\Filament\Tables\Table $table) {
             $table

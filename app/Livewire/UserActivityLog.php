@@ -57,13 +57,8 @@ class UserActivityLog extends Component implements HasActions, HasSchemas, HasTa
                 T\TextColumn::make('log_name')
                     ->label('Type')
                     ->badge()
-                    ->color(fn(string $state): ?string => match ($state) {
-                        'Resource' => 'primary',
-                        'Access' => 'danger',
-                        default => null,
-                    })
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 T\TextColumn::make('event')
                     ->label('Event')

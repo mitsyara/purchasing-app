@@ -45,12 +45,18 @@ class UserAuthenticationLog extends Component implements HasActions, HasSchemas,
                     ? $query->where('user_id', auth()->id())
                     : $query
             )
+            ->poll('30s')
             ->columns([
                 __index(),
 
+                T\TextColumn::make('id')
+                    ->label(__('Session ID'))
+                    ->sortable()
+                    ->toggleable(),
+
                 T\TextColumn::make('user.name')
                     ->label(__('User'))
-                    ->searchable()
+                    ->searchable(['users.name', 'users.email', 'users.phone'])
                     ->sortable(),
 
                 T\TextColumn::make('ip_address')
@@ -62,7 +68,7 @@ class UserAuthenticationLog extends Component implements HasActions, HasSchemas,
                     ->label(__('User Agent'))
                     ->toggleable(),
 
-                T\TextColumn::make('timestamp')
+                T\TextColumn::make('last_activity_at')
                     ->label(__('Last Activity'))
                     ->dateTime('d/m/Y H:i:s')
                     ->sortable(query: fn(Builder $query, string $direction): Builder
@@ -74,6 +80,19 @@ class UserAuthenticationLog extends Component implements HasActions, HasSchemas,
             ])
             ->headerActions([
                 //
+            ])
+            ->recordActions([
+                A\Action::make('signOut')
+                    ->label(__('Sign Out'))
+                    ->icon(Heroicon::OutlinedArrowLeftStartOnRectangle)
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->action(function (\App\Models\Session $record): void {
+                        $record->delete();
+                        $this->dispatch('refresh-custom-table');
+                    })
+                    ->disabled(fn($record) => $record->id === session()->getId())
+                    ,
             ]);
     }
 }

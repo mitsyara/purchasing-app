@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Session extends Model
 {
     protected $table = 'sessions';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     public function user(): BelongsTo
     {
@@ -16,7 +18,7 @@ class Session extends Model
     }
 
     // Casting attribute
-    protected function timestamp(): Attribute
+    protected function lastActivityAt(): Attribute
     {
         return Attribute::get(fn() => $this->last_activity
             ? \Carbon\Carbon::createFromTimestamp($this->last_activity, 'Asia/Ho_Chi_Minh')

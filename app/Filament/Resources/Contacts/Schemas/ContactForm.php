@@ -155,11 +155,13 @@ class ContactForm
 
             F\TextInput::make('contact_code')
                 ->label(__('Code'))
-                ->unique(),
+                ->unique()
+                ->required(),
 
             F\TextInput::make('contact_short_name')
                 ->label(__('Short Name'))
-                ->unique(),
+                ->unique()
+                ->requiredIf('is_mfg', true),
 
             F\Select::make('country_id')
                 ->label(__('Country'))

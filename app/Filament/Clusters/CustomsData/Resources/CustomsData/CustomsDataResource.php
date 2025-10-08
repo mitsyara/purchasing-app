@@ -194,18 +194,14 @@ class CustomsDataResource extends Resource
                     ])
             ])
             ->recordActions([
-                //     A\ActionGroup::make([
-                //         A\EditAction::make()
-                //             ->modal()->slideOver(),
-                //         A\DeleteAction::make(),
-                //     ]),
+                //
             ])
             ->headerActions([
                 A\ExportAction::make()
                     ->exporter(\App\Filament\Exports\CustomsDataExporter::class)
                     ->color('teal')
                     ->icon(Heroicon::ArrowDownTray)
-                    ->label(__('Export to CSV'))
+                    ->label(__('Download Data'))
                     ->columnMappingColumns(2)
                     ->maxRows(10000)
                     ->chunkSize(200),
