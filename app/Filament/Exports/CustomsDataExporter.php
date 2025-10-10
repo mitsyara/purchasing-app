@@ -21,7 +21,8 @@ class CustomsDataExporter extends Exporter
     public static function getColumns(): array
     {
         return [
-            ExportColumn::make('import_date'),
+            ExportColumn::make('import_date')
+                ->state(fn($record): ?string => $record->import_date?->format('Y-m-d')),
             ExportColumn::make('importer'),
             ExportColumn::make('product'),
             ExportColumn::make('unit'),

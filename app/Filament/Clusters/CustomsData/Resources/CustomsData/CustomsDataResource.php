@@ -4,6 +4,7 @@ namespace App\Filament\Clusters\CustomsData\Resources\CustomsData;
 
 use App\Filament\Clusters\CustomsData\CustomsDataCluster;
 use App\Filament\Clusters\CustomsData\Resources\CustomsData\Pages\ManageCustomsData;
+use Illuminate\Database\Eloquent\Builder;
 use App\Models\CustomsData;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -15,8 +16,7 @@ use Filament\Forms\Components as F;
 use Filament\Schemas\Components as S;
 use Filament\Tables\Columns as T;
 use Filament\Tables\Filters as TF;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Cache;
+use Filament\Tables\Filters\QueryBuilder\Constraints as C;
 
 class CustomsDataResource extends Resource
 {
@@ -28,69 +28,9 @@ class CustomsDataResource extends Resource
 
     protected static ?int $navigationSort = 0;
 
-    public static function getNavigationGroup(): ?string
-    {
-        return CustomsDataResource::getNavigationLabel();
-    }
-
     public static function form(Schema $schema): Schema
     {
-        return $schema
-            ->components([
-                S\Group::make([
-                    F\Select::make('customs_data_category_id')
-                        ->relationship(
-                            name: 'category',
-                            titleAttribute: 'name',
-                        )
-                        // ->createOptionForm(CustomsDataCategoryResource::createForm())
-                        // ->editOptionForm(CustomsDataCategoryResource::createForm())
-                        ->preload()
-                        ->searchable(),
-
-                    F\DatePicker::make('import_date')
-                        ->format('d/m/Y')
-                        ->required(),
-
-                    F\TextInput::make('importer')
-                        ->columnSpanFull()
-                        ->required(),
-
-                    F\TextInput::make('exporter')
-                        ->columnSpanFull(),
-
-                    F\TextInput::make('product')
-                        ->columnSpanFull()
-                        ->required(),
-
-                    S\Group::make([
-                        F\TextInput::make('qty')
-                            ->numeric()
-                            ->minValue(0.001)
-                            ->required(),
-                        F\TextInput::make('unit'),
-
-                        F\TextInput::make('price')
-                            ->numeric()
-                            ->suffix('USD')
-                            ->minValue(0)
-                            ->required(),
-                    ])
-                        ->columns(3)
-                        ->columnSpanFull(),
-
-                    S\Group::make([
-                        F\TextInput::make('export_country'),
-                        F\Select::make('incoterm')
-                            ->options(\App\Enums\IncotermEnum::class),
-                        F\TextInput::make('hscode'),
-                    ])
-                        ->columns(3)
-                        ->columnSpanFull(),
-                ])
-                    ->columns()
-                    ->columnSpanFull(),
-            ]);
+        return $schema;
     }
 
     public static function table(Table $table): Table
@@ -98,8 +38,8 @@ class CustomsDataResource extends Resource
         return $table
             ->query(fn() => CustomsData::select(self::selectedColumns()))
             ->defaultSort('import_date', 'desc')
-            ->paginationMode(\Filament\Tables\Enums\PaginationMode::Simple)
-            ->extremePaginationLinks()
+            // ->paginationMode(\Filament\Tables\Enums\PaginationMode::Simple)
+            // ->extremePaginationLinks(true)
             ->deferLoading()
 
             ->columns([
@@ -116,6 +56,7 @@ class CustomsDataResource extends Resource
                     ->label(__('Importer'))
                     ->searchable()
                     ->sortable()
+                    ->extraAttributes(['style' => 'width: 280px; white-space: normal; word-break: break-word;'])
                     ->toggleable(),
 
                 T\TextColumn::make('product')
@@ -124,6 +65,7 @@ class CustomsDataResource extends Resource
                     ->label(__('Product'))
                     ->searchable()
                     ->sortable()
+                    ->extraAttributes(['style' => 'width: 480px; white-space: normal; word-break: break-word;'])
                     ->toggleable(),
 
                 T\TextColumn::make('qty')
@@ -158,6 +100,7 @@ class CustomsDataResource extends Resource
                     ->wrap()
                     ->label(__('Exporter'))
                     ->sortable()
+                    ->extraAttributes(['style' => 'width: 280px; white-space: normal; word-break: break-word;'])
                     ->toggleable(),
 
                 T\TextColumn::make('export_country')
@@ -184,62 +127,69 @@ class CustomsDataResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+
             ->filters([
-                TF\Filter::make('custom_filters')
+                TF\Filter::make('customFilters')
                     ->schema([
-                        F\Select::make('category')
-                            ->options(fn() => Cache::get('customs_data_categories.all')
-                                ->pluck('name', 'id'))
-                            ->multiple(),
+                        F\Checkbox::make('is_vett'),
+                        F\Checkbox::make('is_null')
+                            ->label(__('No Category Assigned')),
                     ])
-            ])
+                    ->columns(['default' => 2])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['is_vett'],
+                                fn(Builder $query): Builder
+                                => $query
+                                    ->whereAny(['importer', 'product'], 'like', '%thú y%'),
+                            )
+                            ->when(
+                                $data['is_null'],
+                                fn(Builder $query): Builder
+                                => $query
+                                    ->whereNull('customs_data_category_id')
+                            );
+                    }),
+
+                TF\QueryBuilder::make()
+                    ->constraints([
+                        C\DateConstraint::make('import_date'),
+                        C\TextConstraint::make('importer'),
+                        C\TextConstraint::make('exporter'),
+                        C\TextConstraint::make('product'),
+                        C\RelationshipConstraint::make('category')
+                            ->selectable(
+                                C\RelationshipConstraint\Operators\IsRelatedToOperator::make()
+                                    ->titleAttribute('name')
+                                    ->preload()
+                                    ->searchable()
+                                    ->multiple(),
+                            ),
+                        C\NumberConstraint::make('qty'),
+                        C\NumberConstraint::make('price'),
+                    ]),
+
+            ], \Filament\Tables\Enums\FiltersLayout::Modal)
+            ->filtersFormColumns(2)
+            ->filtersFormWidth(\Filament\Support\Enums\Width::FourExtraLarge)
+
             ->recordActions([
                 //
             ])
             ->headerActions([
                 A\ExportAction::make()
                     ->exporter(\App\Filament\Exports\CustomsDataExporter::class)
-                    ->color('teal')
+                    ->color('teal')->outlined()
                     ->icon(Heroicon::ArrowDownTray)
                     ->label(__('Download Data'))
                     ->columnMappingColumns(2)
                     ->maxRows(10000)
-                    ->chunkSize(200),
+                    ->chunkSize(200)
+                    ->tooltip(__('10k rows max'))
+                    ->disabled(fn() => $table->getAllSelectableRecordsCount() > 10000),
             ])
-            ->toolbarActions([
-                A\BulkActionGroup::make([
-                    A\ExportBulkAction::make()
-                        ->exporter(\App\Filament\Exports\CustomsDataExporter::class)
-                        ->icon(Heroicon::ArrowDownTray)
-                        ->label(__('Export selected to CSV'))
-                        ->columnMappingColumns(2)
-                        ->maxRows(1000)
-                        ->chunkSize(200)
-                        ->requiresConfirmation(),
-
-                    A\BulkAction::make('deleteBulk')
-                        ->label(__('Delete selected'))
-                        ->color('danger')->icon(Heroicon::OutlinedTrash)
-                        ->action(fn(\Illuminate\Support\Collection $records)
-                        => \App\Models\CustomsData::destroy($records->pluck('id')))
-                        ->after(function ($livewire) {
-                            \App\Jobs\RecalculateCustomsDataAggregatesJob::dispatch();
-                            // event('customs-data.import.completed');
-                            $livewire->getTableRecords()->fresh();
-                            \Filament\Notifications\Notification::make()
-                                ->title(__('Deleted.'))
-                                ->success()
-                                ->send();
-                        })
-                        ->deselectRecordsAfterCompletion()
-                        ->modalDescription(fn(\Illuminate\Support\Collection $records): string
-                        => __(
-                            'Are you sure you want to delete the selected :count records? This action cannot be undone.',
-                            ['count' => $records->count()]
-                        ))
-                        ->requiresConfirmation(),
-                ]),
-            ]);
+            ->toolbarActions([]);
     }
 
     public static function getPages(): array

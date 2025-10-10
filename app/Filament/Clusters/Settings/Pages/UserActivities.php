@@ -47,7 +47,7 @@ class UserActivities extends Page implements HasActions, HasSchemas
                 ->action(function () {
                     $this->dispatch('refresh-custom-table');
                     \Filament\Notifications\Notification::make()
-                        ->title('Refresh data complete!')
+                        ->title('Data refreshed!')
                         ->success()
                         ->send();
                 }),

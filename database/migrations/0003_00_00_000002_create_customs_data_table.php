@@ -33,6 +33,10 @@ return new class extends Migration
 
             $table->index([DB::raw('importer(191)')], 'customs_data_importer_index');
             $table->index([DB::raw('product(191)')], 'customs_data_product_index');
+            $table->index(['import_date', 'id'], 'customs_data_import_date_id_index');
+
+            // $table->index([DB::raw('product(191)'), 'id'], 'customs_data_product_id_index');
+            // $table->index([DB::raw('importer(191)'), 'id'], 'customs_data_importer_id_index');
 
             $table->timestamps();
         });

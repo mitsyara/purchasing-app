@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,12 +11,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, Notifiable, HasRoles, HasApiTokens;
     use \App\Traits\HasLoggedActivity;
+    use \Jeffgreco13\FilamentBreezy\Traits\TwoFactorAuthenticatable;
     
     /**
      * Filament authorization
@@ -45,6 +47,7 @@ class User extends Authenticatable implements FilamentUser
         'phone',
         'dob',
         'status',
+        'lock_pin',
     ];
 
     /**
@@ -54,6 +57,7 @@ class User extends Authenticatable implements FilamentUser
      */
     protected $hidden = [
         'password',
+        'lock_pin',
         'remember_token',
     ];
 
@@ -67,6 +71,7 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'lock_pin' => 'hashed',
             'dob' => 'date',
             'status' => \App\Enums\UserStatusEnum::class,
         ];

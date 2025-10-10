@@ -32,14 +32,11 @@ class CustomsDataReportByCompany extends Page implements HasTable
 
     protected static ?int $navigationSort = 2;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     public static function getNavigationLabel(): string
     {
         return __('Summary by Company');
-    }
-
-    public static function getNavigationGroup(): ?string
-    {
-        return CustomsDataResource::getNavigationLabel();
     }
 
     public function table(Table $table): Table
@@ -52,7 +49,7 @@ class CustomsDataReportByCompany extends Page implements HasTable
                     ->selectRaw('COUNT(product) as total_import')
                     ->selectRaw('SUM(qty) as total_qty')
                     ->selectRaw('SUM(value) as total_value')
-                    ->groupBy('importer', 'customs_data_category_id')
+                    ->groupBy(['importer', 'customs_data_category_id', 'customs_data.id'])
             )
             ->defaultSort('total_value', 'desc')
             ->deferLoading()
@@ -132,5 +129,15 @@ class CustomsDataReportByCompany extends Page implements HasTable
                             );
                     })
             ]);
+    }
+
+    public function getRecordKey(Model|array $record): string
+    {
+        return $this->getTableRecordKey($record);
+    }
+
+    public function getTableRecordKey(Model|array $record): string
+    {
+        return uniqid();
     }
 }

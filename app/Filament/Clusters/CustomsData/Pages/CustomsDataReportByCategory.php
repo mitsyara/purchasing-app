@@ -35,28 +35,26 @@ class CustomsDataReportByCategory extends Page implements HasTable
 
     protected static ?int $navigationSort = 1;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     public static function getNavigationLabel(): string
     {
         return __('Summary by Category');
     }
 
-    public static function getNavigationGroup(): ?string
+    protected function getTableQuery(): Builder
     {
-        return CustomsDataResource::getNavigationLabel();
+        return CustomsData::query()
+            ->select('importer')
+            ->selectRaw('COUNT(product) as total_import')
+            ->selectRaw('SUM(qty) as total_qty')
+            ->selectRaw('SUM(value) as total_value')
+            ->groupBy(['importer', 'customs_data.id']);
     }
 
     public function table(Table $table): Table
     {
         return $table
-            ->query(
-                CustomsData::query()
-                    ->with('category:id,name')
-                    ->select('importer', 'customs_data_category_id')
-                    ->selectRaw('COUNT(product) as total_import')
-                    ->selectRaw('SUM(qty) as total_qty')
-                    ->selectRaw('SUM(value) as total_value')
-                    ->groupBy('importer', 'customs_data_category_id')
-            )
             ->defaultSort('total_value', 'desc')
             ->deferLoading()
             ->columns([

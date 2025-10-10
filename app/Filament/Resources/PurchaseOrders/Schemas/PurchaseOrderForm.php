@@ -123,7 +123,16 @@ class PurchaseOrderForm
                     modifyQueryUsing: fn(Builder $query): Builder => $query->where('is_cus', true),
                 )
                 ->preload()
-                ->searchable(),
+                ->searchable()
+                ->extraAlpineAttributes([
+                    'x-init' => <<<'JS'
+                        window.addEventListener('toggle-end-user', event => {
+                            const { disabled } = event.detail ?? {};
+                            if (typeof select === 'undefined') return;
+                            disabled ? select.disable() : select.enable();
+                        })
+                    JS,
+                ]),
 
             S\Group::make([
                 S\FusedGroup::make([
@@ -264,7 +273,18 @@ class PurchaseOrderForm
             F\Select::make('incoterm')
                 ->label(__('Incoterm'))
                 ->options(\App\Enums\IncotermEnum::class)
-                ->default(\App\Enums\IncotermEnum::CIF),
+                ->default(\App\Enums\IncotermEnum::CIF)
+                ->extraInputAttributes([
+                    'x-init' => <<<'JS'
+                        $watch('$state', value => {
+                            window.dispatchEvent(
+                                new CustomEvent('toggle-end-user', {
+                                    detail: { disabled: value !== 'CIF' }
+                                })
+                            )
+                        })
+                    JS,
+                ]),
 
             F\Select::make('currency')
                 ->label(__('Currency'))
@@ -279,4 +299,6 @@ class PurchaseOrderForm
 
         ];
     }
+
+    // Helpers
 }

@@ -166,7 +166,7 @@ class ProductResource extends Resource
             F\TextInput::make('product_life_cycle')
                 ->label(__('Product Life Circle'))
                 ->suffix(__('days'))
-                ->numeric()
+                ->numeric()->integer()
                 ->prefixAction(
                     A\Action::make('dayConverter')
                         ->modal()->icon(Heroicon::ArrowPathRoundedSquare)
@@ -192,6 +192,8 @@ class ProductResource extends Resource
                         ->action(function (array $data, F\TextInput $component): void {
                             $component->state($data['number'] * $data['of']);
                         })
+                        ->modalSubmitActionLabel(__('Convert'))
+                        ->modalWidth(\Filament\Support\Enums\Width::Small)
                 )
                 ->minValue(0),
 

@@ -28,15 +28,18 @@ class PurchasingPanelProvider extends PanelProvider
             ->default()
             ->id('purchasing')
             ->path('purchasing')
+            ->spa()
 
             ->login()
             ->passwordReset()
             ->emailVerification()
             ->emailChangeVerification()
+            ->defaultAvatarProvider(\App\Providers\UiAvatarsProvider::class)
 
             ->databaseNotifications()
-            ->databaseNotificationsPolling('30s')
+            ->databaseNotificationsPolling(null)
             ->databaseTransactions()
+            ->unsavedChangesAlerts()
 
             ->topNavigation()
             ->maxContentWidth(Width::Full)
@@ -52,7 +55,14 @@ class PurchasingPanelProvider extends PanelProvider
                 ...\Filament\Support\Colors\Color::all(),
             ])
             ->navigationGroups([...static::getNavGroups()])
-
+            ->userMenuItems([
+                \Filament\Actions\Action::make('lockScreen')
+                    ->icon('heroicon-o-cog-6-tooth')
+                    ->action(function (): void {
+                        session(['screen_locked' => true]);
+                    })
+                    ->requiresConfirmation(),
+            ])
 
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\Filament\Clusters')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
@@ -72,23 +82,25 @@ class PurchasingPanelProvider extends PanelProvider
                     ->navigationLabel(__('System Logs'))
                     ->authorize(fn(): bool =>  auth()->id() === 1),
 
+                // Login
+                \Jeffgreco13\FilamentBreezy\BreezyCore::make()
+                    // User Profile Page & Components                
+                    ->myProfile(
+                        shouldRegisterUserMenu: true,
+                        shouldRegisterNavigation: false,
+                        hasAvatars: false,
+                        slug: 'my-profile123'
+                    )
+                    // 2FA
+                    ->enableTwoFactorAuthentication(
+                        force: false,
+                    )
+                    // Sactum API Tokens
+                    ->enableSanctumTokens()
+                    // Browser Sessions
+                    ->enableBrowserSessions(),
+
                 // Shieldon Filament Spatie Roles & Permissions
-                // \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
-                //     ->navigationLabel('Label')
-                //     ->navigationIcon('heroicon-o-home')
-                //     ->activeNavigationIcon('heroicon-s-home')
-                //     ->navigationGroup('Group')
-                //     ->navigationSort(10)
-                //     ->navigationBadge()
-                //     // ->navigationBadgeColor('success')
-                //     // ->navigationParentItem('parent.item')
-                //     ->registerNavigation(true)
-                //     // Custom Role page
-                //     ->modelLabel('Model')
-                //     ->pluralModelLabel('Models')
-                //     ->recordTitleAttribute('name')
-                //     ->titleCaseModelLabel(false)
-                //     ->parentResource(null),
 
             ])
 
@@ -105,6 +117,8 @@ class PurchasingPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                \App\Http\Middleware\DebugbarAuthorizationMiddleware::class,
+                \App\Http\Middleware\LockSessionMiddleware::class,
             ]);
     }
 
@@ -120,7 +134,7 @@ class PurchasingPanelProvider extends PanelProvider
         ];
         return collect($navGroups)->mapWithKeys(function ($icon, $title): array {
             $label = \Illuminate\Support\Str::of($title)->headline()->toString();
-            return [$title => \Filament\Navigation\NavigationGroup::make()->label($label)];
+            return [$title => \Filament\Navigation\NavigationGroup::make()->label(__($label))];
         })->toArray();
     }
 }

@@ -3,13 +3,17 @@
 use Illuminate\Support\Facades\Route;
 use Filament\Facades\Filament;
 
-// Route::view('/', 'welcome')->name('home');
-
 Route::get('/', function () {
     $panel = Filament::getCurrentOrDefaultPanel();
     return redirect($panel->getLoginUrl(['tenant' => $panel]));
 });
 
+Route::middleware(['web', 'auth'])->group(function () {
+    Route::get('/lock-screen', function () {
+        session(['screen_locked' => true]);
+        return back();
+    })->name('lock-screen');
+});
 
 // Test cron-job
 Route::get('/test-schedule', function () {
@@ -27,3 +31,9 @@ Route::get('/cache', function () {
 
     return redirect()->back();
 });
+
+Route::get('/recache-customs-data', function () {
+    \App\Jobs\RecalculateCustomsDataByImporterJob::dispatch();
+    \App\Jobs\RecalculateCustomsDataByImporterCategoryJob::dispatch();
+    return redirect()->back();
+})->middleware('auth');

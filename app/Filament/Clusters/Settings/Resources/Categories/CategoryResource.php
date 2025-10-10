@@ -93,6 +93,15 @@ class CategoryResource extends Resource
                     ->toggleable()
                     ->limit(3),
 
+                T\TextColumn::make('products_count')
+                    ->label('Products')
+                    ->counts('products')
+                    ->sortable(),
+
+                T\TextColumn::make('parent.category_name')
+                    ->label(__('Belongs To'))
+                    ->toggleable(),
+
             ])
             ->filters([
                 //

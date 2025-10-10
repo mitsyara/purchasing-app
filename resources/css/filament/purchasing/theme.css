@@ -1,6 +1,44 @@
-@import '../../../../vendor/filament/filament/resources/css/theme.css';
+@import "../../../../vendor/filament/filament/resources/css/theme.css";
 
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
 
 @source '../../../../vendor/gboquizosanchez/filament-log-viewer/resources/views/**/*.blade.php';
+@source '../../../../vendor/jeffgreco13/filament-breezy/resources/**/*';
+
+.fi-ta-ctn-with-header {
+    @apply relative;
+}
+
+.custom-bg {
+    background-image: linear-gradient(
+            135deg,
+            rgb(255 255 255 / var(--glass-opacity, 30%)),
+            #0000
+        ),
+        linear-gradient(
+            var(--glass-reflex-degree, 100deg),
+            rgb(255 255 255 / var(--glass-reflex-opacity, 10%)) 25%,
+            rgb(0 0 0 / 0%) 25%
+        );
+
+    @apply absolute inset-0 justify-center items-center z-30 hidden bg-transparent backdrop-blur-xs transition-all;
+}
+
+/**---------------------------------------------------------------------------------------------------------------**/
+
+.screen-lock-overlay {
+    @apply fixed inset-0 bg-black/95 z-50 flex justify-center items-center;
+}
+
+.screen-lock-box {
+    @apply p-6 bg-gray-800 rounded shadow-lg text-white text-center w-96;
+}
+
+.screen-lock-title {
+    @apply text-2xl mb-4;
+}
+
+.screen-lock-error {
+    @apply mt-2 text-red-500;
+}
