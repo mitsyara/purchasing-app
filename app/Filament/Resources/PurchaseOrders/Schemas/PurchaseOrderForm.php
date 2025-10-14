@@ -81,7 +81,7 @@ class PurchaseOrderForm
                 ->relationship(
                     name: 'supplier',
                     titleAttribute: 'contact_name',
-                    modifyQueryUsing: fn(Builder $query): Builder => $query->where('is_trader', true),
+                    modifyQueryUsing: fn(Builder $query): Builder => $query->where('is_trader', true)->whereNotNull('contact_name'),
                 )
                 ->disableOptionWhen(fn($get, $value) => (int) $get('supplier_contract_id') === (int) $value)
                 ->preload()
@@ -94,7 +94,7 @@ class PurchaseOrderForm
                 ->relationship(
                     name: 'supplierContract',
                     titleAttribute: 'contact_name',
-                    modifyQueryUsing: fn(Builder $query): Builder => $query->where('is_trader', true),
+                    modifyQueryUsing: fn(Builder $query): Builder => $query->where('is_trader', true)->whereNotNull('contact_name'),
                 )
                 ->disableOptionWhen(fn($get, $value) => (int) $get('supplier_id') === (int) $value
                     || (int) $get('supplier_payment_id') === (int) $value)
@@ -107,7 +107,7 @@ class PurchaseOrderForm
                 ->relationship(
                     name: 'supplierPayment',
                     titleAttribute: 'contact_name',
-                    modifyQueryUsing: fn(Builder $query): Builder => $query->where('is_trader', true),
+                    modifyQueryUsing: fn(Builder $query): Builder => $query->where('is_trader', true)->whereNotNull('contact_name'),
                 )
                 ->disableOptionWhen(fn($get, $value) => (int) $get('supplier_id') === (int) $value
                     || (int) $get('supplier_contract_id') === (int) $value)
@@ -120,7 +120,7 @@ class PurchaseOrderForm
                 ->relationship(
                     name: 'endUser',
                     titleAttribute: 'contact_name',
-                    modifyQueryUsing: fn(Builder $query): Builder => $query->where('is_cus', true),
+                    modifyQueryUsing: fn(Builder $query): Builder => $query->where('is_cus', true)->whereNotNull('contact_name'),
                 )
                 ->preload()
                 ->searchable()
@@ -152,7 +152,8 @@ class PurchaseOrderForm
 
                     F\Select::make('pay_term_delay_at')
                         ->label(__('Payment Term Delay At'))
-                        ->options(\App\Enums\PayTermDelayAtEnum::class)
+                        ->options(\App\Enums\PaytermDelayAtEnum::class)
+                        ->selectablePlaceholder(false)
                         ->grow(false),
 
                     F\TextInput::make('pay_term_days')

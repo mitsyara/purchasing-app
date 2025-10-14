@@ -7,9 +7,6 @@ use App\Filament\Clusters\CustomsData\Resources\CustomsData\CustomsDataResource;
 use Filament\Resources\Pages\ManageRecords;
 use Filament\Support\Icons\Heroicon;
 use Filament\Actions as A;
-use Filament\Support\Enums\Width;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Model;
 
 class ManageCustomsData extends ManageRecords
 {

@@ -32,6 +32,11 @@ class UserResource extends Resource
         return __('User Settings');
     }
 
+    public static function canAccess(): bool
+    {
+        return auth()->id() === 1;
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

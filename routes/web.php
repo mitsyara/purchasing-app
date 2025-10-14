@@ -2,11 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    $panel = \Filament\Facades\Filament::getCurrentOrDefaultPanel();
-    // return redirect($panel->getLoginUrl(['tenant' => $panel]));
-});
-
 Route::get('/', fn() => view('welcome'));
 
 // Test cron-job

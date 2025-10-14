@@ -26,14 +26,14 @@ class CustomsDataExporter extends Exporter
             ExportColumn::make('importer'),
             ExportColumn::make('product'),
             ExportColumn::make('unit'),
-            ExportColumn::make('qty'),
-            ExportColumn::make('price'),
+            ExportColumn::make('qty')
+                ->state(fn($record) => $record->qty + 0),
+            ExportColumn::make('price')
+                ->state(fn($record) => $record->price + 0),
             ExportColumn::make('export_country'),
             ExportColumn::make('exporter'),
             ExportColumn::make('incoterm'),
             ExportColumn::make('hscode'),
-            ExportColumn::make('category.name')
-                ->enabledByDefault(false),
         ];
     }
 

@@ -15,11 +15,13 @@ class DebugbarAuthorizationMiddleware
     public function handle(Request $request, \Closure $next): Response
     {
         $restrictedPath = $request->getPathInfo() !== "/purchasing/customs-data/customs-data";
-        
-        if (auth()->id() === 1) {
-            debugbar()->enable();
-        } else {
-            debugbar()->disable();
+
+        if (function_exists('debugbar')) {
+            if (auth()->id() === 1) {
+                debugbar()->enable();
+            } else {
+                debugbar()->disable();
+            }
         }
 
         return $next($request);

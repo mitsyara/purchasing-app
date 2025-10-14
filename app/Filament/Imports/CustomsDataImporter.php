@@ -3,6 +3,7 @@
 namespace App\Filament\Imports;
 
 use App\Models\CustomsData;
+use Carbon\Carbon;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
@@ -15,11 +16,32 @@ class CustomsDataImporter extends Importer
     {
         return [
             \Filament\Schemas\Components\Group::make([
-                // \Filament\Forms\Components\Checkbox::make('noHeader')
-                //     ->label(__('File has no header row')),
-                \Filament\Forms\Components\Checkbox::make('separator')
-                    ->label('Comma Thousand separator (e.g. 1,000.25)')
-                    ->default(true),
+
+                \Filament\Forms\Components\Select::make('separator')
+                    ->label('Decimal separator (e.g. 1,000.25)')
+                    ->options([
+                        ',' => 'Dot (e.g. 1,000.25)',
+                        '.' => 'Comma (e.g. 1.000,25)',
+                    ])
+                    ->selectablePlaceholder(false)
+                    ->default('.'),
+
+                \Filament\Forms\Components\Select::make('dateFormat')
+                    ->label('Date Format')
+                    ->options([
+                        'Y-m-d' => now()->format('Y-m-d'),
+                        'd/m/Y' => now()->format('d/m/Y'),
+                        'm/d/Y' => now()->format('m/d/Y'),
+                        'd-m-Y' => now()->format('d-m-Y'),
+                        'm-d-Y' => now()->format('m-d-Y'),
+                        'F j, Y' => now()->format('F j, Y') . ' ' . '(Long text Date)',
+                        'M j, Y' => now()->format('M j, Y') . ' ' . '(Short text Date)',
+                        'j/n/Y' => now()->format('j/n/Y') . ' ' . '(no leading zeros)',
+                        'n/j/Y' => now()->format('n/j/Y') . ' ' . '(no leading zeros)',
+                    ])
+                    ->default('d/m/Y')
+                    ->selectablePlaceholder(false)
+                    ->required(),
             ])
                 ->columns(1)
                 ->columnSpanFull(),
@@ -32,6 +54,8 @@ class CustomsDataImporter extends Importer
             ImportColumn::make('import_date')
                 ->example('2025-01-20')
                 ->guess(['import_date', 'ngaynhap'])
+                ->castStateUsing(fn($state, $options): ?string
+                => static::convertDate($state, $options['dateFormat']))
                 ->rules(['required', 'date'])
                 ->requiredMapping(),
 
@@ -57,24 +81,36 @@ class CustomsDataImporter extends Importer
             ImportColumn::make('qty')
                 ->example('1000')
                 ->guess(['qty', 'kl', 'quantity', 'soluong', 'so_luong'])
-                ->castStateUsing(fn($state, $options) => $options['separator']
-                    ? static::convertToFloat($state, ',')
-                    : static::convertToFloat($state, '.'))
+                ->castStateUsing(fn($state, $options): ?float => match ($options['separator']) {
+                    ',' => static::convertToFloat($state, '.'),
+                    '.' => static::convertToFloat($state, ',')
+                })
                 ->rules(['numeric'])
                 ->requiredMapping(),
 
             ImportColumn::make('price')
                 ->example('42.5')
                 ->guess(['price', 'gia', 'unit_price', 'unit price'])
-                ->castStateUsing(fn($state, $options) => $options['separator']
-                    ? static::convertToFloat($state, ',')
-                    : static::convertToFloat($state, '.'))
+                ->castStateUsing(fn($state, $options) => match ($options['separator']) {
+                    ',' => static::convertToFloat($state, '.'),
+                    '.' => static::convertToFloat($state, ',')
+                })
                 ->rules(['numeric'])
                 ->requiredMapping(),
 
             ImportColumn::make('export_country')
                 ->example('China')
-                ->guess(['export_country', 'xuat_xu', 'origin_country', 'origin'])
+                ->guess([
+                    'export_country',
+                    'xuat_xu',
+                    'origin_country',
+                    'origin',
+                    'country',
+                    'original',
+                    'nuocsx',
+                    'nuoc_sx',
+                    'country_of_origin',
+                ])
                 ->ignoreBlankState()
                 ->rules(['max:255'])
                 ->requiredMapping(),
@@ -97,11 +133,6 @@ class CustomsDataImporter extends Importer
                 ->ignoreBlankState()
                 ->rules(['max:255'])
                 ->requiredMapping(),
-
-            ImportColumn::make('category')
-                ->example('Amoxicillin')
-                ->ignoreBlankState()
-                ->relationship(resolveUsing: ['name', 'keywords']),
         ];
     }
 
@@ -119,7 +150,6 @@ class CustomsDataImporter extends Importer
             'export_country' => $this->data['export_country'],
             'incoterm' => $this->data['incoterm'],
             'hscode' => $this->data['hscode'],
-            'category_id' => $this->data['category']?->id,
         ]);
     }
 
@@ -161,5 +191,14 @@ class CustomsDataImporter extends Importer
         }
 
         return round(floatval($value), 3);
+    }
+
+    public static function convertDate(string $value, ?string $originFormat): ?string
+    {
+        if (blank($value)) return null;
+
+        $date = Carbon::createFromFormat($originFormat, $value);
+
+        return $date ? $date->format('Y-m-d') : null;
     }
 }

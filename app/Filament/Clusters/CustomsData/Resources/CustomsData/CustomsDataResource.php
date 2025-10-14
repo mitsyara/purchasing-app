@@ -179,12 +179,13 @@ class CustomsDataResource extends Resource
                     ->icon(Heroicon::ArrowUpTray)
                     ->importer(\App\Filament\Imports\CustomsDataImporter::class)
                     ->color('info')
-                    ->maxRows(100000)
-                    ->chunkSize(200)
+                    ->maxRows(50000)
+                    ->chunkSize(1000)
                     ->fileRules([
-                        'mimes:csv',
+                        'mimes:csv,txt',
                         'max:10240',
                     ])
+                    ->visible(fn(): bool => auth()->id() === 1)
                     ->requiresConfirmation(),
 
                 A\ExportAction::make()
@@ -195,9 +196,9 @@ class CustomsDataResource extends Resource
                     ->label(__('Download Data'))
                     ->columnMappingColumns(2)
                     ->maxRows(10000)
-                    ->chunkSize(200)
+                    ->chunkSize(1000)
                     ->tooltip(__('10k rows max'))
-                    ->disabled(fn() => $table->getAllSelectableRecordsCount() > 10000),
+                    ->disabled(fn(Table $table) => $table->getAllSelectableRecordsCount() > 10000),
             ])
             ->toolbarActions([]);
     }
