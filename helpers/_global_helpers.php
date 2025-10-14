@@ -144,29 +144,6 @@ if (!function_exists('__get_all_models')) {
         return $models->values();
     }
 }
-if (!function_exists('__get_model_with_files_column')) {
-    function __get_model_with_files_column(?bool $groupped = false): array
-    {
-        $results = [];
-        foreach (__get_all_models() as $modelClass) {
-            $model = new $modelClass;
-            if (property_exists($model, 'fillable')) {
-                $field = collect($model->getFillable())
-                    ->first(fn($field) => in_array($field, [
-                        DB_FILE_COLUMN,
-                        DB_FILES_COLUMN,
-                    ]));
-                if ($field) {
-                    $results[$modelClass] = $field;
-                }
-            }
-        }
-        foreach ($results as $model => $column) {
-            $reversed[$column][] = $model;
-        }
-        return $groupped ? $reversed : $results;
-    }
-}
 
 if (!function_exists('__tables_check')) {
     function __tables_check(): array

@@ -64,8 +64,6 @@ class PurchaseShipment extends Model
         'average_cost',
 
         'notes',
-        'attachment_files',
-        'attachment_files_name',
     ];
 
     protected $casts = [
@@ -84,8 +82,6 @@ class PurchaseShipment extends Model
         'is_exchange_rate_final' => 'boolean',
 
         'extra_costs' => 'array',
-        'attachment_files' => 'array',
-        'attachment_files_name' => 'array',
     ];
 
     public function purchaseOrder(): BelongsTo

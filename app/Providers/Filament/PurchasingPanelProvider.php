@@ -2,27 +2,24 @@
 
 namespace App\Providers\Filament;
 
+use Filament\PanelProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
-use Filament\Panel;
-use Filament\PanelProvider;
-use Filament\Support\Enums\Width;
-use Filament\Support\Icons\Heroicon;
-use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
+
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+
+use Filament\Support\Enums\Width;
 
 class PurchasingPanelProvider extends PanelProvider
 {
-    public function panel(Panel $panel): Panel
+    public function panel(\Filament\Panel $panel): \Filament\Panel
     {
         return $panel
             ->default()
@@ -35,9 +32,14 @@ class PurchasingPanelProvider extends PanelProvider
             ->emailVerification()
             ->emailChangeVerification()
             ->defaultAvatarProvider(\App\Providers\UiAvatarsProvider::class)
+            // ->multiFactorAuthentication([
+            //     \Filament\Auth\MultiFactor\App\AppAuthentication::make()
+            //         ->recoverable(),
+            // ])
+            // ->profile()
 
             ->databaseNotifications()
-            ->databaseNotificationsPolling(null)
+            ->databaseNotificationsPolling('60s')
             ->databaseTransactions()
             ->unsavedChangesAlerts()
 
@@ -61,6 +63,7 @@ class PurchasingPanelProvider extends PanelProvider
                     ->action(function (): void {
                         session(['screen_locked' => true]);
                     })
+                    ->hidden(fn() => auth()->user()->lock_pin === null)
                     ->requiresConfirmation(),
             ])
 
@@ -69,36 +72,19 @@ class PurchasingPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
-                AccountWidget::class,
-                FilamentInfoWidget::class,
+                \Filament\Widgets\AccountWidget::class,
+                \Filament\Widgets\FilamentInfoWidget::class,
             ])
 
             ->plugins([
-                // Application's Log Viewer (laravel log channels)
-                \Boquizo\FilamentLogViewer\FilamentLogViewerPlugin::make()
+                \AchyutN\FilamentLogViewer\FilamentLogViewer::make()
                     ->navigationGroup('system')
-                    ->navigationSort(2)
-                    ->navigationIcon(Heroicon::OutlinedDocumentText)
                     ->navigationLabel(__('System Logs'))
-                    ->authorize(fn(): bool =>  auth()->id() === 1),
-
-                // Login
-                \Jeffgreco13\FilamentBreezy\BreezyCore::make()
-                    // User Profile Page & Components                
-                    ->myProfile(
-                        shouldRegisterUserMenu: true,
-                        shouldRegisterNavigation: false,
-                        hasAvatars: false,
-                        slug: 'my-profile123'
-                    )
-                    // 2FA
-                    ->enableTwoFactorAuthentication(
-                        force: false,
-                    )
-                    // Sactum API Tokens
-                    ->enableSanctumTokens()
-                    // Browser Sessions
-                    ->enableBrowserSessions(),
+                    ->navigationIcon('heroicon-o-document-text')
+                    ->navigationSort(2)
+                    ->navigationUrl('/application-logs')
+                    ->pollingTime(null)
+                    ->authorize(fn() => auth()->id() === 1),
 
                 // Shieldon Filament Spatie Roles & Permissions
 
@@ -118,7 +104,6 @@ class PurchasingPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
                 \App\Http\Middleware\DebugbarAuthorizationMiddleware::class,
-                \App\Http\Middleware\LockSessionMiddleware::class,
             ]);
     }
 

@@ -6,10 +6,12 @@ use App\Models\Contact;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
+use Filament\Schemas\Components as S;
 use Filament\Tables\Columns as T;
 use Filament\Tables\Filters as TF;
 use Filament\Actions as A;
 use Filament\Support\Enums\Width;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Collection;
 
 class ContactTable
@@ -50,7 +52,7 @@ class ContactTable
                 T\TextColumn::make('company_types')
                     ->label(__('Type'))
                     ->badge()
-                    ->listWithLineBreaks()
+                    // ->listWithLineBreaks()
                     ->toggleable(),
 
                 T\TextColumn::make('contact_info')
@@ -61,7 +63,7 @@ class ContactTable
 
                 T\TextColumn::make('rep_info')
                     ->label(__('Representative'))
-                    ->description(fn(Contact $record): string => $record->rep_title)
+                    ->description(fn(Contact $record): ?string => $record?->rep_title)
                     ->sortable(query: fn(Builder $query, string $direction): Builder
                     => $query->orderBy('rep_name', $direction))
                     ->searchable(query: fn(Builder $query, string $search): Builder
@@ -72,6 +74,22 @@ class ContactTable
             ->filters([])
             ->recordActions([
                 A\ActionGroup::make([
+                    A\ActionGroup::make([
+                        A\Action::make('viewPurchaseHistory')
+                            ->schema(fn(?Contact $record): array => [
+                                S\Livewire::make(\App\Livewire\ContactPurchaseOrderHistory::class, [
+                                    'contact' => $record,
+                                ]),
+                            ])
+                            ->icon(Heroicon::OutlinedEye)
+                            ->color(fn($action) => $action->isDisabled() ? 'gray' : 'info')
+                            ->modal()->slideOver()
+                            ->modalWidth(Width::SevenExtraLarge)
+                            ->disabled(fn(?Contact $record): bool
+                            => \App\Models\PurchaseOrder::where('supplier_id', $record?->id)->count() <= 0)
+                    ])
+                        ->dropdown(false),
+
                     A\EditAction::make()
                         ->modal()->slideOver()
                         ->modalWidth(Width::FiveExtraLarge),

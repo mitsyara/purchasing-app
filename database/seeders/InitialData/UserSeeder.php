@@ -27,6 +27,7 @@ class UserSeeder extends Seeder
             ]);
 
             // name, phone, email
+            // Vhl@2022
             $users = [
                 ["Lê Hải Anh", "0944866447", "susan@vietuy.vn"],
                 ["Trần Mai Lan", "0932365666", "helen@globalhub.com.vn"],

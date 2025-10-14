@@ -7,6 +7,8 @@ use Staudenmeir\LaravelAdjacencyList\Eloquent\Builder as RecursiveBuilder;
 
 trait HasCustomRecursiveQueryBuilder
 {
+    use \Staudenmeir\LaravelAdjacencyList\Eloquent\HasRecursiveRelationships;
+
     /**
      * ancestors(): The model's recursive parents.
      * ancestorsAndSelf(): The model's recursive parents and itself.

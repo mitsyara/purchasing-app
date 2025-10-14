@@ -30,7 +30,8 @@ class PurchaseOrdersTable
                     ->label(__('Order Date'))
                     ->description(fn(PurchaseOrder $record) => $record->order_number)
                     ->sortable()
-                    ->searchable(query: fn(Builder $query, string $search): Builder => $query->orWhere('order_number', 'like', "%{$search}%"))
+                    ->searchable(query: fn(Builder $query, string $search): Builder
+                    => $query->orWhere('order_number', 'like', "%{$search}%"))
                     ->toggleable(),
 
                 T\TextColumn::make('company.company_code')
@@ -41,7 +42,7 @@ class PurchaseOrdersTable
 
                 T\TextColumn::make('supplier.contact_name')
                     ->label(__('Supplier'))
-                    ->description(fn($record) => $record->thirdParty?->contact_name)
+                    ->description(fn(PurchaseOrder $record) => $record->supplierContract?->contact_name)
                     ->sortable()
                     ->searchable()
                     ->toggleable(),
@@ -113,22 +114,22 @@ class PurchaseOrdersTable
                                 \App\Enums\OrderStatusEnum::Canceled,
                             ])),
 
-                            A\Action::make('cancelOrder')
-                                ->modal()
-                                ->icon(Heroicon::XCircle)
-                                ->color(fn(A\Action $action): string
-                                => match ($action->isDisabled()) {
-                                    true => 'gray',
-                                    default => 'danger',
-                                })
-                                ->requiresConfirmation()
-                                ->action(fn(PurchaseOrder $record) => $record->cancelOrder())
-                                ->disabled(fn(PurchaseOrder $record): bool
-                                => $record->order_status === \App\Enums\OrderStatusEnum::Canceled),
+                        A\Action::make('cancelOrder')
+                            ->modal()
+                            ->icon(Heroicon::XCircle)
+                            ->color(fn(A\Action $action): string
+                            => match ($action->isDisabled()) {
+                                true => 'gray',
+                                default => 'danger',
+                            })
+                            ->requiresConfirmation()
+                            ->action(fn(PurchaseOrder $record) => $record->cancelOrder())
+                            ->disabled(fn(PurchaseOrder $record): bool
+                            => $record->order_status === \App\Enums\OrderStatusEnum::Canceled),
                     ])
                         ->dropdown(false),
 
-                    A\ViewAction::make(),
+                    // A\ViewAction::make(),
                     A\EditAction::make(),
                     A\DeleteAction::make(),
                 ]),

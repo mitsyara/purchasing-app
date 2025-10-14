@@ -26,6 +26,7 @@ class CommentForm
                     ->disabled(fn(?Comment $record): bool => $record
                         && $record?->user_id !== auth()->id()),
             )
+            ->defaultItems(0)
             ->addActionLabel(__('Add Comment'))
             ->mutateRelationshipDataBeforeCreateUsing(fn(array $data): array => [
                 ...$data,

@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $initial = true;
-        $test = true;
+        $test = false;
 
         // Real data
         if ($initial) {

@@ -22,30 +22,6 @@ if (!function_exists('__index')) {
     }
 }
 
-if (!function_exists('__file_upload')) {
-    function __file_upload(?string $model = null, ?bool $is_multiple = false): F\FileUpload
-    {
-        $path = 'attachments/' . model_to_path($model);
-
-        $form_field = $is_multiple
-            // Multiple files
-            ? F\FileUpload::make(DB_FILES_COLUMN)
-            ->storeFileNamesIn(DB_FILES_NAME)
-            ->multiple()
-            // Single file
-            : F\FileUpload::make(DB_FILE_COLUMN)
-            ->storeFileNamesIn(DB_FILE_NAME);
-
-        return $form_field
-            ->disk(FILES_DISK)
-            ->directory($path)
-            ->openable()
-            ->downloadable()
-            ->previewable(false)
-            ->acceptedFileTypes(FILE_TYPES)
-            ->maxSize(FILE_MAX_SIZE);
-    }
-}
 
 if (!function_exists('__order_date_fields')) {
     function __order_date_fields(bool $readonly = false, string|null $date = null): F\Field
@@ -155,17 +131,6 @@ if (!function_exists('__atd_ata_fields')) {
         ])
             ->grow(false)
             ->columns($columns);
-    }
-}
-
-if (!function_exists('__file_column')) {
-    function __file_column(?bool $is_multiple = false): CustomLinkColumn
-    {
-        $column = $is_multiple ? DB_FILES_COLUMN : DB_FILE_COLUMN;
-        $title = $is_multiple ? DB_FILES_NAME : DB_FILE_NAME;
-        return CustomLinkColumn::make($column)
-            ->titleColumn($title)
-            ->multiple($is_multiple);
     }
 }
 

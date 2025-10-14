@@ -41,8 +41,8 @@ class PurchaseShipmentForm
                             ]),
 
                         S\Tabs\Tab::make(__('Products'))
-                            ->schema([
-                                static::shipmentLines(),
+                            ->schema(fn(PurchaseShipment $record): array => [
+                                static::shipmentLines($record),
                             ])
                             ->columns(3),
 
@@ -209,7 +209,7 @@ class PurchaseShipmentForm
         ];
     }
 
-    public static function shipmentLines(): F\Repeater
+    public static function shipmentLines(PurchaseShipment $record): F\Repeater
     {
         return F\Repeater::make('purchaseShipmentLines')
             ->label(__('Products'))
@@ -287,6 +287,7 @@ class PurchaseShipmentForm
                     ])
                     ->defaultItems(1)
                     ->addActionLabel(__('Add Lot/Batch'))
+                    ->addable(fn() => $record->purchaseOrder?->incoterm !== \App\Enums\IncotermEnum::CIF)
                     ->after(function(PurchaseShipmentLine $record) {
                         new \App\Services\InventoryLine\SyncFromShipmentLine($record);
                     })

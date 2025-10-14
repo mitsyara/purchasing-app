@@ -25,9 +25,9 @@ class FilamentServiceProvider extends ServiceProvider
         \Filament\Support\Facades\FilamentTimezone::set($timezone);
 
         // Custom Js and CSS
-        \Filament\Support\Facades\FilamentAsset::register([
-            \Filament\Support\Assets\Js::make('custom-script', __DIR__ . '/../../resources/js/custom.js'),
-        ]);
+        // \Filament\Support\Facades\FilamentAsset::register([
+        //     \Filament\Support\Assets\Js::make('custom-script', __DIR__ . '/../../resources/js/custom.js'),
+        // ]);
 
         // Render Hook
         \Filament\Support\Facades\FilamentView::registerRenderHook(
@@ -50,11 +50,16 @@ class FilamentServiceProvider extends ServiceProvider
                 ->maxSelectableRecords(1000)
                 ->recordActionsPosition(RecordActionsPosition::BeforeColumns)
                 ->searchOnBlur()
-                ->persistSearchInSession()
-                ->persistColumnSearchesInSession()
+                // ->searchOnChange()
+                // ->persistSearchInSession()
+                // ->persistColumnSearchesInSession()
                 ->splitSearchTerms()
                 ->reorderableColumns(false)
             ;
+        }, isImportant: true);
+
+        \Filament\Schemas\Components\Tabs::configureUsing(function (\Filament\Schemas\Components\Tabs $tabs) {
+            $tabs->contained(false);
         }, isImportant: true);
 
         \Filament\Forms\Components\TextInput::configureUsing(function (\Filament\Forms\Components\TextInput $input) {

@@ -1,10 +1,4 @@
 <?php
-
-define('DB_FILE_COLUMN', 'attachment_file');
-define('DB_FILE_NAME', 'attachment_file_name');
-define('DB_FILES_COLUMN', 'attachment_files');
-define('DB_FILES_NAME', 'attachment_files_name');
-
 define('FILES_DISK', 'local');
 define('FILE_MAX_SIZE', 2048);
 define('FILE_TYPES', [

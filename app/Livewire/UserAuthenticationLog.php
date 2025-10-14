@@ -15,8 +15,10 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 use Filament\Actions as A;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns as T;
 use Filament\Tables\Filters as TF;
+use Illuminate\Support\Facades\DB;
 
 class UserAuthenticationLog extends Component implements HasActions, HasSchemas, HasTable
 {
@@ -79,7 +81,34 @@ class UserAuthenticationLog extends Component implements HasActions, HasSchemas,
                 //
             ])
             ->headerActions([
-                //
+                A\Action::make('signOutAll')
+                    ->label(__('Sign Out All'))
+                    ->icon(Heroicon::OutlinedArrowLeftOnRectangle)
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->action(function (): void {
+                        try {
+                            DB::transaction(function () {
+                                \App\Models\Session::where('user_id', auth()->id())
+                                    ->whereNot('id', session()->getId())
+                                    ->delete();
+                            });
+                            Notification::make()
+                                ->success()
+                                ->title(__('Success'))
+                                ->body(__('All other sessions have been signed out.'))
+                                ->send();
+
+                            $this->dispatch('refresh-custom-table');
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->danger()
+                                ->title(__('Error'))
+                                ->body(__('Failed to sign out. Please try again later.'))
+                                ->send();
+                        }
+                    })
+                    ->hidden(fn(): bool => \App\Models\Session::count() <= 1),
             ])
             ->recordActions([
                 A\Action::make('signOut')
@@ -91,8 +120,7 @@ class UserAuthenticationLog extends Component implements HasActions, HasSchemas,
                         $record->delete();
                         $this->dispatch('refresh-custom-table');
                     })
-                    ->disabled(fn($record) => $record->id === session()->getId())
-                    ,
+                    ->disabled(fn($record) => $record->id === session()->getId()),
             ]);
     }
 }

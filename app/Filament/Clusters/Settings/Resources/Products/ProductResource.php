@@ -55,8 +55,12 @@ class ProductResource extends Resource
                             ->schema([
                                 static::specializedTraderRepeater(),
                             ]),
+
+                        S\Tabs\Tab::make(__('Specialized Customers'))
+                            ->schema([
+                                static::specializedCustomerRepeater(),
+                            ]),
                     ])
-                    ->contained(false)
                     ->columnSpanFull()
             ])
             ->columns();
@@ -195,7 +199,8 @@ class ProductResource extends Resource
                         ->modalSubmitActionLabel(__('Convert'))
                         ->modalWidth(\Filament\Support\Enums\Width::Small)
                 )
-                ->minValue(0),
+                ->minValue(0)
+                ->dehydrated(fn($state) => filled($state) && (int) $state > 0),
 
             F\TagsInput::make('product_certificates')
                 ->label(__('Product Certificates'))
@@ -227,6 +232,30 @@ class ProductResource extends Resource
                     ->searchable()
                     ->preload()
                     ->required(),
-            );
+            )
+            ->defaultItems(0);
     }
+
+    public static function specializedCustomerRepeater(): F\Repeater
+    {
+        return F\Repeater::make('productStrongCustomers')
+            ->relationship()
+            ->hiddenLabel()
+            ->simple(
+                F\Select::make('contact_id')
+                    ->hiddenLabel()
+                    ->relationship(
+                        name: 'contact',
+                        titleAttribute: 'contact_code_name',
+                        modifyQueryUsing: fn(Builder $query) => $query->where('is_cus', true)
+                    )
+                    ->disableOptionsWhenSelectedInSiblingRepeaterItems()
+                    ->searchable()
+                    ->preload()
+                    ->required(),
+            )
+            ->defaultItems(0);
+    }
+
+
 }

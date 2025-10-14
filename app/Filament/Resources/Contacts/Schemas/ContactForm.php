@@ -11,6 +11,7 @@ use Filament\Schemas\Schema;
 use Filament\Schemas\Components as S;
 use Filament\Forms\Components as F;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
 
 class ContactForm
 {
@@ -40,16 +41,7 @@ class ContactForm
                             ->schema([
                                 CommentForm::commentFormFields(),
                             ]),
-
-                        S\Tabs\Tab::make(__('Order History'))
-                            ->schema(fn(?Contact $record): array => [
-                                S\Livewire::make(\App\Livewire\ContactOrderHistory::class, [
-                                    'contact' => $record,
-                                ]),
-                            ])
-                            ->hidden(fn(string $operation): bool => $operation === 'create'),
                     ])
-                    ->contained(false)
                     ->columnSpanFull(),
             ]);
     }
@@ -90,7 +82,8 @@ class ContactForm
             S\Group::make([
                 F\TextInput::make('tax_code')
                     ->label(__('Tax Code'))
-                    ->requiredIfAccepted('is_cus'),
+                // ->requiredIfAccepted('is_cus')
+                ,
 
                 F\TextInput::make('office_email')
                     ->label(__('Email'))
@@ -156,7 +149,8 @@ class ContactForm
             F\TextInput::make('contact_code')
                 ->label(__('Code'))
                 ->unique()
-                ->required(),
+            // ->required()
+            ,
 
             F\TextInput::make('contact_short_name')
                 ->label(__('Short Name'))
@@ -172,7 +166,9 @@ class ContactForm
                 )
                 ->searchable()
                 ->preload()
-                ->required(),
+                ->default(Cache::rememberForever('country_vn_id', function () {
+                    return \App\Models\Country::whereAlpha3('VNM')->first()?->id;
+                })),
 
             F\Select::make('region')
                 ->label(__('Region'))
@@ -228,7 +224,7 @@ class ContactForm
     {
         return [
             F\ModalTableSelect::make('strongProducts')
-                ->label(__('Specialized Products'))
+                ->label(__('Specialized in'))
                 ->relationship(
                     name: 'strongProducts',
                     titleAttribute: 'product_full_name',
@@ -238,6 +234,24 @@ class ContactForm
                 ->tableConfiguration(ProductTable::class)
                 // ->badge(false)
                 ->multiple()
+                ->hiddenJs(<<<'JS'
+                    $get('is_trader') ? false : true
+                JS),
+
+            F\ModalTableSelect::make('buyerStrongProducts')
+                ->label(__('Interested in'))
+                ->relationship(
+                    name: 'buyerStrongProducts',
+                    titleAttribute: 'product_full_name',
+                    modifyQueryUsing: fn(Builder $query, string $operation): Builder
+                    => $operation === 'create' ? $query->where('is_active', true) : $query
+                )
+                ->tableConfiguration(ProductTable::class)
+                // ->badge(false)
+                ->multiple()
+                ->hiddenJs(<<<'JS'
+                    $get('is_cus') ? false : true
+                JS),
         ];
     }
 }

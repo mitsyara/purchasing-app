@@ -4,9 +4,7 @@ namespace App\Filament\Resources\PurchaseOrders\Pages;
 
 use App\Filament\Resources\PurchaseOrders\PurchaseOrderResource;
 use App\Services\PurchaseOrder\CallAllPurchaseOrderServices;
-use App\Services\PurchaseOrder\UpdateOrderTotals;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\ViewAction;
+use Filament\Actions as A;
 use Filament\Resources\Pages\EditRecord;
 
 class EditPurchaseOrder extends EditRecord
@@ -22,8 +20,8 @@ class EditPurchaseOrder extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            ViewAction::make(),
-            DeleteAction::make(),
+            // A\ViewAction::make(),
+            A\DeleteAction::make(),
         ];
     }
 

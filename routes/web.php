@@ -1,19 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Filament\Facades\Filament;
 
 Route::get('/', function () {
-    $panel = Filament::getCurrentOrDefaultPanel();
-    return redirect($panel->getLoginUrl(['tenant' => $panel]));
+    $panel = \Filament\Facades\Filament::getCurrentOrDefaultPanel();
+    // return redirect($panel->getLoginUrl(['tenant' => $panel]));
 });
 
-Route::middleware(['web', 'auth'])->group(function () {
-    Route::get('/lock-screen', function () {
-        session(['screen_locked' => true]);
-        return back();
-    })->name('lock-screen');
-});
+Route::get('/', fn() => view('welcome'));
 
 // Test cron-job
 Route::get('/test-schedule', function () {

@@ -49,7 +49,7 @@ class CustomsDataReportByCategory extends Page implements HasTable
             ->selectRaw('COUNT(product) as total_import')
             ->selectRaw('SUM(qty) as total_qty')
             ->selectRaw('SUM(value) as total_value')
-            ->groupBy(['importer', 'customs_data.id']);
+            ->groupBy(['importer']);
     }
 
     public function table(Table $table): Table

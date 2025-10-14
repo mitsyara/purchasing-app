@@ -20,6 +20,9 @@ use Filament\Tables\Filters as TF;
 use Filament\Forms\Components as F;
 use Filament\Actions as A;
 use Filament\Schemas\Components as S;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class CategoryResource extends Resource
@@ -41,28 +44,60 @@ class CategoryResource extends Resource
     {
         return $schema
             ->components([
-                F\TextInput::make('category_code')
-                    ->label(__('Category Code'))
-                    ->unique()
-                    ->required(),
+                S\Tabs::make()
+                    ->tabs([
+                        S\Tabs\Tab::make(__('Category Details'))
+                            ->schema([
+                                F\TextInput::make('category_code')
+                                    ->label(__('Category Code'))
+                                    ->unique()
+                                    ->required(),
 
-                F\TextInput::make('category_name')
-                    ->label(__('Category Name'))
-                    ->unique()
-                    ->required(),
+                                F\TextInput::make('category_name')
+                                    ->label(__('Category Name'))
+                                    ->unique()
+                                    ->required(),
 
-                F\TagsInput::make('category_keywords')
-                    ->label(__('Category Keywords'))
-                    ->helperText(__('Separate keywords with commas.'))
-                    ->separator(',')
-                    ->splitKeys([',', 'enter'])
-                    ->columnSpanFull()
-                    ->afterLabel([
-                        \Filament\Actions\Action::make('clear')
-                            ->action(fn (F\TagsInput $component) => $component->state([]))
-                    ]),
+                                F\Select::make('parent_id')
+                                    ->label(__('Belongs To'))
+                                    ->hint(__('* If applicable.'))
+                                    ->options(fn(?Category $record)
+                                    => Category::when($record?->id, fn(Builder $sq, $id) => $sq->whereNot('id', $id))->pluck('category_name', 'id'))
+                                    ->afterStateUpdated(fn($state, $set) => static::afterParentStateUpdated($set, $state))
+                                    ->live()
+                                    ->partiallyRenderComponentsAfterStateUpdated(['vat_id', 'is_gmp_required']),
 
-                __notes()
+                                F\Select::make('vat_id')
+                                    ->label(__('VAT'))
+                                    ->options(fn() => \App\Models\Vat::pluck('vat_value', 'id'))
+                                    ->prefix('%')
+                                    ->requiredWithout('parent_id')
+                                    ->disabled(fn(Get $get) => (bool)$get('parent_id')),
+
+                                F\Checkbox::make('is_gmp_required')
+                                    ->label(__('GMP Required'))
+                                    ->disabled(fn(Get $get) => (bool)$get('parent_id')),
+
+                                F\TagsInput::make('category_keywords')
+                                    ->label(__('Category Keywords'))
+                                    ->helperText(__('Separate keywords with commas.'))
+                                    ->separator(',')
+                                    ->splitKeys([',', 'enter'])
+                                    ->afterLabel([
+                                        \Filament\Actions\Action::make('clear')
+                                            ->action(fn(F\TagsInput $component) => $component->state([]))
+                                    ])
+                                    ->columnSpanFull(),
+
+                                __notes()
+                                    ->columnSpanFull(),
+                            ])
+                            ->columns(),
+
+                        S\Tabs\Tab::make(__('Products'))
+                            ->schema([]),
+
+                    ])
                     ->columnSpanFull(),
             ])
             ->columns();
@@ -122,5 +157,14 @@ class CategoryResource extends Resource
         return [
             'index' => ManageCategories::route('/'),
         ];
+    }
+
+    // Helpers
+    public static function afterParentStateUpdated(Set $set, ?string $state): void
+    {
+        if (!$state) return;
+        $parent = Category::find($state);
+        $set('vat_id', $parent?->vat_id);
+        $set('is_gmp_required', $parent?->is_gmp_required);
     }
 }

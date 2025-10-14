@@ -59,6 +59,8 @@ class UnitTableView extends Component implements HasActions, HasSchemas, HasTabl
             ])
             ->toolbarActions([
                 A\DeleteBulkAction::make(),
-            ]);
+            ])
+            ->recordAction('edit')
+        ;
     }
 }

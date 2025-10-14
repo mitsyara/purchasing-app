@@ -36,11 +36,11 @@ class CustomsDataResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->query(fn() => CustomsData::select(self::selectedColumns()))
-            ->defaultSort('import_date', 'desc')
             // ->paginationMode(\Filament\Tables\Enums\PaginationMode::Simple)
             // ->extremePaginationLinks(true)
-            ->deferLoading()
+            // ->deferLoading()
+            ->defaultSort('id', 'desc')
+            ->deferFilters()
 
             ->columns([
                 T\TextColumn::make('import_date')
@@ -55,7 +55,6 @@ class CustomsDataResource extends Resource
                     ->wrap()
                     ->label(__('Importer'))
                     ->searchable()
-                    ->sortable()
                     ->extraAttributes(['style' => 'width: 280px; white-space: normal; word-break: break-word;'])
                     ->toggleable(),
 
@@ -64,7 +63,6 @@ class CustomsDataResource extends Resource
                     ->wrap()
                     ->label(__('Product'))
                     ->searchable()
-                    ->sortable()
                     ->extraAttributes(['style' => 'width: 480px; white-space: normal; word-break: break-word;'])
                     ->toggleable(),
 
@@ -99,7 +97,7 @@ class CustomsDataResource extends Resource
                     ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->wrap()
                     ->label(__('Exporter'))
-                    ->sortable()
+                    ->searchable()
                     ->extraAttributes(['style' => 'width: 280px; white-space: normal; word-break: break-word;'])
                     ->toggleable(),
 
@@ -121,11 +119,11 @@ class CustomsDataResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                T\TextColumn::make('category.name')
-                    ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
-                    ->label(__('Category'))
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                // T\TextColumn::make('category.name')
+                //     ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
+                //     ->label(__('Category'))
+                //     ->sortable()
+                //     ->toggleable(isToggledHiddenByDefault: true),
             ])
 
             ->filters([
@@ -174,13 +172,25 @@ class CustomsDataResource extends Resource
             ->filtersFormColumns(2)
             ->filtersFormWidth(\Filament\Support\Enums\Width::FourExtraLarge)
 
-            ->recordActions([
-                //
-            ])
             ->headerActions([
+                A\ImportAction::make()
+                    ->modal()
+                    ->label('Upload from CSV')
+                    ->icon(Heroicon::ArrowUpTray)
+                    ->importer(\App\Filament\Imports\CustomsDataImporter::class)
+                    ->color('info')
+                    ->maxRows(100000)
+                    ->chunkSize(200)
+                    ->fileRules([
+                        'mimes:csv',
+                        'max:10240',
+                    ])
+                    ->requiresConfirmation(),
+
                 A\ExportAction::make()
+                    ->modal()
                     ->exporter(\App\Filament\Exports\CustomsDataExporter::class)
-                    ->color('teal')->outlined()
+                    ->color(fn(A\Action $action) => $action->isDisabled() ? 'gray' : 'teal')->outlined()
                     ->icon(Heroicon::ArrowDownTray)
                     ->label(__('Download Data'))
                     ->columnMappingColumns(2)

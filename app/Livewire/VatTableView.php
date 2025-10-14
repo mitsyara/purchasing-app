@@ -57,6 +57,8 @@ class VatTableView extends Component implements HasActions, HasSchemas, HasTable
             ])
             ->toolbarActions([
                 A\DeleteBulkAction::make(),
-            ]);
+            ])
+            ->recordAction('edit')
+        ;
     }
 }

@@ -5,9 +5,7 @@ namespace App\Filament\Clusters\CustomsData\Resources\CustomsDataByImporterCateg
 use App\Filament\Clusters\CustomsData\CustomsDataCluster;
 use App\Filament\Clusters\CustomsData\Resources\CustomsDataByImporterCategories\Pages\ManageCustomsDataByImporterCategories;
 use App\Models\CustomsDataByImporterCategory;
-use BackedEnum;
 use Filament\Resources\Resource;
-use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
@@ -20,7 +18,7 @@ class CustomsDataByImporterCategoryResource extends Resource
 {
     protected static ?string $model = CustomsDataByImporterCategory::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedChartPie;
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedChartPie;
 
     protected static ?string $cluster = CustomsDataCluster::class;
 
@@ -31,14 +29,6 @@ class CustomsDataByImporterCategoryResource extends Resource
     public static function getModelLabel(): string
     {
         return static::getNavigationLabel();
-    }
-
-    public static function form(Schema $schema): Schema
-    {
-        return $schema
-            ->components([
-                //
-            ]);
     }
 
     public static function table(Table $table): Table

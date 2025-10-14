@@ -102,6 +102,23 @@ class Product extends Model
         return $this->hasMany(ProductTrader::class, 'product_id');
     }
 
+    // Strong Customers
+    public function strongCustomers(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Contact::class,
+            'product_customer',
+            'product_id',
+            'contact_id'
+        )
+            ->withPivot(['id']);
+    }
+    // Product strong Customers
+    public function productStrongCustomers(): HasMany
+    {
+        return $this->hasMany(ProductCustomer::class, 'product_id');
+    }
+
     // Helper methods
     public function setProductCode(int|string|null $category_id = null): static
     {

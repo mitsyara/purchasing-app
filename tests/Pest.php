@@ -11,8 +11,18 @@
 |
 */
 
+use function Pest\Laravel\actingAs;
+use Illuminate\Support\Facades\Auth;
+
 pest()->extend(Tests\TestCase::class)
     ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+    ->beforeEach(function () {
+        $user = \App\Models\User::factory()
+            ->active()
+            ->create();
+
+        Auth::login($user);
+    })
     ->in('Feature');
 
 /*

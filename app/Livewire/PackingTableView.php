@@ -56,6 +56,8 @@ class PackingTableView extends Component implements HasActions, HasSchemas, HasT
             ])
             ->toolbarActions([
                 A\DeleteBulkAction::make(),
-            ]);
+            ])
+            ->recordAction('edit')
+        ;
     }
 }

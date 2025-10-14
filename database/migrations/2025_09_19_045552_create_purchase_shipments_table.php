@@ -61,9 +61,6 @@ return new class extends Migration
 
             $table->text('notes')->nullable();
 
-            $table->json('attachment_files')->nullable();
-            $table->json('attachment_files_name')->nullable();
-
             $table->timestamps();
         });
     }

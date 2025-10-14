@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
+use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthenticationRecovery;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 use Filament\Models\Contracts\FilamentUser;
@@ -14,18 +16,18 @@ use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser, MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail, HasAppAuthentication, HasAppAuthenticationRecovery
 {
     use HasFactory, Notifiable, HasRoles, HasApiTokens;
     use \App\Traits\HasLoggedActivity;
-    use \Jeffgreco13\FilamentBreezy\Traits\TwoFactorAuthenticatable;
-    
+
     /**
      * Filament authorization
      */
     public function canAccessPanel(\Filament\Panel $panel): bool
     {
         $allowedDomains = [
+            'vietuy.vn',
             'vhl.com.vn',
             'globalhub.com.vn',
             'cangroup.vn',
@@ -33,6 +35,52 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 
         $emailDomain = substr(strrchr($this->email, "@"), 1);
         return (in_array($emailDomain, $allowedDomains) && $this->hasVerifiedEmail()) || $this->id === 1;
+    }
+
+    // Filament's 2FA 
+
+    /**
+     * This method return the user's app authentication secret.
+     */
+    public function getAppAuthenticationSecret(): ?string
+    {
+
+        return $this->google2fa_secret;
+    }
+
+    /**
+     * This method save the user's app authentication secret.
+     */
+    public function saveAppAuthenticationSecret(?string $secret): void
+    {
+        $this->save([
+            'google2fa_secret' => $secret,
+        ]);
+    }
+
+    /**
+     * Should return the user's holder name, uniquely identifiable.
+     */
+    public function getAppAuthenticationHolderName(): string
+    {
+        return $this->email;
+    }
+
+    // This method should return the user's saved app authentication recovery codes.
+    public function getAppAuthenticationRecoveryCodes(): ?array
+    {
+        return $this->google2fa_recovery_codes;
+    }
+
+    /**
+     * This method should save the user's app authentication recovery codes.
+     * @param  array<string> | null  $codes
+     */
+    public function saveAppAuthenticationRecoveryCodes(?array $codes): void
+    {
+        $this->save([
+            'google2fa_recovery_codes' => $codes,
+        ]);
     }
 
     /**
@@ -48,6 +96,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'dob',
         'status',
         'lock_pin',
+        'google2fa_secret',
+        'google2fa_recovery_codes',
     ];
 
     /**
@@ -59,6 +109,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'password',
         'lock_pin',
         'remember_token',
+        'google2fa_secret',
+        'google2fa_recovery_codes',
     ];
 
     /**
@@ -69,11 +121,13 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     protected function casts(): array
     {
         return [
+            'dob' => 'date',
+            'status' => \App\Enums\UserStatusEnum::class,
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'lock_pin' => 'hashed',
-            'dob' => 'date',
-            'status' => \App\Enums\UserStatusEnum::class,
+            'google2fa_secret' => 'encrypted',
+            'google2fa_recovery_codes' => 'encrypted:array',
         ];
     }
 

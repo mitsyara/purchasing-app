@@ -4,12 +4,11 @@ namespace App\Models;
 
 use App\Traits\HasComments;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
+
 
 class Contact extends Model
 {
@@ -39,8 +38,6 @@ class Contact extends Model
         'gmp_no',
         'gmp_expires_at',
         'certificates',
-        'attachment_files',
-        'attachment_files_name',
         'notes',
     ];
 
@@ -70,10 +67,6 @@ class Contact extends Model
     }
 
     // Trader Strong Products
-    public function traderStrongProducts(): HasMany
-    {
-        return $this->hasMany(ProductTrader::class, 'contact_id');
-    }
     public function strongProducts(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -83,6 +76,26 @@ class Contact extends Model
             'product_id'
         )
             ->withPivot(['id']);
+    }
+    public function traderStrongProducts(): HasMany
+    {
+        return $this->hasMany(ProductTrader::class, 'contact_id');
+    }
+
+    // Customer Strong Products
+    public function buyerStrongProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Product::class,
+            'product_customer',
+            'contact_id',
+            'product_id'
+        )
+            ->withPivot(['id']);
+    }
+    public function customerStrongProducts(): HasMany
+    {
+        return $this->hasMany(ProductCustomer::class, 'contact_id');
     }
 
     // Staff in charge
@@ -121,9 +134,9 @@ class Contact extends Model
     public function companyTypes(): Attribute
     {
         return Attribute::get(fn(): array => collect([
-            $this->is_trader ? 'Trader' : null,
-            $this->is_mfg ? 'Manufacturer' : null,
-            $this->is_cus ? 'Customer' : null,
+            $this->is_trader ? 'TRD' : null,
+            $this->is_mfg ? 'MFG' : null,
+            $this->is_cus ? 'CUS' : null,
         ])->filter()->values()->all());
     }
 }

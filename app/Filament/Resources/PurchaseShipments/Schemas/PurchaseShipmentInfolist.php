@@ -41,8 +41,7 @@ class PurchaseShipmentInfolist
                             ])
                             ->columnSpanFull(),
                     ])
-                    ->columnSpanFull()
-                    ->contained(false),
+                    ->columnSpanFull(),
             ]);
     }
 

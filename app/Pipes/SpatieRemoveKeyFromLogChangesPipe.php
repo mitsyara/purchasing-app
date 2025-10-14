@@ -13,7 +13,7 @@ class SpatieRemoveKeyFromLogChangesPipe implements LoggablePipe
     {
         $changes = $event->changes;
 
-        // Lặp qua attributes và old
+        // Loop through 'attributes' and 'old'
         foreach (['attributes', 'old'] as $type) {
             if (isset($changes[$type]) && is_array($changes[$type])) {
                 foreach ($changes[$type] as $key => $value) {
