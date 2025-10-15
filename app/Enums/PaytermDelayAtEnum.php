@@ -39,7 +39,7 @@ enum PaytermDelayAtEnum: string implements HasLabel, HasColor, HasIcon
         };
     }
 
-    public static function cases(): array
+    public static function allCases(): array
     {
         $arr = [];
         foreach (static::cases() as $case) {

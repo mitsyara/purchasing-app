@@ -22,6 +22,7 @@
         "pxlrbt/filament-activity-log": "^2.0",
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-permission": "^6.21",
+        "spatie/simple-excel": "^3.8",
         "staudenmeir/laravel-adjacency-list": "^1.0"
     },
     "require-dev": {

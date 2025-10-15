@@ -16,6 +16,7 @@ return new class extends Migration
             $table->morphs('commentable');
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->text('comment');
+            $table->string('comment_status')->nullable();
             $table->timestamps();
         });
     }

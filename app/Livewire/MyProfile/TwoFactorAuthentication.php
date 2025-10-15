@@ -50,13 +50,21 @@ class TwoFactorAuthentication extends Component implements HasSchemas, HasAction
                 S\Section::make('Multi-Factor Authentication')
                     ->description('Manage your multi-factor authentication settings. When multi-factor authentication is enabled, you will be prompted for a secure, random token during authentication.')
                     ->schema([
-                        $this->setupAction()
-                            ->hidden(fn(): bool => $this->isEnabled()),
-
-                        // RegenerateAppAuthenticationRecoveryCodesAction::make($instance)
-                        //     ->visible(fn(): bool => $this->isEnabled()),
-                        // DisableAppAuthenticationAction::make($instance)
-                        //     ->visible(fn(): bool => $this->isEnabled()),
+                        S\Flex::make([
+                            $this->setupAction()
+                                ->hidden(fn(): bool => $this->isEnabled()),
+    
+                            Action::make('verifyEmail')
+                                ->label($this->user->hasVerifiedEmail() ? __('Email verified') : __('Verify Email'))
+                                ->link()->icon($this->user->hasVerifiedEmail() ? Heroicon::EnvelopeOpen : Heroicon::Envelope)
+                                ->modal()->color('teal')
+                                ->action(function (): void {
+                                    // Logic to send verification email
+                                })
+                                ->disabled($this->user->hasVerifiedEmail())
+                                ->color($this->user->hasVerifiedEmail() ? 'gray' : 'primary')
+                        ])
+                        ->from('sm'),
                     ])
                     ->footer([])
                     ->aside()
