@@ -4,7 +4,6 @@ namespace App\Jobs;
 
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -29,15 +28,6 @@ class CustomsDataExportJob implements ShouldQueue
         }
 
         // ====== REBUILD QUERY ======
-        // $data = [
-        //     'key' => $key,
-        //     'sessionKey' => $sessionKey,
-        //     'connection' => $connection,
-        //     'model' => $this->model,
-        //     'sql' => $query->toSql(),
-        //     'bindings' => $query->getBindings(),
-        // ];
-
         if (isset($data['sql'], $data['bindings'])) {
             $modelClass = $data['model'];
             $sql = $data['sql'];
@@ -85,7 +75,15 @@ class CustomsDataExportJob implements ShouldQueue
             $query->orderBy($orderCol)->chunk(1000, function ($records) use ($writer, $mapped) {
                 $rows = collect($records)->map(function ($record) use ($mapped) {
                     return collect($mapped)->keys()
-                        ->mapWithKeys(fn($col) => [$col => $record->{$col} ?? null])
+                        ->mapWithKeys(function($col) use ($record) {
+                            if ($col === 'import_date') {
+                                return [$col => (string) $record->import_date?->format('Y-m-d')];
+                            }
+                            if ($col === 'qty' || $col === 'price') {
+                                return [$col => $record->{$col} !== null ? $record->{$col} - 0 : null];
+                            }
+                            return [$col => $record->{$col} ?? null];
+                        })
                         ->toArray();
                 })->toArray();
 
@@ -103,18 +101,17 @@ class CustomsDataExportJob implements ShouldQueue
                 ['path' => $relativePath]
             );
 
-            // Lưu kết quả vào cache để FE lấy
+            // Lưu kết quả vào Cache
             Cache::put(
                 "export-result-{$data['sessionKey']}",
                 [
+                    'status' => 'ready',
                     'url' => $signedUrl,
-                    'file' => basename($filePath),
+                    'file' => $filePath,
                 ],
                 now()->addMinutes(5)
             );
 
-            // Schedule xoá file sau 5 phút
-            \App\Jobs\CleanUpCustomsDataExportFileJob::dispatch($filePath)->delay(now()->addMinutes(5));
             Log::channel('export')->info("Export completed: {$filePath}", ['url' => $signedUrl]);
         } catch (\Throwable $e) {
             // ====== XỬ LÝ LỖI ======
@@ -139,6 +136,15 @@ class CustomsDataExportJob implements ShouldQueue
             if (file_exists($filePath)) {
                 @unlink($filePath);
             }
+
+            Cache::put(
+                "export-result-{$data['sessionKey']}",
+                [
+                    'status' => 'error',
+                    'message' => $e->getMessage(),
+                ],
+                now()->addMinutes(1)
+            );
 
             throw $e;
         }

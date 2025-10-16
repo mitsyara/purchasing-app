@@ -103,8 +103,30 @@ class PasswordSection extends Component implements HasSchemas, HasActions
                             ->disabled(fn(): bool => $this->user->lock_pin === null)
                             ->requiresConfirmation(),
 
+                        Action::make('setAppPin')
+                            ->visible(fn(): bool => auth()->id() === 1)
+                            ->schema([
+                                F\TextInput::make('app_pin')
+                                    ->label(__('Application PIN'))
+                                    ->mask('9999')
+                                    ->default(fn(): string => \Illuminate\Support\Facades\Cache::get('app_pin', '1234'))
+                                    ->required(),
+                            ])
+                            ->action(function (array $data): void {
+                                \Illuminate\Support\Facades\Cache::put('app_pin', $data['app_pin']);
+                                $this->dispatch('refresh-topbar');
+
+                                Notification::make()
+                                    ->success()
+                                    ->title(__('Application PIN updated'))
+                                    ->send();
+                            })
+                            ->modal()->link()->outlined()->color('warning')
+                            ->modalWidth(Width::Small)
+                            ->icon(Heroicon::DevicePhoneMobile)
+
                     ])
-                        ->columns(['default' => 3])
+                        ->columns(['default' => 4])
                 ])
                 ->aside()
                 ->compact()

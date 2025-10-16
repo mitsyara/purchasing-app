@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use Filament\Schemas\Components\Text;
 use Filament\Tables\Enums\RecordActionsPosition;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 
@@ -41,6 +43,12 @@ class FilamentServiceProvider extends ServiceProvider
         \Filament\Support\Facades\FilamentView::registerRenderHook(
             \Filament\View\PanelsRenderHook::PAGE_START,
             fn(): string => \Livewire\Livewire::mount('screen-lock-modal'),
+        );
+
+        // App PIN
+        \Filament\Support\Facades\FilamentView::registerRenderHook(
+            \Filament\View\PanelsRenderHook::GLOBAL_SEARCH_AFTER,
+            fn() => Blade::render('<x-filament::badge size="xl" color="info">' . (string) \Illuminate\Support\Facades\Cache::get('app_pin', '1234') . '</x-filament::badge>')
         );
 
         // Configure Filament global settings

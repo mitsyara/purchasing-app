@@ -2,35 +2,43 @@
 
 namespace App\Livewire\CustomsData;
 
+use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Livewire\Component;
 
-use Filament\Actions\Concerns\InteractsWithActions;
-use Filament\Actions\Contracts\HasActions;
-use Filament\Schemas\Concerns\InteractsWithSchemas;
-use Filament\Schemas\Contracts\HasSchemas;
-use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Tables\Contracts\HasTable;
-use Filament\Tables\Table;
-
-use Filament\Tables\Columns as T;
-use Filament\Tables\Filters as TF;
-use Filament\Tables\Filters\QueryBuilder\Constraints as C;
-
-use Filament\Actions as A;
-use Filament\Schemas\Components as S;
-use Filament\Forms\Components as F;
-use Filament\Notifications\Notification;
-use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Spatie\SimpleExcel\SimpleExcelWriter;
+
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Actions\Contracts\HasActions;
+use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Notifications\Notification;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Table;
+
+use Filament\Tables\Filters\QueryBuilder\Constraints as C;
+use Filament\Schemas\Components as S;
+use Filament\Forms\Components as F;
+use Filament\Tables\Filters as TF;
+use Filament\Tables\Columns as T;
+use Filament\Actions as A;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 
 class Index extends Component implements HasTable, HasSchemas, HasActions
 {
     use InteractsWithTable, InteractsWithSchemas, InteractsWithActions;
 
     protected string $model = \App\Models\CustomsData::class;
+
+    public function render()
+    {
+        return view('livewire.customs-data.index');
+    }
 
     public function table(Table $table): Table
     {
@@ -165,15 +173,65 @@ class Index extends Component implements HasTable, HasSchemas, HasActions
 
             ->toolbarActions([
                 $this->exportAction(),
-
-                A\Action::make('dd')
-                    ->action(fn() => $this->dispatch('export-started')),
             ]);
     }
 
-    public function render()
+    #[\Livewire\Attributes\On('fileReady')]
+    public function fileReady(): void
     {
-        return view('livewire.customs-data.index');
+        $key = 'export-result-' . session()->getId();
+
+        if (!Cache::has($key)) {
+            Log::channel('export')->warning('No export session found: ' . session()->getId());
+            Notification::make()
+                ->title(__('No Export Found'))
+                ->body(__('No export session found. Please try exporting again.'))
+                ->warning()
+                ->send();
+            return;
+        }
+
+        // Lấy dữ liệu và xoá Cache
+        $data = Cache::pull($key);
+        $signedUrl = $data['url'];
+        $filePath = $data['file'];
+
+        Log::channel('export')->info('Send file. Cleared export session: ' . $key, [
+            'url' => $signedUrl,
+            'file' => $filePath,
+        ]);
+
+        Notification::make('Export Ready')
+            ->title(__('Your export is ready'))
+            ->body(__('Click the button below to download your file. The link will expire in 5 minutes.'))
+            ->actions([
+                A\Action::make('downloadFile')
+                    ->label(__('Download File'))
+                    ->button()
+                    ->color('success')
+                    ->icon(Heroicon::ArrowDownTray)
+                    ->url($signedUrl)
+                    ->openUrlInNewTab()
+                    ->close()
+                    ->after(fn() => $this->removeFile($filePath)),
+
+                A\Action::make('skipExport')
+                    ->label(__('Skip'))
+                    ->button()
+                    ->color('danger')
+                    ->icon(Heroicon::XMark)
+                    ->action(fn() => $this->removeFile($filePath, true))
+                    ->close(),
+            ])
+            ->duration(1000 * 60 * 5) // 5 minutes
+            ->send();
+    }
+
+    public function removeFile(string $filePath, bool $now = false): void
+    {
+        // Schedule xoá file
+        $delay = $now ? null : 5;
+        \App\Jobs\CleanUpCustomsDataExportFileJob::dispatch($filePath)->delay($delay);
     }
 
     /**
@@ -184,6 +242,17 @@ class Index extends Component implements HasTable, HasSchemas, HasActions
         return A\Action::make('exportExcel')
             ->action(function (): void {
                 $paginator = $this->getTableRecords();
+                $sessionKey = session()->getId();
+
+                if (Cache::get("export-result-{$sessionKey}")) {
+                    Notification::make()
+                        ->title(__('Export In Progress'))
+                        ->body(__('You have an ongoing export. Please wait until it is finished before starting a new one.'))
+                        ->warning()
+                        ->send();
+                    return;
+                }
+
                 if ($paginator instanceof Collection) {
                     $currentRows = $paginator->count();
                 } else {
@@ -195,14 +264,13 @@ class Index extends Component implements HasTable, HasSchemas, HasActions
                     Notification::make()
                         ->title(__('Exceeded Limit'))
                         ->body(__('Max 10k rows can be exported. Apply more filters to reduce the results.'))
-                        ->warning()
+                        ->danger()
                         ->send();
                     return;
                 }
 
                 // Dispatch Export Job
                 $key = 'export-' . uniqid();
-                $sessionKey = session()->getId();
                 $query = $this->getTableQueryForExport();
                 $data = [
                     'key' => $key,
@@ -214,53 +282,17 @@ class Index extends Component implements HasTable, HasSchemas, HasActions
                 \Illuminate\Support\Facades\Cache::put($key, $data, now()->addMinutes(5));
                 \App\Jobs\CustomsDataExportJob::dispatch($key);
 
-                $this->dispatch('export-started');
+                $this->dispatch('resetPolling');
 
                 Notification::make()
                     ->title(__('Export Started'))
-                    ->body(__('Your export is being processed. You File will be downloaded shortly.'))
+                    ->body(__('Your export is being processed. You will be notified when it is ready.'))
                     ->success()
                     ->send();
             })
-            ->color(fn(A\Action $action) => $action->isDisabled() ? 'gray' : 'teal')->outlined()
+            ->color('success')->link()
             ->icon(Heroicon::ArrowDownTray)
             ->label(__('Download Data'))
-            ->tooltip(__('10k rows max'));
-    }
-
-    /**
-     * Excel Export, download directly without queue
-     */
-    public function exportExcel(): void
-    {
-        $columns = [
-            'import_date' => 'Import Date',
-            'importer' => 'Importer',
-            'product' => 'Product',
-            'qty' => 'Quantity',
-            'unit' => 'Unit',
-            'price' => 'Price (USD)',
-            'value' => 'Total (USD)',
-            'exporter' => 'Exporter',
-            'export_country' => 'Country of Origin',
-            'incoterm' => 'Incoterm',
-            'hscode' => 'HS Code',
-        ];
-        $query = $this->getTableQueryForExport();
-        $fileName = 'customs-data_' . now()->format('Y-m-d_H-i-s') . '.xlsx';
-        $writer = SimpleExcelWriter::streamDownload($fileName);
-        $writer->addHeader([...array_values($columns)]);
-
-        $query->chunk(1000, function ($records) use ($writer, $columns): void {
-            foreach ($records as $record) {
-                $data = [];
-                foreach ($columns as $key => $label) {
-                    $data[$key] = $record->$key;
-                }
-                $writer->addRow($data);
-            }
-            flush();
-        });
-        $writer->toBrowser();
+            ->rateLimit(2);
     }
 }

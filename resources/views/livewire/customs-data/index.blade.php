@@ -1,16 +1,24 @@
-<div style="font-size: 0.65rem!important;" x-on:export-started.window="startPolling()">
-    
-    {{ $this->table }}
+<div>
 
-    <x-filament::modal id="lock-screen">
-        {{-- TODO: User must input PIN before proceeding. --}}
+    <div style="font-size: 0.65rem!important;">
+        {{ $this->table }}
+    </div>
+
+    <x-filament::modal id="ultility">
+        {{-- TODO: Ultility tools here. --}}
     </x-filament::modal>
 </div>
 
 <script>
+    let polling = true;
+
     async function pollExportStatus() {
+        const route = "{{ route('exports.status') }}";
+
+        if (!polling) return;
+
         try {
-            const res = await fetch('/export/status', {
+            const res = await fetch(route, {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json'
@@ -23,35 +31,41 @@
 
             if (data.status === 'ready') {
                 console.log('Export ready! URL:', data.url);
-                notify(data.url);
+                polling = false;
+                @this.dispatch('fileReady');
+
+            } else if (data.status === 'failed') {
+                console.log('Export failed. ', data.message);
+                failedNotify();
+                polling = false;
             } else {
-                console.log('Export pending...');
+                console.log('Polling...');
             }
+
         } catch (err) {
+
             console.error('Error fetching export status', err);
+
         } finally {
-            // luôn schedule lần poll tiếp theo sau 10 giây
-            setTimeout(pollExportStatus, 10000);
+            setTimeout(pollExportStatus, 10000); // 10 giây
         }
     }
 
     // Start polling ngay khi load trang
     pollExportStatus();
 
-    function notify(url) {
-        new FilamentNotification()
-            .title('Your export is ready!')
-            .success()
-            .body('Your export file is ready for download.')
-            .duration(500000) // 5 phút
-            .actions([
-                new FilamentNotificationAction('download')
-                .link()
-                .color('info')
-                .url(url)
-                .openUrlInNewTab(),
-            ])
-            .send();
+    window.addEventListener('resetPolling', event => {
+        console.log('Reset polling triggered');
+        resetPolling();
+    });
+
+    function resetPolling() {
+        polling = true;
+        pollExportStatus();
+    }
+
+    function skipExport() {
+        @this.dispatch('skipExport');
     }
 
     function failedNotify() {

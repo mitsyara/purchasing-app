@@ -1,14 +1,16 @@
 @props([
     'livewire' => null,
+    'dark' => false,
 ])
 <!DOCTYPE html>
+<html lang="vi">
 <html lang="vi" @class(['fi', 'dark' => filament()->hasDarkModeForced()])>
 
 <head>
     <meta charset="utf-8" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+    <meta name="robots" content="noindex, nofollow">
     @if ($favicon = filament()->getFavicon())
         <link rel="icon" href="{{ $favicon }}" />
     @endif
@@ -92,6 +94,32 @@
 
 <body>
     <div x-data="{ isSticky: false }">
+
+        {{-- Page Header --}}
+        <div class="flex justify-between items-center px-8 py-4">
+            <h1>
+                <span class="text-lg font-semibold block leading-none">
+                    DỮ LIỆU HẢI ANH cho người mới chém gió!
+                </span>
+                <span class="text-xs">version: 4.0</span>
+            </h1>
+
+            <x-filament::input.wrapper class="w-auto">
+                <x-filament::input.select id="theme-switcher"
+                    x-on:change="
+                    localStorage.setItem('theme', $event.target.value);
+                    theme = $event.target.value;
+                    $dispatch('theme-changed', theme);
+                    loadDarkMode();
+                "
+                    class="w-auto text-sm" aria-label="Chuyển đổi giao diện sáng/tối/hệ thống">
+                    <option value="light" @if (filament()->getDefaultThemeMode() === \Filament\Enums\ThemeMode::Light) selected @endif>Giao diện sáng</option>
+                    <option value="dark" @if (filament()->getDefaultThemeMode() === \Filament\Enums\ThemeMode::Dark) selected @endif>Giao diện tối</option>
+                    <option value="system" @if (filament()->getDefaultThemeMode() === \Filament\Enums\ThemeMode::System) selected @endif>Giao diện Hệ thống</option>
+                </x-filament::input.select>
+            </x-filament::input.wrapper>
+        </div>
+
         {{ $slot }}
 
         @livewire(Filament\Livewire\Notifications::class)
@@ -103,6 +131,7 @@
                 loadDarkMode()
             </script>
         @endif
+
     </div>
 
     @stack('scripts')

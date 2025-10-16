@@ -12,6 +12,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 use Filament\Tables\Columns as T;
+use Filament\Tables\Filters as TF;
 use Filament\Actions as A;
 use Filament\Forms\Components as F;
 use Filament\Schemas\Components as S;
@@ -113,6 +114,7 @@ class UserResource extends Resource
 
                 T\TextColumn::make('email')
                     ->label(__('Email'))
+                    ->color(fn(User $record): string => $record->hasVerifiedEmail() ? 'success' : 'danger')
                     ->searchable()
                     ->sortable(),
 
@@ -121,21 +123,26 @@ class UserResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                T\TextColumn::make('updated_at')
-                    ->label(__('Last Updated'))
-                    ->since()
-                    ->sortable(),
-
                 T\TextColumn::make('companies.company_code')
                     ->label(__('Company'))
                     ->badge()
                     ->sortable(),
             ])
             ->filters([
-                //
+                TF\TernaryFilter::make('email_verified_at')
+                    ->nullable(),
             ])
             ->recordActions([
                 A\ActionGroup::make([
+                    A\Action::make('markEmailVerified')
+                        ->label(__('Mark Email Verified'))
+                        ->icon(Heroicon::OutlinedCheckCircle)
+                        ->color('success')
+                        ->hidden(fn(User $record): bool => !is_null($record->email_verified_at))
+                        ->action(function (User $record) {
+                            $record->markEmailAsVerified();
+                        }),
+
                     A\EditAction::make(),
                     A\DeleteAction::make(),
                 ]),
@@ -143,6 +150,7 @@ class UserResource extends Resource
             ->toolbarActions([
                 A\BulkActionGroup::make([
                     A\BulkActionGroup::make([
+                        static::bulkEmailVerification(),
                         static::bulkStatus(),
                         static::bulkCompanies(),
                     ])
@@ -224,6 +232,19 @@ class UserResource extends Resource
                     User::query()->whereIn('id', $records)
                         ->update(['status' => $status]);
                 }
+            });
+    }
+
+    public static function bulkEmailVerification(): A\BulkAction
+    {
+        return A\BulkAction::make('verify_email')
+            ->label(__('Verify Email'))
+            ->icon(Heroicon::OutlinedCheckCircle)
+            ->color('success')
+            ->action(function (array $data, mixed $records) {
+                User::query()->whereIn('id', $records)
+                    ->where('email_verified_at', null)
+                    ->update(['email_verified_at' => now()]);
             });
     }
 }
