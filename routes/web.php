@@ -2,6 +2,7 @@
 
 use App\Livewire\CustomsData\Index;
 use App\Livewire\CustomsData\PinForm;
+use App\Services\VcbExchangeRatesService;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
@@ -68,4 +69,9 @@ Route::get('/test-download', function () {
         ['path' => $relativePath]
     );
     return $signedUrl;
+});
+
+Route::get('/exrate', function () {
+    $rates = VcbExchangeRatesService::fetch();
+    dd($rates);
 });

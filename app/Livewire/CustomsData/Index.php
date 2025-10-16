@@ -52,28 +52,28 @@ class Index extends Component implements HasTable, HasSchemas, HasActions
 
             ->columns([
                 T\TextColumn::make('import_date')
-                    ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
+                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label(__('Import Date'))
                     ->date('d/m/Y')
                     ->sortable()
                     ->toggleable(),
 
                 T\TextColumn::make('importer')
-                    ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
+                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->wrap()
                     ->label(__('Importer'))
                     ->searchable()
                     ->toggleable(),
 
                 T\TextColumn::make('product')
-                    ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
+                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->wrap()
                     ->label(__('Product'))
                     ->searchable()
                     ->toggleable(),
 
                 T\TextColumn::make('qty')
-                    ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
+                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label(__('Quantity'))
                     ->numeric()
                     ->suffix(fn($record): ?string => $record->unit ? ' ' . $record->unit : null)
@@ -81,45 +81,45 @@ class Index extends Component implements HasTable, HasSchemas, HasActions
                     ->toggleable(),
 
                 T\TextColumn::make('unit')
-                    ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
+                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label(__('Unit'))
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 T\TextColumn::make('price')
-                    ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
+                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label(__('Price'))
                     ->money('USD')
                     ->sortable()
                     ->toggleable(),
 
                 T\TextColumn::make('value')
-                    ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
+                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label(__('Total'))
                     ->money('USD')
                     ->sortable()
                     ->toggleable(),
 
                 T\TextColumn::make('exporter')
-                    ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
+                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->wrap()
                     ->label(__('Exporter'))
                     ->searchable()
                     ->toggleable(),
 
                 T\TextColumn::make('export_country')
-                    ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
+                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label(__('Export Country'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 T\TextColumn::make('incoterm')
-                    ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
+                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label(__('Incoterm'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 T\TextColumn::make('hscode')
-                    ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
+                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label(__('HS Code'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

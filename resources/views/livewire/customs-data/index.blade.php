@@ -1,21 +1,25 @@
 <div>
-
-    <div style="font-size: 0.65rem!important;">
+    <div class=" px-4 xl:px-6">
         {{ $this->table }}
     </div>
-
-    <x-filament::modal id="ultility">
-        {{-- TODO: Ultility tools here. --}}
-    </x-filament::modal>
 </div>
 
 <script>
     let polling = true;
+    const MAX_POLL_TIME = 5 * 60 * 1000; // 5 phút
+    const startTime = Date.now();
 
     async function pollExportStatus() {
         const route = "{{ route('exports.status') }}";
 
         if (!polling) return;
+
+        // Kiểm tra đã quá 5 phút chưa
+        if (Date.now() - startTime > MAX_POLL_TIME) {
+            console.log('Polling stopped after 5 minutes.');
+            polling = false;
+            return;
+        }
 
         try {
             const res = await fetch(route, {
@@ -43,30 +47,16 @@
             }
 
         } catch (err) {
-
             console.error('Error fetching export status', err);
-
         } finally {
-            setTimeout(pollExportStatus, 10000); // 10 giây
+            if (polling) {
+                setTimeout(pollExportStatus, 10000); // 10 giây
+            }
         }
     }
 
     // Start polling ngay khi load trang
     pollExportStatus();
-
-    window.addEventListener('resetPolling', event => {
-        console.log('Reset polling triggered');
-        resetPolling();
-    });
-
-    function resetPolling() {
-        polling = true;
-        pollExportStatus();
-    }
-
-    function skipExport() {
-        @this.dispatch('skipExport');
-    }
 
     function failedNotify() {
         new FilamentNotification()
@@ -75,4 +65,10 @@
             .body('There was an error processing your export. Please try again later.')
             .send();
     }
+
+    window.addEventListener('resetPolling', event => {
+        console.log('Reset polling triggered');
+        polling = true;
+        pollExportStatus();
+    });
 </script>
