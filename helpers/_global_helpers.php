@@ -68,24 +68,49 @@ if (!function_exists('trim_decimal')) {
     function trim_decimal(string|float|int|null $number = null): ?string
     {
         $fmt = new \NumberFormatter(app()->getLocale(), \NumberFormatter::DECIMAL);
-        $decimalSeparator = $fmt->getSymbol(\NumberFormatter::DECIMAL_SEPARATOR_SYMBOL);
+        $thousandsSeparator = $fmt->getSymbol(\NumberFormatter::GROUPING_SEPARATOR_SYMBOL);
         // Convert to String, then Remove unnesscesary 0 and dot
-        return $number ? rtrim(rtrim((string) $number, '0'), '.') : null;
+        return $number ? rtrim(rtrim((string) $number, '0'), $thousandsSeparator) : null;
     }
 }
 
-if (!function_exists('__number_string_converter_vi')) {
-    function __number_string_converter_vi(string|float|int|null $value, bool $toString = true): string|float|null
-    {
-        if (is_null($value)) return null;
+if (!function_exists('__number_string_converter')) {
+    function __number_string_converter(
+        string|float|int|null $value,
+        bool $toString = true,
+        bool $autoLocale = true
+    ): string|float|null {
+        if (is_null($value)) {
+            return null;
+        }
+
+        // Nếu bật autoLocale thì xác định locale hiện tại
+        if ($autoLocale) {
+            $locale = app()->getLocale();
+            $fmt = new \NumberFormatter($locale, \NumberFormatter::DECIMAL);
+            $decimalSeparator = $fmt->getSymbol(\NumberFormatter::DECIMAL_SEPARATOR_SYMBOL);
+            $groupSeparator = $fmt->getSymbol(\NumberFormatter::GROUPING_SEPARATOR_SYMBOL);
+        } else {
+            $decimalSeparator = '.';
+            $groupSeparator = ',';
+        }
 
         if ($toString) {
             // Convert float|int -> string 
-            return number_format((float) $value, 0, '.', ',');
+            if ($autoLocale) {
+                return $fmt->format((float) $value);
+            }
+            return number_format((float) $value, 0, $decimalSeparator, $groupSeparator);
         }
 
         // Convert string -> float
-        return (float) str_replace(',', '', $value);
+        if ($autoLocale) {
+            // Thay group separator trước, rồi đổi decimal separator thành '.'
+            $normalized = str_replace([$groupSeparator, $decimalSeparator], ['', '.'], $value);
+            return (float) $normalized;
+        }
+
+        return (float) str_replace($groupSeparator, '', $value);
     }
 }
 

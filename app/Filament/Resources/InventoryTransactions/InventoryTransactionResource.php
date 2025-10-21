@@ -4,7 +4,7 @@ namespace App\Filament\Resources\InventoryTransactions;
 
 use App\Filament\Resources\InventoryTransactions\Pages\ManageInventoryTransactions;
 use App\Models\InventoryTransaction;
-use Filament\Resources\Resource;
+use App\Filament\BaseResource as Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;

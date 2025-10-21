@@ -27,42 +27,56 @@ class ExchangeRate extends Component implements HasTable, HasSchemas, HasActions
     }
 
     #[\Livewire\Attributes\On('dateChanged')]
+    /**
+     * Fetch exchange rates for a specific date (or today if no date is provided).
+     * - Caches results to minimize API calls.
+     * - Cache duration: 30 minutes for today's rates, 1 day for older dates
+     */
     public function fetchRate(?string $date = null): void
     {
-        // Bước 1: gọi fetch để lấy timestamp mới nhất (chỉ metadata)
-        $probe = VcbExchangeRatesService::fetch($date);
-        $timestamp = $probe['timestamp'] ?? null;
+        // Determine date
+        $dateStr = $date ?? now()->toDateString();
+        $dateObj = \Carbon\Carbon::createFromFormat('Y-m-d', $dateStr);
+        $isToday = $dateObj->isToday();
 
-        if (!$timestamp) {
-            // Nếu API không trả timestamp, vẫn lấy data mới
-            $rates = $probe;
-        } else {
-            // Tạo cache key theo timestamp
-            $cacheKey = 'vcb_rates_' . str_replace([' ', ':'], ['_', '-'], $timestamp);
+        // Create cache key by date
+        $cacheKey = 'vcb_exrates_' . $dateObj->format('Ymd');
 
-            // Bước 2: thử lấy cache
-            $rates = Cache::get($cacheKey);
+        // Try to get transformed cached data
+        $result = Cache::get($cacheKey);
 
-            // Bước 3: nếu chưa có thì mới gọi API thật sự và cache lại
-            if (!$rates) {
-                $rates = $probe; // dùng luôn kết quả fetch() vừa rồi
-                Cache::put($cacheKey, $rates, now()->addDay()); // lưu cache 1 ngày
-            }
+        // If not cached, fetch new data
+        if (!$result) {
+            $probe = VcbExchangeRatesService::fetch($dateStr);
+            $this->timestamp = $probe['timestamp'] ?? null;
+
+            // Transform before caching
+            $result = $this->transformData($probe);
+
+            // TTL: today => 30 minutes, older => 1 day
+            $ttl = $isToday ? now()->addMinutes(30) : now()->addDay();
+            Cache::put($cacheKey, $result, $ttl);
         }
 
-        // Chuẩn bị dữ liệu cho bảng
-        $result = collect($rates)
+        // Update Livewire data
+        $this->data = $result;
+        $this->resetTable();
+    }
+
+    /**
+     * Transform raw rates data into a structured array suitable for table display.
+     * - Excludes entries with any zero values.
+     * - Sorts by currency code.
+     */
+    public function transformData(array $rates): array
+    {
+        return collect($rates)
             ->except('timestamp')
             ->filter(fn($v) => collect($v)->every(fn($val) => $val != 0))
             ->map(fn($v, $k) => array_merge(['curr' => $k], $v))
-            ->values()
             ->sortBy('curr')
+            ->values()
             ->all();
-
-        $this->timestamp = $rates['timestamp'] ?? null;
-        $this->data = $result;
-
-        $this->resetTable();
     }
 
     public function table(Table $table): Table
@@ -78,18 +92,21 @@ class ExchangeRate extends Component implements HasTable, HasSchemas, HasActions
                 TextColumn::make('cash')
                     ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label('Mua Tiền mặt')
+                    ->color('success')
                     ->sortable()
                     ->money('VND', locale: 'vi'),
 
                 TextColumn::make('transfer')
                     ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label('Mua Chuyển khoản')
+                    ->color('info')
                     ->sortable()
                     ->money('VND', locale: 'vi'),
 
                 TextColumn::make('sell')
                     ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label('Bán ra')
+                    ->color('danger')
                     ->sortable()
                     ->money('VND', locale: 'vi'),
             ])

@@ -34,17 +34,17 @@ class TwoFactorAuthentication extends Component implements HasSchemas, HasAction
 {
     use InteractsWithSchemas, InteractsWithActions;
 
-    protected ?\App\Models\User $user;
     protected $recoveryCodeCount = 8;
 
     public function mount(): void
     {
-        $this->user = auth()->user();
         $this->isEnabled();
     }
 
     public function form(Schema $schema): Schema
     {
+        $user = auth()->user();
+
         return $schema
             ->schema([
                 S\Section::make('Multi-Factor Authentication')
@@ -53,18 +53,18 @@ class TwoFactorAuthentication extends Component implements HasSchemas, HasAction
                         S\Flex::make([
                             $this->setupAction()
                                 ->hidden(fn(): bool => $this->isEnabled()),
-    
+
                             Action::make('verifyEmail')
-                                ->label($this->user->hasVerifiedEmail() ? __('Email verified') : __('Verify Email'))
-                                ->link()->icon($this->user->hasVerifiedEmail() ? Heroicon::EnvelopeOpen : Heroicon::Envelope)
+                                ->label($user->hasVerifiedEmail() ? __('Email verified') : __('Verify Email'))
+                                ->link()->icon($user->hasVerifiedEmail() ? Heroicon::EnvelopeOpen : Heroicon::Envelope)
                                 ->modal()->color('teal')
                                 ->action(function (): void {
                                     // Logic to send verification email
                                 })
-                                ->disabled($this->user->hasVerifiedEmail())
-                                ->color($this->user->hasVerifiedEmail() ? 'gray' : 'primary')
+                                ->disabled($user->hasVerifiedEmail())
+                                ->color($user->hasVerifiedEmail() ? 'gray' : 'primary')
                         ])
-                        ->from('sm'),
+                            ->from('sm'),
                     ])
                     ->footer([])
                     ->aside()

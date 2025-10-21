@@ -2,13 +2,12 @@
 
 namespace App\Livewire\CustomsData;
 
-use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Livewire\Component;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
@@ -26,14 +25,31 @@ use Filament\Forms\Components as F;
 use Filament\Tables\Filters as TF;
 use Filament\Tables\Columns as T;
 use Filament\Actions as A;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\URL;
+use Livewire\Attributes\Url;
 
 class Index extends Component implements HasTable, HasSchemas, HasActions
 {
     use InteractsWithTable, InteractsWithSchemas, InteractsWithActions;
 
     protected string $model = \App\Models\CustomsData::class;
+
+    #[Url(as: 'filters')]
+    public ?array $tableFilters = null;
+
+    #[Url(as: 'group')]
+    public ?string $tableGrouping = null;
+
+    #[Url(as: 'groupDir')]
+    public ?string $tableGroupingDirection = null;
+
+    #[Url(as: 'search')]
+    public $tableSearch = '';
+
+    #[Url(as: 'sortCol')]
+    public ?string $tableSortColumn = null;
+
+    #[Url(as: 'sortDirection')]
+    public ?string $tableSortDirection = null;
 
     public function render()
     {
@@ -43,83 +59,70 @@ class Index extends Component implements HasTable, HasSchemas, HasActions
     public function table(Table $table): Table
     {
         return $table
-            ->query(function (): Builder {
-                return \App\Models\CustomsData::query();
-            })
+            ->query(fn(): Builder => \App\Models\CustomsData::query())
             ->deferLoading()
             ->defaultSort('id', 'desc')
             ->deferFilters()
 
             ->columns([
                 T\TextColumn::make('import_date')
-                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label(__('Import Date'))
                     ->date('d/m/Y')
                     ->sortable()
                     ->toggleable(),
 
                 T\TextColumn::make('importer')
-                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->wrap()
                     ->label(__('Importer'))
                     ->searchable()
                     ->toggleable(),
 
                 T\TextColumn::make('product')
-                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->wrap()
                     ->label(__('Product'))
                     ->searchable()
                     ->toggleable(),
 
                 T\TextColumn::make('qty')
-                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label(__('Quantity'))
                     ->numeric()
-                    ->suffix(fn($record): ?string => $record->unit ? ' ' . $record->unit : null)
+                    ->suffix(fn($record): ?string => $record->unit ? ' ' . $record->unit : [null])
                     ->sortable()
                     ->toggleable(),
 
                 T\TextColumn::make('unit')
-                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label(__('Unit'))
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 T\TextColumn::make('price')
-                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label(__('Price'))
                     ->money('USD')
                     ->sortable()
                     ->toggleable(),
 
                 T\TextColumn::make('value')
-                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label(__('Total'))
                     ->money('USD')
                     ->sortable()
                     ->toggleable(),
 
                 T\TextColumn::make('exporter')
-                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->wrap()
                     ->label(__('Exporter'))
                     ->searchable()
                     ->toggleable(),
 
                 T\TextColumn::make('export_country')
-                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label(__('Export Country'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 T\TextColumn::make('incoterm')
-                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label(__('Incoterm'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 T\TextColumn::make('hscode')
-                    // ->size(\Filament\Support\Enums\TextSize::ExtraSmall)
                     ->label(__('HS Code'))
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -170,6 +173,8 @@ class Index extends Component implements HasTable, HasSchemas, HasActions
             ], \Filament\Tables\Enums\FiltersLayout::Modal)
             ->filtersFormColumns(2)
             ->filtersFormWidth(\Filament\Support\Enums\Width::FourExtraLarge)
+
+            ->queryStringIdentifier('cd')
 
             ->toolbarActions([
                 $this->exportAction(),

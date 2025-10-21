@@ -10,7 +10,8 @@ export default defineConfig({
             input: [
                 'resources/js/app.js',
                 'resources/css/app.css',
-                'resources/css/filament/purchasing/theme.css',                
+                'resources/css/filament/purchasing/theme.css',
+                'resources/css/pdf.css',
             ],
             refresh: true,
         }),

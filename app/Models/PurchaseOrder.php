@@ -187,13 +187,13 @@ class PurchaseOrder extends Model
 
     public function processOrder(array $data): bool
     {
-        $supplierCode = $this->order->supplier->contact_short_name
-            ?? $this->order->supplier->contact_code
+        $supplierCode = $this->supplier->contact_short_name
+            ?? $this->supplier->contact_code
             ?? 'N/A';
 
         $this->validateOrderData($data);
 
-        return $this->order->update([
+        return $this->update([
             'order_status' => \App\Enums\OrderStatusEnum::Inprogress,
             'order_number' => $data['order_number'],
             'order_date' => $data['order_date'],
@@ -219,5 +219,24 @@ class PurchaseOrder extends Model
         return $this->update([
             'order_status' => \App\Enums\OrderStatusEnum::Canceled,
         ]);
+    }
+
+    // auto assign order number
+    public function generateOrderNumber(): string
+    {
+        $formattedId = str_pad($this->id, 3, '0', STR_PAD_LEFT);
+        $baseOrderNumber = "PO-{$formattedId}." . $this->created_at->format('ymd');
+
+        // Kiểm tra trùng
+        $orderNumber = $baseOrderNumber;
+        $suffix = 1;
+
+        // hậu tố .01, .02,...
+        while (self::where('order_number', $orderNumber)->exists()) {
+            $orderNumber = $baseOrderNumber . '.' . str_pad($suffix, 2, '0', STR_PAD_LEFT);
+            $suffix++;
+        }
+
+        return $orderNumber;
     }
 }

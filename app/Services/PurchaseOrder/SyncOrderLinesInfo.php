@@ -10,9 +10,9 @@ class SyncOrderLinesInfo
     {
         $order->purchaseOrderLines()
             ->update([
-                'company_id' => $order->company_id,
-                'warehouse_id' => $order->warehouse_id,
-                'currency' => $order->currency,
+                'company_id' => $order->company_id ?? null,
+                'warehouse_id' => $order->warehouse_id ?? null,
+                'currency' => $order->currency ?? null,
             ]);
     }
 }

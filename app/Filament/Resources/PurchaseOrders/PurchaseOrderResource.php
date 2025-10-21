@@ -3,7 +3,8 @@
 namespace App\Filament\Resources\PurchaseOrders;
 
 use App\Models\PurchaseOrder;
-use Filament\Resources\Resource;
+use App\Filament\BaseResource as Resource;
+
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;

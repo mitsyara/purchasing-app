@@ -5,7 +5,7 @@ namespace App\Filament\Clusters\CustomsData\Resources\CustomsDataByImporterCateg
 use App\Filament\Clusters\CustomsData\CustomsDataCluster;
 use App\Filament\Clusters\CustomsData\Resources\CustomsDataByImporterCategories\Pages\ManageCustomsDataByImporterCategories;
 use App\Models\CustomsDataByImporterCategory;
-use Filament\Resources\Resource;
+use App\Filament\BaseResource as Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 

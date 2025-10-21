@@ -5,7 +5,7 @@ namespace App\Filament\Clusters\Settings\Resources\Users;
 use App\Filament\Clusters\Settings\Resources\Users\Pages\ManageUsers;
 use App\Filament\Clusters\Settings\SettingsCluster;
 use App\Models\User;
-use Filament\Resources\Resource;
+use App\Filament\BaseResource as Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;

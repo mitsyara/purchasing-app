@@ -124,17 +124,22 @@
 
                 {{-- Theme switcher --}}
                 <x-filament::input.wrapper class="w-auto">
-                    <x-filament::input.select id="theme-switcher"
-                        x-on:change="
-                        localStorage.setItem('theme', $event.target.value);
-                        theme = $event.target.value;
-                        $dispatch('theme-changed', theme);
-                        loadDarkMode();
+                    <x-filament::input.select id="theme-switcher" 
+                    x-data="{ theme: localStorage.getItem('theme') ?? '@js(filament()->getDefaultThemeMode()->value)'  }" 
+                    x-init="theme = localStorage.getItem('theme') ?? '@js(filament()->getDefaultThemeMode()->value)' ;
+                    $el.value = theme;
+                    loadDarkMode();
                     "
+                        x-on:change="
+                            theme = $event.target.value;
+                            localStorage.setItem('theme', theme);
+                            $dispatch('theme-changed', theme);
+                            loadDarkMode();
+                        "
                         class="w-auto text-sm" aria-label="Chuyển đổi giao diện sáng/tối/hệ thống">
-                        <option value="light" selected>Giao diện sáng</option>
+                        <option value="light">Giao diện sáng</option>
                         <option value="dark">Giao diện tối</option>
-                        </option>
+                        <option value="system">Giao diện hệ thống</option>
                     </x-filament::input.select>
                 </x-filament::input.wrapper>
             </div>
@@ -164,6 +169,10 @@
                             Xem tỷ giá VCB
                         </x-filament::tabs.item>
 
+                        <x-filament::tabs.item alpine-active="activeTab === 'tab3'" x-on:click="activeTab = 'tab3'">
+                            Tạo Báo giá
+                        </x-filament::tabs.item>
+
                         {{-- Other tabs --}}
                     </x-filament::tabs>
 
@@ -174,6 +183,9 @@
                     </div>
                     <div x-show="activeTab === 'tab2'" class="p-4">
                         <livewire:customs-data.exchange-rate lazy />
+                    </div>
+                    <div x-show="activeTab === 'tab3'" class="p-4">
+                        <livewire:customs-data.price-quote lazy />
                     </div>
 
                 </div>
@@ -195,8 +207,6 @@
         // Runs immediately after Livewire has finished initializing
         document.addEventListener('livewire:initialized', () => {
             console.log('Livewire initialized');
-            console.log('localStorage.theme:', localStorage.getItem('theme'));
-            console.log('defaultThemeMode:', @js(filament()->getDefaultThemeMode()->value));
         });
     </script>
 

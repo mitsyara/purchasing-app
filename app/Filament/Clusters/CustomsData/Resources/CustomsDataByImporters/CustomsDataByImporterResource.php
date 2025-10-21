@@ -6,7 +6,7 @@ use App\Filament\Clusters\CustomsData\CustomsDataCluster;
 use App\Filament\Clusters\CustomsData\Resources\CustomsDataByImporters\Pages\ManageCustomsDataByImporters;
 use App\Models\CustomsDataByImporter;
 use BackedEnum;
-use Filament\Resources\Resource;
+use App\Filament\BaseResource as Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;

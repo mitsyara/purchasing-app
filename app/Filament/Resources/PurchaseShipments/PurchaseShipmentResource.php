@@ -7,7 +7,7 @@ use App\Filament\Resources\PurchaseShipments\Pages\ManagePurchaseShipments;
 use App\Filament\Resources\PurchaseShipments\Schemas\PurchaseShipmentForm;
 use App\Filament\Resources\PurchaseShipments\Schemas\PurchaseShipmentInfolist;
 use App\Models\PurchaseShipment;
-use Filament\Resources\Resource;
+use App\Filament\BaseResource as Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;

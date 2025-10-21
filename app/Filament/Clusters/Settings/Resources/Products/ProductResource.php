@@ -8,7 +8,7 @@ use App\Filament\Clusters\Settings\SettingsCluster;
 use App\Filament\Schemas\SettingsClusters\PackingSchema;
 use App\Filament\Tables\ProductTable;
 use App\Models\Product;
-use Filament\Resources\Resource;
+use App\Filament\BaseResource as Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;

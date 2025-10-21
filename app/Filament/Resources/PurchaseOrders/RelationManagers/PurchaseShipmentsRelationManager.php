@@ -79,6 +79,7 @@ class PurchaseShipmentsRelationManager extends RelationManager
                         new CallAllPurchaseShipmentServices($record);
                         $this->dispatch('refresh-order-status');
                     })
+                    ->disabled(fn(): bool => $this->getOwnerRecord()->order_number == null)
                     ->modal()->slideOver(),
             ])
             ->recordActions([
@@ -326,6 +327,7 @@ class PurchaseShipmentsRelationManager extends RelationManager
                 ?->qty ?? 0;
 
             $recommendedQty = max($orderedQty - $shippedQty, 0);
+            $recommendedQty = __number_string_converter($recommendedQty);
 
             if ($recommendedQty > 0) {
                 $set('qty', $recommendedQty);
@@ -337,8 +339,13 @@ class PurchaseShipmentsRelationManager extends RelationManager
         }
     }
 
-    public static function validateQty(Get $get, Livewire $livewire, ?PurchaseShipmentLine $record, $value, \Closure $fail): void
-    {
+    public static function validateQty(
+        Get $get,
+        Livewire $livewire,
+        ?PurchaseShipmentLine $record,
+        $value,
+        \Closure $fail
+    ): void {
         if (!($livewire instanceof static)) {
             throw new \Exception('Livewire component is not an instance of the expected RelationManager.');
         }

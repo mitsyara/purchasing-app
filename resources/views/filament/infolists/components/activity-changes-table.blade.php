@@ -1,3 +1,6 @@
+@php
+    $state = $getState() ?? [];
+@endphp
 <x-dynamic-component :component="$getEntryWrapperView()" :entry="$entry">
     <div class="changes-table-wrapper">
         <table class="changes-table">
@@ -10,7 +13,7 @@
             </thead>
 
             <tbody>
-                @forelse ($getState() as $item)
+                @forelse ($state as $item)
                     @php
                         $old = $item['old'] ?? null;
                         $new = $item['new'] ?? null;

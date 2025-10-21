@@ -16,10 +16,9 @@ Route::get('/test-schedule', function () {
     return redirect()->back();
 });
 
-Route::get('/data', Index::class)->name('index')
-    ->middleware([\App\Http\Middleware\CheckPin::class]);
-
 Route::get('/lock-screen', PinForm::class)->name('pin.form');
+
+Route::get('/data', Index::class)->name('customs-data.index');
 
 // Polling Export Status
 Route::get('/export/status', function (Request $request) {
@@ -46,7 +45,8 @@ Route::get('/export/status', function (Request $request) {
 
 // Download Exported File
 Route::get('/download/{path}', function ($path) {
-    $path = urldecode($path); // decode lại trước khi dùng
+    // decode lại
+    $path = urldecode($path); 
 
     $file = storage_path('app/' . $path);
 
@@ -54,12 +54,6 @@ Route::get('/download/{path}', function ($path) {
 
     return response()->download($file);
 })->where('path', '.*')->name('exports.download')->middleware('signed');
-
-Route::get('/session', function (Request $request) {
-    $key = $request->session()->getId();
-    $condition = session()->has("export-result-{$key}");
-    dd($key, $condition);
-});
 
 Route::get('/test-download', function () {
     $relativePath = 'dlhq_exports/test.xlsx';
@@ -71,7 +65,12 @@ Route::get('/test-download', function () {
     return $signedUrl;
 });
 
-Route::get('/exrate', function () {
-    $rates = VcbExchangeRatesService::fetch();
-    dd($rates);
+Route::get('/test', function () {
+    return view('pdf-view.price-quote-print');
 });
+
+Route::get('/print-quote', function(Request $request) {
+    return view('pdf-view.price-quote-print', [
+        'data' => $request->input('data', []),
+    ]);
+})->name('customs-data.price-quote.print');

@@ -4,13 +4,11 @@ use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 
 use Filament\Facades\Filament;
-use Filament\Support\Facades\FilamentAsset;
 use Filament\Support\Icons\Heroicon;
 
-use Filament\Forms\Components as F;
 use Filament\Tables\Columns as T;
+use Filament\Forms\Components as F;
 use App\Filament\Tables\Columns\LinkColumn as CustomLinkColumn;
-use Illuminate\Support\HtmlString;
 
 if (!function_exists('__index')) {
     function __index(?string $column_name = '#'): T\TextColumn
@@ -22,48 +20,6 @@ if (!function_exists('__index')) {
     }
 }
 
-
-if (!function_exists('__order_date_fields')) {
-    function __order_date_fields(bool $readonly = false, string|null $date = null): F\Field
-    {
-        \Filament\Infolists\Components\TextEntry::make('order_date_display')
-            ->label(__('Order Date'))
-            ->inlineLabel()
-            ->state(function (): \Filament\Schemas\JsContent {
-                $locale = app()->getLocale();
-                return \Filament\Schemas\JsContent::make(<<<JS
-                        \$get('order_date') ? new Date(\$get('order_date')).toLocaleDateString('$locale', {
-                            day: '2-digit',
-                            month: 'long',
-                            year: 'numeric',
-                        }) : 'N/A';
-                    JS);
-            });
-
-        $field = $readonly
-            ? F\DatePicker::make('order_date')
-            ->dehydrated(false)
-            ->extraAttributes(['class' => 'opacity-80 cursor-not-allowed'])
-            ->extraFieldWrapperAttributes(['class' => 'hidden'])
-
-            : F\DatePicker::make('order_date')
-            ->maxDate(today())
-            ->requiredWith('status');
-
-        return $field
-            ->afterStateHydrated(function (F\Field $component) use ($date) {
-                $component->state($date);
-                $orderDate = json_encode($date);
-                $component->getLivewire()->js(<<<JS
-                    \$dispatch('root-date-changed', {
-                        orderDate: {$orderDate},
-                    });
-                JS);
-            })
-            ->afterStateUpdatedJs(__dispatch_order_date_changed_js())
-            ->extraInputAttributes(['id' => 'data-custom-order_date']);
-    }
-}
 if (!function_exists('__eta_etd_fields')) {
     function __eta_etd_fields(bool $isRequired = false, bool $isVisible = true): array
     {
@@ -181,82 +137,23 @@ if (!function_exists('__code_field')) {
 }
 
 if (!function_exists('__number_field')) {
-    function __number_field(string $fieldName, ?string $suffixField = null, ?bool $autoLocale = false): F\TextInput
-    {
-        return $autoLocale ? __number_field_auto_locale($fieldName, $suffixField) : __number_field_vi($fieldName, $suffixField);
-    }
-}
-if (!function_exists('__number_field_vi')) {
-    function __number_field_vi(string $fieldName, ?string $suffixField = null): F\TextInput
-    {
-        $textInput = F\TextInput::make($fieldName)
-            ->minValue(0.001)
-            ->afterStateHydrated(function (
-                F\TextInput $component,
-                ?string $state
-            ): void {
-                if (!$state) {
-                    return;
-                }
-                // Xoá dấu phẩy từ gốc, format lại thành chuỗi dạng 1,000.12
-                $formatted = number_format((float) str_replace(',', '', $state), 3, '.', ',');
-                // Bỏ phần thập phân thừa số 0
-                $formatted = preg_replace('/\.?0+$/', '', $formatted);
-                $component->state($formatted);
-            })
-            ->mask(\Filament\Support\RawJs::make(<<<'JS'
-                () => {
-                    $el.addEventListener('input', () => {
-                        let raw = $el.value.replace(/[^\d.]/g, '');
-                        const firstDotIndex = raw.indexOf('.');
-                        raw = raw.replace(/\./g, (match, index) => index === firstDotIndex ? '.' : '');
+    function __number_field(
+        string $fieldName,
+        ?string $suffixField = null,
+        bool $autoLocale = true
+    ): F\TextInput {
+        // Lấy locale hiện tại & ký hiệu phân tách
+        if ($autoLocale) {
+            $locale = app()->getLocale();
 
-                        const parts = raw.split('.');
-                        const integer = parts[0];
-                        const decimal = parts[1] ?? '';
-                        const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-
-                        if (raw.endsWith('.') && decimal === '') {
-                            $el.value = formattedInteger + '.';
-                        } else if (decimal !== '') {
-                            $el.value = `${formattedInteger}.${decimal.slice(0, 3)}`;
-                        } else {
-                            $el.value = formattedInteger;
-                        }
-                    });
-                }
-            JS))
-            ->rules([
-                fn(F\TextInput $component): Closure
-                => function (string $attribute, $value, Closure $fail) use ($component) {
-                    $min = $component->getMinValue();
-                    if ((float) $value < $min) {
-                        $fail(__("Min") . ': ' . $min);
-                    }
-                },
-            ])
-            ->stripCharacters(',');
-
-        return $suffixField != null
-            ? $textInput
-            ->suffix(\Filament\Schemas\JsContent::make("\$get('{$suffixField}')"))
-            : $textInput;
-    }
-}
-
-if (!function_exists('__number_field_auto_locale')) {
-    function __number_field_auto_locale(string $fieldName, ?string $suffixField = null): F\TextInput
-    {
-        $locale = match (app()->getLocale()) {
-            'vi' => 'vi_VN',
-            'en' => 'en_US',
-            default => 'en_US',
-        };
-
-        $formatter = new \NumberFormatter($locale, \NumberFormatter::DECIMAL);
-
-        $decimalSeparator = $formatter->getSymbol(\NumberFormatter::DECIMAL_SEPARATOR_SYMBOL);
-        $thousandSeparator = $formatter->getSymbol(\NumberFormatter::GROUPING_SEPARATOR_SYMBOL);
+            $fmt = new \NumberFormatter($locale, \NumberFormatter::DECIMAL);
+            $decimalSeparator = $fmt->getSymbol(\NumberFormatter::DECIMAL_SEPARATOR_SYMBOL);
+            $thousandSeparator = $fmt->getSymbol(\NumberFormatter::GROUPING_SEPARATOR_SYMBOL);
+        } else {
+            // Mặc định kiểu Việt Nam
+            $decimalSeparator = ',';
+            $thousandSeparator = '.';
+        }
 
         $textInput = F\TextInput::make($fieldName)
             ->minValue(0.001)
@@ -264,43 +161,97 @@ if (!function_exists('__number_field_auto_locale')) {
                 F\TextInput $component,
                 ?string $state
             ) use ($decimalSeparator, $thousandSeparator): void {
-                if (!$state) {
+                if ($state === null || $state === '') return;
+
+                // Nếu là số (float, int) → format trực tiếp
+                if (is_numeric($state)) {
+                    $formatted = number_format((float) $state, 3, $decimalSeparator, $thousandSeparator);
+                    $formatted = preg_replace('/' . preg_quote($decimalSeparator, '/') . '?0+$/', '', $formatted);
+                    $component->state($formatted);
                     return;
                 }
-                // Xoá dấu phẩy từ gốc, format lại thành chuỗi dạng 1,000.12
-                $formatted = number_format(
-                    (float) str_replace($thousandSeparator, '', $state),
-                    3,
-                    $decimalSeparator,
-                    $thousandSeparator
-                );
-                // Bỏ phần thập phân thừa số 0
-                $formatted = preg_replace('/\.?0+$/', '', $formatted);
+
+                // Nếu là chuỗi → normalize cross-locale
+                $normalized = preg_replace('/[^0-9,\.]/', '', $state);
+
+                // Xác định dấu thập phân (ký tự cuối giữa , và .)
+                $lastDecimal = null;
+                if (str_contains($normalized, '.') || str_contains($normalized, ',')) {
+                    $posDot = strrpos($normalized, '.');
+                    $posComma = strrpos($normalized, ',');
+                    $lastDecimal = $posDot > $posComma ? '.' : ',';
+                }
+
+                // Loại bỏ hết dấu phân tách nghìn
+                $normalized = str_replace(['.', ','], '', $normalized);
+
+                // Nếu có dấu thập phân, thêm lại '.' ở vị trí cuối
+                if ($lastDecimal !== null) {
+                    $decimalPos = strrpos($state, $lastDecimal);
+                    $fraction = substr($state, $decimalPos + 1);
+                    $normalized = substr($normalized, 0, -strlen($fraction)) . '.' . $fraction;
+                }
+
+                $formatted = number_format((float) $normalized, 3, $decimalSeparator, $thousandSeparator);
+                $formatted = preg_replace('/' . preg_quote($decimalSeparator, '/') . '?0+$/', '', $formatted);
+
                 $component->state($formatted);
             })
+
+            ->stripCharacters($thousandSeparator)
             ->mask(\Filament\Support\RawJs::make(strtr(<<<'JS'
                 () => {
                     const decimalSeparator = '{{decimal}}';
                     const thousandSeparator = '{{thousand}}';
 
+                    let skipNextInput = false;
+
+                    // ✅ Bắt riêng numpad decimal → dùng làm dấu thập phân
+                    $el.addEventListener('keydown', (e) => {
+                        if (e.code === 'NumpadDecimal') {
+                            e.preventDefault();
+
+                            const start = $el.selectionStart;
+                            const end = $el.selectionEnd;
+                            const value = $el.value;
+
+                            // Nếu đã có 1 dấu decimalSeparator → bỏ qua
+                            if (value.includes(decimalSeparator)) return;
+
+                            // Chèn ký tự decimal vào vị trí con trỏ
+                            $el.value = value.slice(0, start) + decimalSeparator + value.slice(end);
+                            $el.setSelectionRange(start + 1, start + 1);
+
+                            // Bỏ qua input event kế tiếp
+                            skipNextInput = true;
+                        }
+                    });
+
+                    // ✅ Logic format chính
                     $el.addEventListener('input', () => {
-                        let raw = $el.value
-                            .replace(new RegExp('[^\\d' + decimalSeparator + ']', 'g'), '')
-                            .replace(new RegExp('\\' + decimalSeparator, 'g'), '.');
+                        if (skipNextInput) {
+                            skipNextInput = false;
+                            return;
+                        }
 
-                        const firstDotIndex = raw.indexOf('.');
-                        raw = raw.replace(/\./g, (match, index) => index === firstDotIndex ? '.' : '');
+                        // Giữ lại số, dấu decimalSeparator và thousandSeparator (cho phép . hoặc , tuỳ locale)
+                        let raw = $el.value.replace(new RegExp('[^\\d\\' + decimalSeparator + '\\' + thousandSeparator + ']', 'g'), '');
 
-                        const parts = raw.split('.');
-                        const integer = parts[0];
-                        const decimal = parts[1] ?? '';
+                        // Chuẩn hoá nếu user nhập trộn dấu (ví dụ nhập 1.000,5 ở vi-VN)
+                        // Giữ lại tất cả thousandSeparators, chỉ xác định 1 decimalSeparator cuối cùng
+                        let lastDecimalPos = raw.lastIndexOf(decimalSeparator);
+                        let integerPart = lastDecimalPos >= 0 ? raw.slice(0, lastDecimalPos) : raw;
+                        let decimalPart = lastDecimalPos >= 0 ? raw.slice(lastDecimalPos + 1) : '';
 
-                        const formattedInteger = integer.replace(/\B(?=(\d{3})+(?!\d))/g, thousandSeparator);
+                        // Xoá mọi thousandSeparator trong phần integer
+                        const cleanInteger = integerPart.replace(new RegExp('\\' + thousandSeparator, 'g'), '');
 
-                        if (raw.endsWith('.') && decimal === '') {
-                            $el.value = formattedInteger + decimalSeparator;
-                        } else if (decimal !== '') {
-                            $el.value = `${formattedInteger}${decimalSeparator}${decimal.slice(0, 3)}`;
+                        // Format lại phần integer với thousandSeparator chuẩn
+                        const formattedInteger = cleanInteger.replace(/\B(?=(\d{3})+(?!\d))/g, thousandSeparator);
+
+                        if (lastDecimalPos >= 0) {
+                            // Có phần thập phân
+                            $el.value = `${formattedInteger}${decimalSeparator}${decimalPart.slice(0, 3)}`;
                         } else {
                             $el.value = formattedInteger;
                         }
@@ -310,23 +261,25 @@ if (!function_exists('__number_field_auto_locale')) {
                 '{{decimal}}' => $decimalSeparator,
                 '{{thousand}}' => $thousandSeparator,
             ])))
-            ->stripCharacters($thousandSeparator)
-            ->rules([
-                fn(F\TextInput $component): Closure
-                => function (string $attribute, $value, Closure $fail) use ($component) {
-                    $min = $component->getMinValue();
-                    if ((float) $value < $min) {
-                        $fail(__("Min") . ': ' . $min);
-                    }
-                },
-            ]);
 
-        return $suffixField != null
-            ? $textInput
-            ->suffix(\Filament\Schemas\JsContent::make("\$get('{$suffixField}')"))
+            ->validationMessages([
+                'min' => 'Min: :value.',
+            ])
+
+            ->dehydrateStateUsing(function ($state)
+            use ($decimalSeparator, $thousandSeparator) {
+                if (!$state) return null;
+                $normalized = str_replace($thousandSeparator, '', $state);
+                $normalized = str_replace($decimalSeparator, '.', $normalized);
+                return (float)$normalized;
+            });
+
+        return $suffixField
+            ? $textInput->suffix(\Filament\Schemas\JsContent::make("\$get('{$suffixField}')"))
             : $textInput;
     }
 }
+
 
 if (!function_exists('__certificates')) {
     function __certificates(?string $column = 'certificates'): F\TagsInput
@@ -382,43 +335,3 @@ if (!function_exists('filament_repeater_path_diff')) {
 /**
  * Filament JS Helpers
  */
-if (!function_exists('__x_load_js')) {
-    function __x_load_js(array|string $fileIds): HtmlString
-    {
-        $urls = collect((array) $fileIds)
-            ->filter()
-            ->map(fn($id) => FilamentAsset::getScriptSrc($id))
-            ->filter()
-            ->map(fn($url) => "'" . addslashes($url) . "'")
-            ->implode(",\n    ");
-
-        return new HtmlString("[{$urls}]");
-    }
-}
-
-if (!function_exists('__dispatch_order_date_changed_js')) {
-    function __dispatch_order_date_changed_js(): string
-    {
-        return <<<'JS'
-            $dispatch('root-date-changed', {
-                orderDate: $state ?? undefined,
-            });
-        JS;
-    }
-}
-
-if (!function_exists('__toggle_disable_js')) {
-    function __toggle_disable_js(array|string $fields): string
-    {
-        return <<<'JS'
-            let isDisabled = $state == '';
-            const key = $el.getAttribute('wire:key');
-            const baseKey = key.substring(0, key.lastIndexOf('.') + 1);
-
-            const elementKey = baseKey + 'transaction_id';
-            const el = document.querySelector(`[wire\\:key="${elementKey}"]`)
-                ?.querySelector('.fi-input-wrp-content-ctn');
-            console.log(el, isDisabled);
-        JS;
-    }
-}

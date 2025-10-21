@@ -9,6 +9,7 @@
 
 @source '../../../../vendor/gboquizosanchez/filament-log-viewer/resources/views/**/*.blade.php';
 @source '../../../../vendor/jeffgreco13/filament-breezy/resources/**/*';
+@source '../../../../vendor/defstudio/filament-searchable-input/resources/**/*.blade.php';
 
 .fi-ta-ctn-with-header {
     @apply relative;

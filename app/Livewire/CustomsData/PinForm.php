@@ -57,9 +57,17 @@ class PinForm extends Component implements HasSchemas, HasActions
         $correctPin = Cache::get('app_pin', '1234');
         $data = $this->form->getState();
         $inputPin = (string) ($data['pin'] ?? '');
+
         if ($inputPin === $correctPin) {
-            session()->put('pin_verified', true);
-            return redirect()->route('index');
+            session()->put('pin_verified', [
+                'value' => true,
+                'expires_at' => now()->addMinutes(30),
+            ]);
+
+            return redirect()->route('customs-data.index');
         }
+
+        // hiện lỗi
+        // $this->addError('pin', 'Invalid PIN code.');
     }
 }

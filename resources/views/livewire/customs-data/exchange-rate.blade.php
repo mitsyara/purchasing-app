@@ -2,7 +2,7 @@
     $maxDate = today()->format('Y-m-d');
 @endphp
 <div>
-    <div class=" flex justify-between items-center mb-4">
+    <div class=" flex justify-end items-center mb-4">
         <x-filament::input.wrapper class="inline-block w-auto">
             <x-filament::input
                 id="date"

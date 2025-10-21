@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -13,17 +12,20 @@ class CheckPin
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, \Closure $next)
     {
-        // Kiểm tra session PIN
-        $pinEntered = $request->session()->get('pin_verified', false);
+        $data = $request->session()->get('pin_verified');
 
-        if (!$pinEntered && auth()->guest()) {
-            // Chưa nhập PIN hoặc PIN sai → redirect sang trang nhập PIN
+        $isVerified =
+            $data &&
+            ($data['value'] ?? false) === true &&
+            now()->lt($data['expires_at']);
+
+        if (!$isVerified) {
+            $request->session()->forget('pin_verified');
             return redirect()->route('pin.form');
         }
 
-        // Đã nhập PIN → cho phép tiếp tục
         return $next($request);
     }
 }

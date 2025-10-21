@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Contacts;
 
 use App\Filament\Resources\Contacts\Pages\ManageContacts;
 use App\Models\Contact;
-use Filament\Resources\Resource;
+use App\Filament\BaseResource as Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;

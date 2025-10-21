@@ -14,6 +14,7 @@ use Filament\Schemas\Schema;
 
 use Filament\Schemas\Components as S;
 use Filament\Forms\Components as F;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\JsContent;
@@ -58,6 +59,13 @@ class PurchaseShipmentForm
     public static function shipmentInfoFields(): array
     {
         return [
+            TextEntry::make('purchase_order')
+                ->inlineLabel()
+                ->state(fn(?PurchaseShipment $record) => $record?->purchaseOrder?->order_number)
+                ->label(__('Purchase Order'))
+                ->url(fn(?PurchaseShipment $record) => $record?->purchaseOrder?->id
+                    ? ViewPurchaseOrder::getUrl(['record' => $record->purchaseOrder->id]) : null, true)
+                ->color('info'),
 
             F\ToggleButtons::make('shipment_status')
                 ->label(__('Shipment Status'))
@@ -68,16 +76,6 @@ class PurchaseShipmentForm
                 ->required(),
 
             S\Flex::make([
-                F\Select::make('purchase_order_id')
-                    ->label(__('Purchase Order'))
-                    ->relationship(
-                        name: 'purchaseOrder',
-                        titleAttribute: 'order_number',
-                        modifyQueryUsing: fn(Builder $query): Builder => $query
-                    )
-                    ->suffixAction(static::viewOrderAction())
-                    ->disabled(),
-
                 F\Select::make('port_id')
                     ->label(__('Port'))
                     ->relationship(
@@ -223,10 +221,12 @@ class PurchaseShipmentForm
 
                 F\Hidden::make('product_life_cycle')
                     ->afterStateHydrated(fn(F\Field $component, ?PurchaseShipmentLine $record)
-                    => $component->state($record?->product?->product_life_cycle)),
+                    => $component->state($record?->product?->product_life_cycle))
+                    ->dehydrated(false),
                 F\Hidden::make('uom')
                     ->afterStateHydrated(fn(F\Field $component, ?PurchaseShipmentLine $record)
-                    => $component->state($record?->product?->product_uom)),
+                    => $component->state($record?->product?->product_uom))
+                    ->dehydrated(false),
 
                 F\Repeater::make('transactions')
                     ->hiddenLabel()
@@ -263,8 +263,9 @@ class PurchaseShipmentForm
 
                                     $sumQty = 0;
                                     foreach ($transactions as $uuid => $transaction) {
-                                        $sumQty += __number_string_converter_vi($transaction['qty'] ?? 0, false);
-                                        if ($uuid === $key) break; // dừng khi tới dòng hiện tại
+                                        $sumQty += __number_string_converter($transaction['qty'] ?? 0, false);
+                                        // dừng khi tới dòng hiện tại
+                                        if ($uuid === $key) break;
                                     }
 
                                     if ($sumQty > $availableQty) {
@@ -288,7 +289,7 @@ class PurchaseShipmentForm
                     ->defaultItems(1)
                     ->addActionLabel(__('Add Lot/Batch'))
                     ->addable(fn() => $record->purchaseOrder?->incoterm !== \App\Enums\IncotermEnum::CIF)
-                    ->after(function(PurchaseShipmentLine $record) {
+                    ->after(function (PurchaseShipmentLine $record) {
                         new \App\Services\InventoryLine\SyncFromShipmentLine($record);
                     })
                     ->compact()
@@ -352,7 +353,7 @@ class PurchaseShipmentForm
             $state['currency'] ?? 'VND',
             locale: app()->getLocale()
         );
-        $qty = __number_string_converter_vi($state['qty'] ?? 0);
+        $qty = __number_string_converter($state['qty'] ?? 0);
         return "{$productName} " . SPACING . " Qty: {$qty} {$uom} " . SPACING . " Price: {$unitPrice}";
     }
 
@@ -362,7 +363,7 @@ class PurchaseShipmentForm
         $date = $get('customs_clearance_date') ?? $get('customs_declaration_date') ?? null;
         if ($date && $currency && $currency !== 'VND') {
             $rate = \App\Services\VcbExchangeRatesService::fetch($date)[$currency][VCB_RATE_TARGET] ?? null;
-            if ($rate) $rate = __number_string_converter_vi($rate);
+            if ($rate) $rate = __number_string_converter($rate);
             if ($rate) {
                 $set('exchange_rate', $rate);
             }

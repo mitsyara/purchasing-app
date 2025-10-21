@@ -6,7 +6,7 @@ use App\Filament\Clusters\CustomsData\CustomsDataCluster;
 use App\Filament\Clusters\CustomsData\Resources\CustomsData\Pages\ManageCustomsData;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\CustomsData;
-use Filament\Resources\Resource;
+use App\Filament\BaseResource as Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;

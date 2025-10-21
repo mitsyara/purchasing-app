@@ -2,6 +2,15 @@
     <div class=" px-4 xl:px-6">
         {{ $this->table }}
     </div>
+
+    <style>
+        .fi-ta-text-item.fi-size-sm {
+            font-size: var(--text-sm);
+            line-height: var(--tw-leading, var(--text-sm--line-height));
+            --tw-leading: calc(var(--spacing) * 4);
+            line-height: calc(var(--spacing) * 4);
+        }
+    </style>
 </div>
 
 <script>
