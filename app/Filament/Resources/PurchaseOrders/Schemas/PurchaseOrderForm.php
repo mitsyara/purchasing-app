@@ -3,10 +3,13 @@
 namespace App\Filament\Resources\PurchaseOrders\Schemas;
 
 use App\Filament\Schemas\POProductForm;
+use App\Models\PurchaseOrder;
+use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 
 use Filament\Schemas\Components as S;
 use Filament\Forms\Components as F;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Builder;
 
 class PurchaseOrderForm
@@ -250,7 +253,30 @@ class PurchaseOrderForm
                 ])
                 ->validationMessages([
                     'required_if' => __('Order Number is required!')
-                ]),
+                ])
+                ->suffixAction(
+                    Action::make('generate')
+                        ->label(__('Generate Order Number'))
+                        ->icon(Heroicon::OutlinedArrowPath)
+                        ->action(function (F\TextInput $component, ?PurchaseOrder $record, callable $get) {
+                            if ($record) {
+                                $component->state($record->generateOrderNumber());
+                            }
+                            else {
+                                $id = $get('company_id');
+                                $orderDate = $get('order_date');
+                                if(!$id || !$orderDate) {
+                                    return;
+                                }
+                                $orderNumber = (new PurchaseOrder())->generateOrderNumber([
+                                    'id' => $id,
+                                    'order_date' => $orderDate,
+                                ]);
+                                $component->state($orderNumber);
+                            }
+                        })
+                        ->color('info')
+                ),
 
             F\DatePicker::make('order_date')
                 ->label(__('Order Date'))

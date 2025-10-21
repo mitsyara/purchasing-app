@@ -63,6 +63,8 @@ class FilamentServiceProvider extends ServiceProvider
                 // ->persistColumnSearchesInSession()
                 ->splitSearchTerms()
                 ->reorderableColumns(false)
+                ->paginated([10, 20, 50])
+                ->defaultPaginationPageOption(20)
             ;
         }, isImportant: true);
 
@@ -100,7 +102,6 @@ class FilamentServiceProvider extends ServiceProvider
         }, isImportant: true);
 
         // Set Filament field's labels auto translate
-
         \Filament\Actions\Action::configureUsing(
             function (\Filament\Actions\Action $action): void {
                 $action->translateLabel();

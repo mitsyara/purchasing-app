@@ -32,14 +32,15 @@ class PurchasingPanelProvider extends PanelProvider
             ->emailVerification()
             ->emailChangeVerification()
             ->defaultAvatarProvider(\App\Providers\UiAvatarsProvider::class)
-            // ->multiFactorAuthentication([
-            //     \Filament\Auth\MultiFactor\App\AppAuthentication::make()
-            //         ->recoverable(),
-            // ])
+
             // ->profile()
+            ->multiFactorAuthentication([
+                \Filament\Auth\MultiFactor\App\AppAuthentication::make()
+                    ->recoverable(),
+            ])
 
             ->databaseNotifications()
-            ->databaseNotificationsPolling('60s')
+            ->databaseNotificationsPolling('30s')
             ->databaseTransactions()
             ->unsavedChangesAlerts()
 
@@ -58,6 +59,10 @@ class PurchasingPanelProvider extends PanelProvider
             ])
             ->navigationGroups([...static::getNavGroups()])
             ->userMenuItems([
+                'profile' => fn(\Filament\Actions\Action $action) => $action->url(
+                    \App\Filament\Clusters\Settings\Pages\MyProfile::getUrl(),
+                ),
+
                 \Filament\Actions\Action::make('lockScreen')
                     ->icon('heroicon-o-cog-6-tooth')
                     ->action(function (): void {

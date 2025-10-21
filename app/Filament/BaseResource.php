@@ -2,9 +2,9 @@
 
 namespace App\Filament;
 
-use Filament\Resources\Resource;
+use Filament\Resources\Resource as FilamentResource;
 
-abstract class BaseResource extends Resource
+abstract class BaseResource extends FilamentResource
 {
     // Override Labels
     public static function getModelLabel(): string

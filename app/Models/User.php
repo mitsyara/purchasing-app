@@ -45,7 +45,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
     public function getAppAuthenticationSecret(): ?string
     {
 
-        return $this->google2fa_secret;
+        return $this->app_mfa_secret;
     }
 
     /**
@@ -53,9 +53,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
      */
     public function saveAppAuthenticationSecret(?string $secret): void
     {
-        $this->save([
-            'google2fa_secret' => $secret,
-        ]);
+        $this->app_mfa_secret = $secret;
+        $this->save();
     }
 
     /**
@@ -69,7 +68,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
     // This method should return the user's saved app authentication recovery codes.
     public function getAppAuthenticationRecoveryCodes(): ?array
     {
-        return $this->google2fa_recovery_codes;
+        return $this->app_mfa_recovery_codes;
     }
 
     /**
@@ -78,9 +77,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
      */
     public function saveAppAuthenticationRecoveryCodes(?array $codes): void
     {
-        $this->save([
-            'google2fa_recovery_codes' => $codes,
-        ]);
+        $this->app_mfa_recovery_codes = $codes;
+        $this->save();
     }
 
     /**
@@ -96,8 +94,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
         'dob',
         'status',
         'lock_pin',
-        'google2fa_secret',
-        'google2fa_recovery_codes',
+        // 'app_mfa_secret',
+        // 'app_mfa_recovery_codes',
     ];
 
     /**
@@ -109,8 +107,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
         'password',
         'lock_pin',
         'remember_token',
-        'google2fa_secret',
-        'google2fa_recovery_codes',
+        'app_mfa_secret',
+        'app_mfa_recovery_codes',
     ];
 
     /**
@@ -126,8 +124,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'lock_pin' => 'hashed',
-            'google2fa_secret' => 'encrypted',
-            'google2fa_recovery_codes' => 'encrypted:array',
+            'app_mfa_secret' => 'encrypted',
+            'app_mfa_recovery_codes' => 'encrypted:array',
         ];
     }
 

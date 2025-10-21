@@ -32,7 +32,7 @@ class PurchaseShipmentsRelationManager extends RelationManager
 
     public static function title(): string
     {
-        return __('Shipments');
+        return __('Shipment');
     }
 
     public function form(Schema $schema): Schema
@@ -181,7 +181,7 @@ class PurchaseShipmentsRelationManager extends RelationManager
                         ->validationMessages([
                             'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
                         ])
-                        ->extraInputAttributes(['id' => 'data-custom-etd_min']),
+                        ->minDate(fn() => $this->getOwnerRecord()->order_date ?? today()),
 
                     F\DatePicker::make('etd_max')->label(__('To'))
                         ->default(fn($livewire) => $livewire->getOwnerRecord()?->etd_max)
@@ -189,7 +189,7 @@ class PurchaseShipmentsRelationManager extends RelationManager
                         ->validationMessages([
                             'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
                         ])
-                        ->extraInputAttributes(['id' => 'data-custom-etd_max']),
+                        ->minDate(fn($get) => $get('etd_min') ?? $this->getOwnerRecord()->order_date ?? today()),
                 ])
                 ->columns([
                     'default' => 2,
@@ -205,7 +205,7 @@ class PurchaseShipmentsRelationManager extends RelationManager
                         ->validationMessages([
                             'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
                         ])
-                        ->extraInputAttributes(['id' => 'data-custom-eta_min']),
+                        ->minDate(fn($get) => $get('etd_max') ?? $this->getOwnerRecord()->order_date ?? today()),
 
                     F\DatePicker::make('eta_max')->label(__('To'))
                         ->default(fn($livewire) => $livewire->getOwnerRecord()?->eta_max)
@@ -213,7 +213,7 @@ class PurchaseShipmentsRelationManager extends RelationManager
                         ->validationMessages([
                             'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
                         ])
-                        ->extraInputAttributes(['id' => 'data-custom-eta_max']),
+                        ->minDate(fn($get) => $get('eta_min') ?? $this->getOwnerRecord()->order_date ?? today()),
                 ])
                 ->columns([
                     'default' => 2,

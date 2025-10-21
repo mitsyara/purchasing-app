@@ -22,8 +22,8 @@ return new class extends Migration
             $table->string('status')->nullable();
             $table->string('password');
             $table->string('lock_pin')->nullable();
-            $table->string('google2fa_secret')->nullable();
-            $table->text('google2fa_recovery_codes')->nullable();
+            $table->string('app_mfa_secret')->nullable();
+            $table->text('app_mfa_recovery_codes')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

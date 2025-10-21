@@ -222,21 +222,20 @@ class PurchaseOrder extends Model
     }
 
     // auto assign order number
-    public function generateOrderNumber(): string
+    public function generateOrderNumber(?array $data = null): string
     {
-        $formattedId = str_pad($this->id, 3, '0', STR_PAD_LEFT);
-        $baseOrderNumber = "PO-{$formattedId}." . $this->created_at->format('ymd');
+        $id = str_pad($data['id'] ?? $this->company_id, 3, '0', STR_PAD_LEFT);
+        $date = \Carbon\Carbon::parse($data['order_date'] ?? $this->order_date)->format('ymd');
+        $base = "PO-{$id}{$date}";
 
-        // Kiểm tra trùng
-        $orderNumber = $baseOrderNumber;
-        $suffix = 1;
+        for (
+            $i = 0;
+            self::when($this->id, fn($q) => $q->where('id', '!=', $this->id))
+                ->where('order_number', $order = $base . ($i ? sprintf('.%02d', $i) : ''))
+                ->exists();
+            $i++
+        );
 
-        // hậu tố .01, .02,...
-        while (self::where('order_number', $orderNumber)->exists()) {
-            $orderNumber = $baseOrderNumber . '.' . str_pad($suffix, 2, '0', STR_PAD_LEFT);
-            $suffix++;
-        }
-
-        return $orderNumber;
+        return $order;
     }
 }

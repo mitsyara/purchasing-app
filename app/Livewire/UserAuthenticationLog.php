@@ -58,7 +58,7 @@ class UserAuthenticationLog extends Component implements HasActions, HasSchemas,
 
                 T\TextColumn::make('user.name')
                     ->label(__('User'))
-                    ->searchable(['users.name', 'users.email', 'users.phone'])
+                    ->searchable(['name', 'email', 'phone'])
                     ->sortable(),
 
                 T\TextColumn::make('ip_address')
@@ -89,8 +89,7 @@ class UserAuthenticationLog extends Component implements HasActions, HasSchemas,
                     ->action(function (): void {
                         try {
                             DB::transaction(function () {
-                                \App\Models\Session::where('user_id', auth()->id())
-                                    ->whereNot('id', session()->getId())
+                                \App\Models\Session::whereNot('id', session()->getId())
                                     ->delete();
                             });
                             Notification::make()
@@ -109,6 +108,35 @@ class UserAuthenticationLog extends Component implements HasActions, HasSchemas,
                         }
                     })
                     ->hidden(fn(): bool => \App\Models\Session::count() <= 1),
+            ])
+            ->toolbarActions([
+                A\BulkAction::make('signOutSelected')
+                    ->label(__('Sign Out Selected'))
+                    ->icon(Heroicon::OutlinedArrowLeftOnRectangle)
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->action(function (\Illuminate\Support\Collection $records): void {
+                        try {
+                            DB::transaction(function () use ($records) {
+                                \App\Models\Session::whereIn('id', $records->toArray())
+                                    ->whereNot('id', session()->getId())
+                                    ->delete();
+                            });
+                            Notification::make()
+                                ->success()
+                                ->title(__('Success'))
+                                ->body(__('Selected sessions have been signed out.'))
+                                ->send();
+
+                            $this->dispatch('refresh-custom-table');
+                        } catch (\Throwable $e) {
+                            Notification::make()
+                                ->danger()
+                                ->title(__('Error'))
+                                ->body(__('Failed to sign out. Please try again later.'))
+                                ->send();
+                        }
+                    }),
             ])
             ->recordActions([
                 A\Action::make('signOut')

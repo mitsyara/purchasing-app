@@ -140,7 +140,7 @@ class Language extends Page implements HasSchemas, HasActions
                 ->title(__('Language code is Invalid!'))
                 ->send();
         }
-        $file_path = base_path('lang') . '\\' . $lang_code . '.json';
+        $file_path = base_path('lang') . '/' . $lang_code . '.json';
         // Ensure language file doesn't exists (lang folder)
         if (!file_exists($file_path)) {
             // Check if language code is valid
@@ -259,8 +259,8 @@ class Language extends Page implements HasSchemas, HasActions
     // Delete Language file
     public function deleteLanguage(?string $lang_code): void
     {
-        $file_path = base_path('lang') . '\\' . $lang_code . '.json';
-        $folder_path = base_path('lang') . '\\' . $lang_code;
+        $file_path = base_path('lang') . '/' . $lang_code . '.json';
+        $folder_path = base_path('lang') . '/' . $lang_code;
         // Ensure language file exists (lang folder)
         if (file_exists($file_path)) {
             // Perform deletion
@@ -299,7 +299,7 @@ class Language extends Page implements HasSchemas, HasActions
             return null;
         }
         $path = base_path('lang');
-        $data = file_get_contents($path . '\\' . $key . '.json');
+        $data = file_get_contents($path . '/' . $key . '.json');
         return $data;
     }
 }
