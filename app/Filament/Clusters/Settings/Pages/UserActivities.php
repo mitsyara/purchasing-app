@@ -2,7 +2,7 @@
 
 namespace App\Filament\Clusters\Settings\Pages;
 
-use Filament\Pages\Page;
+use App\Filament\BasePage as Page;
 use App\Filament\Clusters\Settings\SettingsCluster;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;

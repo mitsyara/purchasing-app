@@ -3,11 +3,8 @@
 namespace App\Filament\Clusters\CustomsData\Pages;
 
 use App\Filament\Clusters\CustomsData\CustomsDataCluster;
-use App\Filament\Clusters\CustomsData\Resources\CustomsData\CustomsDataResource;
 use App\Models\CustomsData;
-use Filament\Actions\Concerns\InteractsWithActions;
-use Filament\Actions\Contracts\HasActions;
-use Filament\Pages\Page;
+use App\Filament\BasePage as Page;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Illuminate\Database\Eloquent\Model;
@@ -16,8 +13,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Database\Eloquent\Collection;
 
 use Filament\Forms\Components as F;
-use Filament\Schemas\Concerns\InteractsWithSchemas;
-use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns as T;
 use Filament\Tables\Filters as TF;

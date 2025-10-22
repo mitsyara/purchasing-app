@@ -32,11 +32,11 @@ class PurchaseShipmentLine extends Model
     ];
 
     protected $casts = [
-        'unit_price' => 'decimal:2',
-        'contract_price' => 'decimal:2',
-        'average_cost' => 'decimal:2',
-        'break_price' => 'decimal:2',
-        'qty' => 'decimal:2',
+        'unit_price' => 'decimal:3',
+        'contract_price' => 'decimal:3',
+        'average_cost' => 'decimal:3',
+        'break_price' => 'decimal:3',
+        'qty' => 'decimal:3',
 
         'is_ready' => 'boolean',
     ];

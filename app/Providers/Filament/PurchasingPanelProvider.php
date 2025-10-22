@@ -33,7 +33,6 @@ class PurchasingPanelProvider extends PanelProvider
             ->emailChangeVerification()
             ->defaultAvatarProvider(\App\Providers\UiAvatarsProvider::class)
 
-            // ->profile()
             ->multiFactorAuthentication([
                 \Filament\Auth\MultiFactor\App\AppAuthentication::make()
                     ->recoverable(),
@@ -57,7 +56,10 @@ class PurchasingPanelProvider extends PanelProvider
                 'gray' => \Filament\Support\Colors\Color::Gray,
                 ...\Filament\Support\Colors\Color::all(),
             ])
-            ->navigationGroups([...static::getNavGroups()])
+            ->navigationGroups([
+                ...static::getNavGroups(),
+            ])
+
             ->userMenuItems([
                 'profile' => fn(\Filament\Actions\Action $action) => $action->url(
                     \App\Filament\Clusters\Settings\Pages\MyProfile::getUrl(),
@@ -124,7 +126,9 @@ class PurchasingPanelProvider extends PanelProvider
         ];
         return collect($navGroups)->mapWithKeys(function ($icon, $title): array {
             $label = \Illuminate\Support\Str::of($title)->headline()->toString();
-            return [$title => \Filament\Navigation\NavigationGroup::make()->label(__($label))];
+            return [
+                $title => \Filament\Navigation\NavigationGroup::make()->label(__($label))
+            ];
         })->toArray();
     }
 }

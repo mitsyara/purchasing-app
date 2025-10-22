@@ -5,7 +5,7 @@ namespace App\Filament\Clusters\CustomsData\Pages;
 use App\Filament\Clusters\CustomsData\CustomsDataCluster;
 use App\Filament\Clusters\CustomsData\Resources\CustomsData\CustomsDataResource;
 use App\Models\CustomsData;
-use Filament\Pages\Page;
+use App\Filament\BasePage as Page;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;

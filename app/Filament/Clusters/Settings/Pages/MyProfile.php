@@ -3,7 +3,7 @@
 namespace App\Filament\Clusters\Settings\Pages;
 
 use App\Filament\Clusters\Settings\SettingsCluster;
-use Filament\Pages\Page;
+use App\Filament\BasePage as Page;
 use Filament\Support\Icons\Heroicon;
 
 class MyProfile extends Page

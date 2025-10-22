@@ -12,7 +12,7 @@ class CustomsDataCluster extends Cluster
 
     protected static ?SubNavigationPosition $subNavigationPosition = SubNavigationPosition::Top;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'other';
+    // protected static string|\UnitEnum|null $navigationGroup = 'other';
 
     protected static ?int $navigationSort = 91;
 

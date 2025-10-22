@@ -51,11 +51,12 @@ class UserResource extends Resource
                     ->password()
                     ->minLength(8)
                     ->maxLength(255)
-                    ->dehydrated(fn($state): bool => !empty($state))
+                    ->dehydrateStateUsing(fn(?string $state): ?string
+                    => \Illuminate\Support\Facades\Hash::make($state))
+                    ->dehydrated(fn(?string $state): bool => filled($state))
                     ->password()
                     ->revealable()
                     ->autocomplete('new-password')
-                    ->disabled(fn(string $operation) => $operation === 'edit' && auth()->id() !== 1)
                     ->required(fn(string $operation): bool => $operation === 'create'),
 
                 F\TextInput::make('email')
@@ -89,8 +90,28 @@ class UserResource extends Resource
                         modifyQueryUsing: fn(Builder $query): Builder => $query
                     )
                     ->multiple()
-                    ->preload()
-                    ->required(),
+                    ->preload(),
+
+                S\Group::make([
+                    F\ToggleButtons::make('status')
+                        ->label(__('Status'))
+                        ->options(\App\Enums\UserStatusEnum::class)
+                        ->grouped()
+                        ->default(\App\Enums\UserStatusEnum::Inactive)
+                        ->columnSpanFull(),
+
+                    F\Checkbox::make('email_verified_at')
+                        ->label(__('Email Verified'))
+                        ->default(false)
+                        ->dehydrated(false),
+
+                    F\Checkbox::make('phone_verified_at')
+                        ->label(__('Phone Verified'))
+                        ->default(false)
+                        ->dehydrated(false),
+                ])
+                    ->columns(),
+
             ]);
     }
 

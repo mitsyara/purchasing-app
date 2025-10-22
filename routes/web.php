@@ -74,3 +74,5 @@ Route::get('/print-quote', function(Request $request) {
         'data' => $request->input('data', []),
     ]);
 })->name('customs-data.price-quote.print');
+
+// User Guide, Parse from MD

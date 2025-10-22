@@ -22,6 +22,8 @@ class CustomsDataByImporterCategoryResource extends Resource
 
     protected static ?string $cluster = CustomsDataCluster::class;
 
+    protected static ?int $navigationSort = 2;
+
     public static function getNavigationLabel(): string
     {
         return __('By Category');

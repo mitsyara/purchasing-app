@@ -28,9 +28,9 @@ class PurchaseOrderLine extends Model
 
     protected $casts = [
         'qty' => 'decimal:3',
-        'unit_price' => 'decimal:2',
-        'contract_price' => 'decimal:2',
-        'extra_cost' => 'decimal:2',
+        'unit_price' => 'decimal:3',
+        'contract_price' => 'decimal:3',
+        'extra_cost' => 'decimal:3',
     ];
 
     public function purchaseOrder(): BelongsTo

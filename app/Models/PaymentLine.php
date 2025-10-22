@@ -19,9 +19,9 @@ class PaymentLine extends Model
 
     protected $casts = [
         'payment_date' => 'date',
-        'amount' => 'decimal:2',
-        'exchange_rate' => 'decimal:4',
-        'amount_vnd' => 'decimal:2',
+        'amount' => 'decimal:3',
+        'exchange_rate' => 'decimal:6',
+        'amount_vnd' => 'decimal:3',
     ];
 
     public function payment(): BelongsTo

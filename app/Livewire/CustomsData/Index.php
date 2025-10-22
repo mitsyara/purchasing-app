@@ -115,17 +115,17 @@ class Index extends Component implements HasTable, HasSchemas, HasActions
                 T\TextColumn::make('export_country')
                     ->label(__('Export Country'))
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(),
 
                 T\TextColumn::make('incoterm')
                     ->label(__('Incoterm'))
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(),
 
                 T\TextColumn::make('hscode')
                     ->label(__('HS Code'))
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(),
             ])
 
             ->filters([
@@ -168,6 +168,7 @@ class Index extends Component implements HasTable, HasSchemas, HasActions
                             ),
                         C\NumberConstraint::make('qty'),
                         C\NumberConstraint::make('price'),
+                        C\TextConstraint::make('export_country'),
                     ]),
 
             ], \Filament\Tables\Enums\FiltersLayout::Modal)

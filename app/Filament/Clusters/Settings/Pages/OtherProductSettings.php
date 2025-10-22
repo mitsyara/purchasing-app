@@ -8,7 +8,7 @@ use App\Filament\Schemas\SettingsClusters\UnitSchema;
 use App\Filament\Schemas\SettingsClusters\VatSchema;
 use BackedEnum;
 use Filament\Notifications\Notification;
-use Filament\Pages\Page;
+use App\Filament\BasePage as Page;
 use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Model;

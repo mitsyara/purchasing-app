@@ -33,8 +33,8 @@ class Payment extends Model
     protected $casts = [
         'payment_status' => \App\Enums\PaymentStatusEnum::class,
         'due_date' => 'date',
-        'total_amount' => 'decimal:2',
-        'average_exchange_rate' => 'decimal:4',
+        'total_amount' => 'decimal:3',
+        'average_exchange_rate' => 'decimal:6',
     ];
 
     public function company(): BelongsTo
