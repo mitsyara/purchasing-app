@@ -25,7 +25,6 @@ class PersonalInfoSection extends Component implements HasSchemas, HasActions
 
     public function mount(): void
     {
-        // \Jeffgreco13\FilamentBreezy\Livewire\PersonalInfo::class;
         $this->user = auth()->user();
         $data = $this->user->only($this->personalDataColumns);
         $this->form->fill($data);

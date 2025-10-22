@@ -7,4 +7,6 @@
 
     <livewire:my-profile.two-factor-authentication />
 
+    <livewire:my-profile.personal-access-tokens-section />
+
 </x-filament-panels::page>
