@@ -16,49 +16,63 @@ class ProductTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->query(fn (): Builder => Product::query())
+            ->query(fn(): Builder => Product::query())
             ->modifyQueryUsing(function (Builder $query) use ($table): Builder {
                 $arguments = $table->getArguments();
-                if ($categoryId = $arguments['category_id'] ?? null) {
+                if ($categoryId = $arguments['belong_category_id'] ?? null) {
                     return $query->where('category_id', $categoryId);
-                }                
-                return $query;
+                }
+                return $query
+                    ->when($arguments['belong_category_id'] ?? null, fn(Builder $query, $categoryId) => $query
+                        ->where('category_id', $categoryId))
+                    ->when($arguments['category_id'] ?? null, fn(Builder $query, $categoryId) => $query
+                        ->where('category_id', $categoryId)
+                        ->orWhereNull('category_id'))
+                ;
             })
             ->columns([
-                __index(),
+                __index()
+                    ->size('xs'),
 
                 T\TextColumn::make('product_code')
                     ->label(__('Code'))
+                    ->size('xs')
                     ->sortable()
                     ->searchable(),
 
                 T\TextColumn::make('product_name')
                     ->label(__('Name'))
+                    ->size('xs')
                     ->sortable()
                     ->searchable(),
 
                 T\TextColumn::make('mfg.contact_name')
                     ->label(__('Manufacturer'))
+                    ->size('xs')
                     ->sortable()
                     ->searchable(),
 
                 T\TextColumn::make('category.category_name')
                     ->label(__('Category'))
+                    ->size('xs')
                     // ->visibleOn(ProductResource::class)
                     ->sortable()
                     ->searchable(),
 
                 T\TextColumn::make('packing.packing_name')
                     ->label(__('Packing'))
+                    ->size('xs')
                     ->sortable()
                     ->searchable(),
 
                 T\TextColumn::make('product_life_cycle')
                     ->label(__('Life Cycle'))
+                    ->size('xs')
                     ->sortable(),
 
                 T\TextColumn::make('productAssortments.assortment.assortment_code')
                     ->label(__('Assortment'))
+                    ->size('xs')
                     ->visibleOn(ProductResource::class)
                     ->sortable()
                     ->searchable(),

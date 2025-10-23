@@ -115,6 +115,27 @@ class Contact extends Model
     // }
 
     // Attributes
+    public function contactName(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => mb_strtoupper($value),
+            set: fn($value) => mb_strtoupper($value),
+        );
+    }
+    public function contactCode(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => mb_strtoupper($value),
+            set: fn($value) => mb_strtoupper($value),
+        );
+    }
+    public function contactShortName(): Attribute
+    {
+        return Attribute::make(
+            get: fn($value) => mb_strtoupper($value),
+            set: fn($value) => mb_strtoupper($value),
+        );
+    }
 
     public function contactInfo(): Attribute
     {

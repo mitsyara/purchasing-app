@@ -1,5 +1,4 @@
 <div>
-
     <section class="fi-section fi-section-has-header fi-aside fi-compact">
         <header class="fi-section-header">
             <div class="fi-section-header-text-ctn">

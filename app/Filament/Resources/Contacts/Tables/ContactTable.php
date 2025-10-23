@@ -19,7 +19,10 @@ class ContactTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->query(fn(): Builder => Contact::query()->whereNot('contact_code', 'KL'))
+            ->query(fn(): Builder => Contact::query()->where(function ($query) {
+                $query->where('contact_code', '<>', 'KL')
+                    ->orWhereNull('contact_code');
+            }))
             ->columns([
                 __index(),
                 T\TextColumn::make('contact_name')

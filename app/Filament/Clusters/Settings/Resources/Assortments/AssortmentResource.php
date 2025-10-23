@@ -34,6 +34,8 @@ class AssortmentResource extends Resource
 
     protected static ?string $cluster = SettingsCluster::class;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     public static function getNavigationGroup(): string|UnitEnum|null
     {
         return __('Product Settings');
@@ -63,11 +65,7 @@ class AssortmentResource extends Resource
                     ->label(__('Products'))
                     ->relationship('products', 'product_full_name')
                     ->tableConfiguration(ProductTable::class)
-                    ->tableArguments(function ($get) {
-                        return [
-                            'category_id' => $get('category_id'),
-                        ];
-                    })
+                    ->tableArguments(fn($get) => ['belong_category_id' => $get('category_id')])
                     // ->searchable()
                     ->helperText(__('Select products to include in this assortment.'))
                     ->multiple()

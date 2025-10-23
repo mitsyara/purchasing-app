@@ -74,13 +74,13 @@ class Index extends Component implements HasTable, HasSchemas, HasActions
                 T\TextColumn::make('importer')
                     ->wrap()
                     ->label(__('Importer'))
-                    ->searchable()
+                    ->searchable(isIndividual: true)
                     ->toggleable(),
 
                 T\TextColumn::make('product')
                     ->wrap()
                     ->label(__('Product'))
-                    ->searchable()
+                    ->searchable(isIndividual: true)
                     ->toggleable(),
 
                 T\TextColumn::make('qty')
@@ -109,7 +109,7 @@ class Index extends Component implements HasTable, HasSchemas, HasActions
                 T\TextColumn::make('exporter')
                     ->wrap()
                     ->label(__('Exporter'))
-                    ->searchable()
+                    ->searchable(isIndividual: true)
                     ->toggleable(),
 
                 T\TextColumn::make('export_country')
@@ -142,7 +142,9 @@ class Index extends Component implements HasTable, HasSchemas, HasActions
                                 $data['is_vett'],
                                 fn(Builder $query): Builder
                                 => $query
-                                    ->whereAny(['importer', 'product'], 'like', '%thú y%'),
+                                    ->whereAny(['importer', 'product'], 'like', '%thú y%')
+                                    ->orWhereAny(['importer', 'product'], 'like', '%thu y%')
+                                    ->orWhereAny(['importer', 'product'], 'like', '%veterinary%'),
                             )
                             ->when(
                                 $data['is_null'],

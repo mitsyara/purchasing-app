@@ -78,7 +78,7 @@ class POProductForm
                     ->label(__('Product'))
                     ->relationship(
                         name: 'product',
-                        titleAttribute: 'product_full_name',
+                        titleAttribute: 'product_description',
                         modifyQueryUsing: function (
                             Builder $query,
                             string $operation,

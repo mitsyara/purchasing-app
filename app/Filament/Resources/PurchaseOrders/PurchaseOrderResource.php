@@ -8,7 +8,6 @@ use App\Filament\BaseResource as Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Model;
 
 class PurchaseOrderResource extends Resource
 {

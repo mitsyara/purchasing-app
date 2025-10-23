@@ -53,7 +53,7 @@ class PurchaseOrderLinesRelationManager extends RelationManager
             ->columns([
                 __index(),
 
-                T\TextColumn::make('product.product_full_name')
+                T\TextColumn::make('product.product_description')
                     ->label(__('Product'))
                     ->sortable(),
 

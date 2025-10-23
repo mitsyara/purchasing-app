@@ -104,7 +104,7 @@ class ContactForm
                     F\Select::make('rep_gender')
                         ->label(__('Rep. Gender'))
                         ->options(\App\Enums\ContactGenderEnum::class)
-                        ->selectablePlaceholder(false)
+                        ->placeholder(__('Gender'))
                         ->requiredWith('rep_name'),
 
                     F\TextInput::make('rep_name')

@@ -149,7 +149,8 @@ class ProductResource extends Resource
                 ->label(__('Manufacturer'))
                 ->relationship('mfg', 'contact_name')
                 ->searchable()
-                ->preload(),
+                ->preload()
+                ->required(),
 
             F\Select::make('category_id')
                 ->label(__('Category'))
@@ -157,7 +158,8 @@ class ProductResource extends Resource
                 ->createOptionForm(fn($schema) => CategoryResource::form($schema)->getComponents())
                 ->editOptionForm(fn($schema) => CategoryResource::form($schema)->getComponents())
                 ->searchable()
-                ->preload(),
+                ->preload()
+                ->required(),
 
             F\Select::make('packing_id')
                 ->label(__('Packing'))
@@ -165,7 +167,8 @@ class ProductResource extends Resource
                 ->createOptionForm(fn($schema) => PackingSchema::configure($schema))
                 ->editOptionForm(fn($schema) => PackingSchema::configure($schema))
                 ->searchable()
-                ->preload(),
+                ->preload()
+                ->required(),
 
             F\TextInput::make('product_life_cycle')
                 ->label(__('Product Life Circle'))
@@ -225,8 +228,9 @@ class ProductResource extends Resource
                     ->hiddenLabel()
                     ->relationship(
                         name: 'contact',
-                        titleAttribute: 'contact_code_name',
+                        titleAttribute: 'contact_name',
                         modifyQueryUsing: fn(Builder $query) => $query->where('is_trader', true)
+                            ->whereNotNull('contact_name')
                     )
                     ->disableOptionsWhenSelectedInSiblingRepeaterItems()
                     ->searchable()
@@ -246,8 +250,9 @@ class ProductResource extends Resource
                     ->hiddenLabel()
                     ->relationship(
                         name: 'contact',
-                        titleAttribute: 'contact_code_name',
+                        titleAttribute: 'contact_name',
                         modifyQueryUsing: fn(Builder $query) => $query->where('is_cus', true)
+                            ->whereNotNull('contact_name')
                     )
                     ->disableOptionsWhenSelectedInSiblingRepeaterItems()
                     ->searchable()
@@ -256,6 +261,4 @@ class ProductResource extends Resource
             )
             ->defaultItems(0);
     }
-
-
 }

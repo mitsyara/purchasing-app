@@ -52,13 +52,13 @@ class CustomsDataResource extends Resource
                 T\TextColumn::make('importer')
                     ->wrap()
                     ->label(__('Importer'))
-                    ->searchable()
+                    ->searchable(isIndividual: true)
                     ->toggleable(),
 
                 T\TextColumn::make('product')
                     ->wrap()
                     ->label(__('Product'))
-                    ->searchable()
+                    ->searchable(isIndividual: true)
                     ->toggleable(),
 
                 T\TextColumn::make('qty')
@@ -87,7 +87,7 @@ class CustomsDataResource extends Resource
                 T\TextColumn::make('exporter')
                     ->wrap()
                     ->label(__('Exporter'))
-                    ->searchable()
+                    ->searchable(isIndividual: true)
                     ->toggleable(),
 
                 T\TextColumn::make('export_country')

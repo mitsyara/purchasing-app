@@ -18,7 +18,7 @@ return new class extends Migration
 
             $table->boolean('is_active')->default(true);
             $table->boolean('is_fav')->default(false);
-            
+
             $table->foreignId('mfg_id')->nullable()->constrained('contacts')->cascadeOnDelete();
             $table->foreignId('category_id')->nullable()->constrained('categories')->cascadeOnDelete();
             $table->foreignId('packing_id')->nullable()->constrained('packings')->cascadeOnDelete();
@@ -30,6 +30,10 @@ return new class extends Migration
 
             $table->longText('product_full_name')->nullable();
             $table->string('product_uom')->nullable();
+
+            $table->string('product_description')->storedAs("concat(product_code, ' - ', product_full_name)");
+
+            // $table
             $table->timestamps();
         });
     }
