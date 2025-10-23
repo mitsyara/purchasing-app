@@ -300,7 +300,7 @@ class PurchaseOrderForm
             F\Select::make('incoterm')
                 ->label(__('Incoterm'))
                 ->options(\App\Enums\IncotermEnum::class)
-                ->default(\App\Enums\IncotermEnum::CIF)
+                ->default(\App\Enums\IncotermEnum::CIP)
                 ->extraInputAttributes([
                     'x-init' => <<<'JS'
                         $watch('$state', value => {

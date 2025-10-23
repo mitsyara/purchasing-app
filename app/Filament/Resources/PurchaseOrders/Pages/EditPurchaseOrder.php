@@ -9,6 +9,8 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditPurchaseOrder extends EditRecord
 {
+    use \Howdu\FilamentRecordSwitcher\Filament\Concerns\HasRecordSwitcher;
+
     protected static string $resource = PurchaseOrderResource::class;
 
     #[\Livewire\Attributes\On('refresh-order-status')]

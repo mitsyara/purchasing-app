@@ -8,6 +8,7 @@ use App\Filament\BaseResource as Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class PurchaseOrderResource extends Resource
 {
@@ -18,6 +19,8 @@ class PurchaseOrderResource extends Resource
     protected static string|\UnitEnum|null $navigationGroup = 'purchasing';
 
     protected static ?int $navigationSort = 10;
+
+    protected static ?string $recordTitleAttribute = 'order_number';
 
     public static function form(Schema $schema): Schema
     {

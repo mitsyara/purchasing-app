@@ -32,7 +32,7 @@ class PurchaseShipmentsRelationManager extends RelationManager
 
     public static function title(): string
     {
-        return __('Shipment');
+        return __('Shipments');
     }
 
     public function form(Schema $schema): Schema
@@ -176,12 +176,13 @@ class PurchaseShipmentsRelationManager extends RelationManager
             \Filament\Schemas\Components\Fieldset::make(__('ETD'))
                 ->schema([
                     F\DatePicker::make('etd_min')->label(__('From'))
-                        ->default(fn($livewire) => $livewire->getOwnerRecord()?->etd_min)
+                        ->default(fn(RelationManager $livewire) => $livewire->getOwnerRecord()?->etd_min)
                         ->requiredWithoutAll(fn() => ['etd_max', 'eta_min', 'eta_max', 'atd', 'ata'])
                         ->validationMessages([
                             'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
                         ])
-                        ->minDate(fn($livewire) => $livewire->getOwnerRecord()->order_date ?? today()),
+                        ->minDate(fn($livewire)
+                        => $livewire->getOwnerRecord()->order_date ?? today()),
 
                     F\DatePicker::make('etd_max')->label(__('To'))
                         ->default(fn($livewire) => $livewire->getOwnerRecord()?->etd_max)
@@ -189,7 +190,8 @@ class PurchaseShipmentsRelationManager extends RelationManager
                         ->validationMessages([
                             'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
                         ])
-                        ->minDate(fn($get) => $get('etd_min') ?? $this->getOwnerRecord()->order_date ?? today()),
+                        ->minDate(fn(callable $get, RelationManager $livewire)
+                        => $get('etd_min') ?? $livewire->getOwnerRecord()->order_date ?? today()),
                 ])
                 ->columns([
                     'default' => 2,
@@ -205,7 +207,8 @@ class PurchaseShipmentsRelationManager extends RelationManager
                         ->validationMessages([
                             'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
                         ])
-                        ->minDate(fn($get) => $get('etd_max') ?? $this->getOwnerRecord()->order_date ?? today()),
+                        ->minDate(fn(callable $get, RelationManager $livewire)
+                        => $get('etd_max') ?? $livewire->getOwnerRecord()->order_date ?? today()),
 
                     F\DatePicker::make('eta_max')->label(__('To'))
                         ->default(fn($livewire) => $livewire->getOwnerRecord()?->eta_max)
@@ -213,7 +216,8 @@ class PurchaseShipmentsRelationManager extends RelationManager
                         ->validationMessages([
                             'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
                         ])
-                        ->minDate(fn($get) => $get('eta_min') ?? $this->getOwnerRecord()->order_date ?? today()),
+                        ->minDate(fn(callable $get, RelationManager $livewire)
+                        => $get('eta_min') ?? $livewire->getOwnerRecord()->order_date ?? today()),
                 ])
                 ->columns([
                     'default' => 2,

@@ -11,7 +11,6 @@ enum IncotermEnum: string implements HasLabel
     case FOB = 'FOB';
     case FAS = 'FAS';
     case CFR = 'CFR';
-    case CIF = 'CIF';
     case CPT = 'CPT';
     case CIP = 'CIP';
     case DAT = 'DAT';
@@ -26,7 +25,6 @@ enum IncotermEnum: string implements HasLabel
             self::FOB => 'FOB',
             self::FAS => 'FAS',
             self::CFR => 'CFR',
-            self::CIF => 'CIF',
             self::CPT => 'CPT',
             self::CIP => 'CIP',
             self::DAT => 'DAT',

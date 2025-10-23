@@ -42,6 +42,7 @@ class PurchasingPanelProvider extends PanelProvider
             ->databaseNotificationsPolling('30s')
             ->databaseTransactions()
             ->unsavedChangesAlerts()
+            ->globalSearch(false)
 
             ->topNavigation()
             ->maxContentWidth(Width::Full)
@@ -94,6 +95,9 @@ class PurchasingPanelProvider extends PanelProvider
                     ->authorize(fn() => auth()->id() === 1),
 
                 // Shieldon Filament Spatie Roles & Permissions
+
+                // Record switcher
+                \Howdu\FilamentRecordSwitcher\FilamentRecordSwitcherPlugin::make(),
 
             ])
 

@@ -15,6 +15,7 @@
         "defstudio/filament-searchable-input": "^4.0",
         "filament/filament": "^4.0",
         "filament/spatie-laravel-media-library-plugin": "^4.0",
+        "howdu/filament-record-switcher": "^2.0",
         "jenssegers/agent": "^2.6",
         "laravel-lang/lang": "^15.26",
         "laravel/framework": "^12.0",

@@ -1,14 +1,22 @@
 <?php
 
+use Illuminate\Http\Request;
+
 use App\Livewire\CustomsData\Index;
 use App\Livewire\CustomsData\PinForm;
-use App\Services\VcbExchangeRatesService;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 
+use Filament\Facades\Filament;
+
 Route::get('/', fn() => view('welcome'));
+
+// Redirect to Filament Login
+Route::get('/login', function () {
+    $url = Filament::getDefaultPanel()->getLoginUrl();
+    return redirect($url);
+})->name('login');
 
 // Test cron-job
 Route::get('/test-schedule', function () {
@@ -46,7 +54,7 @@ Route::get('/export/status', function (Request $request) {
 // Download Exported File
 Route::get('/download/{path}', function ($path) {
     // decode lại
-    $path = urldecode($path); 
+    $path = urldecode($path);
 
     $file = storage_path('app/' . $path);
 
@@ -69,7 +77,7 @@ Route::get('/test', function () {
     return view('pdf-view.price-quote-print');
 });
 
-Route::get('/print-quote', function(Request $request) {
+Route::get('/print-quote', function (Request $request) {
     return view('pdf-view.price-quote-print', [
         'data' => $request->input('data', []),
     ]);

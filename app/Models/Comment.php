@@ -11,7 +11,6 @@ class Comment extends Model
     use \App\Traits\HasLoggedActivity;
     protected $fillable = [
         'user_id',
-        // 'comment_status', // published, draft TODO: migrate this column
         'comment',
     ];
 

@@ -146,6 +146,11 @@ class PurchaseOrder extends Model
         return $this->belongsTo(User::class, 'staff_declarant_id');
     }
 
+    public function staffDeclarantProcessing(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'staff_declarant_processing_id');
+    }
+
     // Edit history
     public function createdBy(): BelongsTo
     {
@@ -224,7 +229,7 @@ class PurchaseOrder extends Model
     // auto assign order number
     public function generateOrderNumber(?array $data = null): string
     {
-        $id = str_pad($data['id'] ?? $this->company_id, 3, '0', STR_PAD_LEFT);
+        $id = str_pad($data['id'] ?? $this->company_id, 2, '0', STR_PAD_LEFT);
         $date = \Carbon\Carbon::parse($data['order_date'] ?? $this->order_date)->format('ymd');
         $base = "PO-{$id}{$date}";
 

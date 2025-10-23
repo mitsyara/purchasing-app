@@ -288,7 +288,6 @@ class PurchaseShipmentForm
                     ])
                     ->defaultItems(1)
                     ->addActionLabel(__('Add Lot/Batch'))
-                    ->addable(fn() => $record->purchaseOrder?->incoterm !== \App\Enums\IncotermEnum::CIF)
                     ->after(function (PurchaseShipmentLine $record) {
                         new \App\Services\InventoryLine\SyncFromShipmentLine($record);
                     })
