@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PurchaseOrders\Schemas;
 
+use App\Filament\Resources\Contacts\Schemas\ContactForm;
 use App\Filament\Schemas\POProductForm;
 use App\Models\PurchaseOrder;
 use Filament\Actions\Action;
@@ -53,7 +54,7 @@ class PurchaseOrderForm
                                 ...POProductForm::repeaterHeaders(),
                             ])
                             ->schema([
-                                ...POProductForm::configure(new Schema())->getComponents(),
+                                ...POProductForm::formSchema(),
                             ])
                             ->defaultItems(1)
                             ->minItems(1)
@@ -89,6 +90,12 @@ class PurchaseOrderForm
                 ->disableOptionWhen(fn($get, $value) => (int) $get('supplier_contract_id') === (int) $value)
                 ->preload()
                 ->searchable()
+                ->createOptionForm(ContactForm::configure(new Schema())->getComponents())
+                ->createOptionAction(fn(Action $action): Action
+                => $action->slideOver())
+                ->editOptionForm(ContactForm::configure(new Schema())->getComponents())
+                ->editOptionAction(fn(Action $action): Action
+                => $action->slideOver())
                 ->required(),
 
             F\Select::make('supplier_contract_id')
@@ -261,11 +268,10 @@ class PurchaseOrderForm
                         ->action(function (F\TextInput $component, ?PurchaseOrder $record, callable $get) {
                             if ($record) {
                                 $component->state($record->generateOrderNumber());
-                            }
-                            else {
+                            } else {
                                 $id = $get('company_id');
                                 $orderDate = $get('order_date');
-                                if(!$id || !$orderDate) {
+                                if (!$id || !$orderDate) {
                                     return;
                                 }
                                 $orderNumber = (new PurchaseOrder())->generateOrderNumber([

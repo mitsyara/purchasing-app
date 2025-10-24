@@ -2,7 +2,7 @@
 
 Phiên bản hệ thống: v1.0 beta-1  
 Cập nhật: 22/10/2025  
-Liên hệ hỗ trợ: [Nam Vương Hùng Thái](tel:0916737190)
+Liên hệ hỗ trợ: [Nam Vương Hùng Thái - Đẹp trai vãi nồi](tel:0916737190)
 
 ---
 

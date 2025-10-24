@@ -48,23 +48,10 @@ class FilamentServiceProvider extends ServiceProvider
         // App PIN
         \Filament\Support\Facades\FilamentView::registerRenderHook(
             \Filament\View\PanelsRenderHook::GLOBAL_SEARCH_AFTER,
-            fn() => Blade::render('
-                <x-filament::badge size="xl" color="info">' . (string) \Illuminate\Support\Facades\Cache::get('app_pin', '1234') . '</x-filament::badge>
-
-                <x-filament::link href="' . \App\Filament\Pages\UserGuide::getUrl() . '" color="info" size="sm">
-                    {{ __("User Guide") }}
-                </x-filament::link>
-            ')
-        );
-
-        // App Docs
-        \Filament\Support\Facades\FilamentView::registerRenderHook(
-            \Filament\View\PanelsRenderHook::PAGE_START,
-            fn(): string => \Livewire\Livewire::mount('screen-lock-modal'),
+            fn(): string => \Livewire\Livewire::mount('display-app-pin'),
         );
 
         // Configure Filament global settings
-
         \Filament\Tables\Table::configureUsing(function (\Filament\Tables\Table $table) {
             $table
                 ->maxSelectableRecords(1000)

@@ -177,7 +177,7 @@ class PurchaseShipmentsRelationManager extends RelationManager
                 ->schema([
                     F\DatePicker::make('etd_min')->label(__('From'))
                         ->default(fn(RelationManager $livewire) => $livewire->getOwnerRecord()?->etd_min)
-                        ->requiredWithoutAll(fn() => ['etd_max', 'eta_min', 'eta_max', 'atd', 'ata'])
+                        ->requiredWithoutAll(['etd_max', 'eta_min', 'eta_max', 'atd', 'ata'])
                         ->validationMessages([
                             'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
                         ])
@@ -186,7 +186,7 @@ class PurchaseShipmentsRelationManager extends RelationManager
 
                     F\DatePicker::make('etd_max')->label(__('To'))
                         ->default(fn($livewire) => $livewire->getOwnerRecord()?->etd_max)
-                        ->requiredWithoutAll(fn() => ['etd_min', 'eta_min', 'eta_max', 'atd', 'ata'])
+                        ->requiredWithoutAll(['etd_min', 'eta_min', 'eta_max', 'atd', 'ata'])
                         ->validationMessages([
                             'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
                         ])
@@ -203,7 +203,7 @@ class PurchaseShipmentsRelationManager extends RelationManager
                 ->schema([
                     F\DatePicker::make('eta_min')->label(__('From'))
                         ->default(fn($livewire) => $livewire->getOwnerRecord()?->eta_min)
-                        ->requiredWithoutAll(fn() => ['etd_min', 'etd_max', 'eta_max', 'atd', 'ata'])
+                        ->requiredWithoutAll(['etd_min', 'etd_max', 'eta_max', 'atd', 'ata'])
                         ->validationMessages([
                             'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
                         ])
@@ -212,7 +212,7 @@ class PurchaseShipmentsRelationManager extends RelationManager
 
                     F\DatePicker::make('eta_max')->label(__('To'))
                         ->default(fn($livewire) => $livewire->getOwnerRecord()?->eta_max)
-                        ->requiredWithoutAll(fn() => ['etd_min', 'etd_max', 'eta_min', 'atd', 'ata'])
+                        ->requiredWithoutAll(['etd_min', 'etd_max', 'eta_min', 'atd', 'ata'])
                         ->validationMessages([
                             'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
                         ])
@@ -317,13 +317,14 @@ class PurchaseShipmentsRelationManager extends RelationManager
         $order = $livewire->getOwnerRecord();
 
         if ($productId && $order) {
-            $shippedQty = $order->purchaseShipments()
-                ->whereHas('purchaseShipmentLines', fn(Builder $query) => $query->where('product_id', $productId))
-                ->withSum(['purchaseShipmentLines as total_qty' => fn(Builder $query)
-                => $query->whereNotIn('id', [$record?->id])
-                    ->where('product_id', $productId)], 'qty')
-                ->first()
-                ?->total_qty ?? 0;
+            // Tính tổng qty đã giao từ bảng purchase_shipment_lines,
+            // cho tất cả shipment thuộc order này, loại trừ record hiện tại (nếu có).
+            $shippedQty = PurchaseShipmentLine::whereHas('purchaseShipment', function (Builder $q) use ($order) {
+                $q->where('purchase_order_id', $order->id);
+            })
+                ->where('product_id', $productId)
+                ->when($record?->id, fn($q, $rid) => $q->where('id', '!=', $rid))
+                ->sum('qty');
 
             $orderedQty = $order->purchaseOrderLines()
                 ->where('product_id', $productId)
@@ -343,6 +344,7 @@ class PurchaseShipmentsRelationManager extends RelationManager
         }
     }
 
+
     public static function validateQty(
         Get $get,
         Livewire $livewire,
@@ -351,21 +353,23 @@ class PurchaseShipmentsRelationManager extends RelationManager
         \Closure $fail
     ): void {
         if (!($livewire instanceof static)) {
-            throw new \Exception('Livewire component is not an instance of the expected RelationManager.');
+            throw new \Exception('Component is not an instance of the expected RelationManager.');
         }
 
-        $orderLineQty = \App\Models\PurchaseOrderLine::where('purchase_order_id', $livewire->getOwnerRecord()->id)
+        $order = $livewire->getOwnerRecord();
+
+        // Lấy qty trong order line cho product hiện tại
+        $orderLineQty = \App\Models\PurchaseOrderLine::where('purchase_order_id', $order->id)
             ->where('product_id', $get('product_id'))
             ->first()?->qty ?? 0;
 
-        // Exclude current record qty
-        $shippedQty = $livewire->getOwnerRecord()
-            ->purchaseShipments()
-            ->whereHas('purchaseShipmentLines', fn(Builder $query) => $query->where('product_id', $get('product_id')))
-            ->withSum(['purchaseShipmentLines as total_qty' => fn(Builder $query)
-            => $query->whereNotIn('id', [$record?->id])
-                ->where('product_id', $get('product_id'))], 'qty')
-            ->first()?->total_qty ?? 0;
+        // Tổng qty đã giao (trên tất cả purchase_shipment_lines thuộc order), loại trừ current record
+        $shippedQty = PurchaseShipmentLine::whereHas('purchaseShipment', function (Builder $q) use ($order) {
+            $q->where('purchase_order_id', $order->id);
+        })
+            ->where('product_id', $get('product_id'))
+            ->when($record?->id, fn($q, $rid) => $q->where('id', '!=', $rid))
+            ->sum('qty');
 
         if ($value + $shippedQty > $orderLineQty) {
             $fail(__('Remaining: :qty', ['qty' => $orderLineQty - $shippedQty]));

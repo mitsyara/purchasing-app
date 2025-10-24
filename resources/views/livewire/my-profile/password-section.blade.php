@@ -1,3 +1,4 @@
 <div>
-   {{ $this->form }}
+    {{ $this->form }}
+    <x-filament-actions::modals />
 </div>

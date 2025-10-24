@@ -10,7 +10,7 @@
         <h2 class="screen-lock-title">{{ __('Screen Locked') }}</h2>
 
         <x-filament::input.wrapper :valid="!$errors->has('lock_pin')">
-            <x-filament::input type="password" wire:model.defer="lock_pin" placeholder="{{ __('Enter PIN') }}"
+            <x-filament::input type="password" id="screen-lock-pin-input" wire:model.defer="lock_pin" placeholder="{{ __('Enter PIN') }}"
                 @keydown.enter="$wire.unlock()" />
         </x-filament::input.wrapper>
 

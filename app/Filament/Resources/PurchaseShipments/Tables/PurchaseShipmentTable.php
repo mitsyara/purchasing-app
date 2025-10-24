@@ -9,12 +9,15 @@ use App\Services\PurchaseShipment\CallAllPurchaseShipmentServices;
 
 use Filament\Actions as A;
 use Filament\Tables\Columns as T;
+use Illuminate\Database\Eloquent\Builder;
 
 class PurchaseShipmentTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn(Builder $query): Builder
+            => $query->whereNotNull('purchase_order_id'))
             ->columns([
                 __index(),
 
@@ -107,6 +110,6 @@ class PurchaseShipmentTable
             ])
             ->toolbarActions([])
             // ->recordAction('edit')
-            ;
+        ;
     }
 }

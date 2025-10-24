@@ -19,10 +19,8 @@ class ContactTable
     public static function configure(Table $table): Table
     {
         return $table
-            ->query(fn(): Builder => Contact::query()->where(function ($query) {
-                $query->where('contact_code', '<>', 'KL')
-                    ->orWhereNull('contact_code');
-            }))
+            ->modifyQueryUsing(fn(Builder $query): Builder
+            => $query->where('contact_code', '<>', 'KL'))
             ->columns([
                 __index(),
                 T\TextColumn::make('contact_name')
@@ -94,6 +92,7 @@ class ContactTable
                         ->dropdown(false),
 
                     A\EditAction::make()
+                        ->disabled(fn(?Contact $record): bool => $record->contact_code === 'KL')
                         ->modal()->slideOver()
                         ->modalWidth(Width::FiveExtraLarge),
                     A\DeleteAction::make(),

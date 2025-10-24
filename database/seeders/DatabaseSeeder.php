@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $initial = true;
-        $test = false;
+        $force = false;
 
         // Real data
         if ($initial) {
@@ -39,7 +39,7 @@ class DatabaseSeeder extends Seeder
         }
 
         // Fake data
-        if ($test) {
+        if ($force ?: app()->isLocal()) {
             // Skip seeders
             $skip = [
                 'UserSeeder',

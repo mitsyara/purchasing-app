@@ -20,7 +20,6 @@ class PurchaseOrder extends Model
         'order_status',
         'order_date',
         'order_number',
-        // yyyy-mm-dd order_number [supplier_code]
         'order_description',
 
         // buyer
@@ -82,6 +81,11 @@ class PurchaseOrder extends Model
         'incoterm' => \App\Enums\IncotermEnum::class,
         'real_amount' => 'decimal:6',
         'total_amount' => 'decimal:6',
+        'total_received_value' => 'decimal:6',
+        'total_paid_value' => 'decimal:6',
+        'is_foreign' => 'boolean',
+        'is_skip_invoice' => 'boolean',
+        'pay_term_days' => 'integer',
     ];
 
     // Model relationships

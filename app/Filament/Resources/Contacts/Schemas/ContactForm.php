@@ -73,6 +73,7 @@ class ContactForm
             F\TextInput::make('contact_name')
                 ->label(__('Company Name'))
                 ->columnSpanFull()
+                ->unique()
                 ->required(),
 
             F\TextInput::make('office_address')
@@ -149,8 +150,7 @@ class ContactForm
             F\TextInput::make('contact_code')
                 ->label(__('Code'))
                 ->unique()
-            // ->required()
-            ,
+                ->required(),
 
             F\TextInput::make('contact_short_name')
                 ->label(__('Short Name'))

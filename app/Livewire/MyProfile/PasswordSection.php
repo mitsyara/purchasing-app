@@ -2,6 +2,7 @@
 
 namespace App\Livewire\MyProfile;
 
+use App\Livewire\DisplayAppPin;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -98,13 +99,11 @@ class PasswordSection extends Component implements HasSchemas, HasActions
                                     ->success()
                                     ->title(__('PIN removed'))
                                     ->send();
-                                $this->dispatch('refresh-sidebar');
                             })
                             ->disabled(fn(): bool => $this->user->lock_pin === null)
                             ->requiresConfirmation(),
 
                         Action::make('setAppPin')
-                            ->visible(fn(): bool => auth()->id() === 1)
                             ->schema([
                                 F\TextInput::make('app_pin')
                                     ->label(__('Application PIN'))
@@ -112,18 +111,11 @@ class PasswordSection extends Component implements HasSchemas, HasActions
                                     ->default(fn(): string => \Illuminate\Support\Facades\Cache::get('app_pin', '1234'))
                                     ->required(),
                             ])
-                            ->action(function (array $data): void {
-                                \Illuminate\Support\Facades\Cache::put('app_pin', $data['app_pin']);
-                                $this->dispatch('refresh-topbar');
-
-                                Notification::make()
-                                    ->success()
-                                    ->title(__('Application PIN updated'))
-                                    ->send();
-                            })
+                            ->action(fn(array $data, \Livewire\Component $livewire) => $this->submitAppPin($data, $livewire))
                             ->modal()->link()->outlined()->color('warning')
                             ->modalWidth(Width::Small)
                             ->icon(Heroicon::DevicePhoneMobile)
+                            ->disabled(fn(): bool => auth()->id() !== 1)
 
                     ])
                         ->columns(['default' => 4])
@@ -197,9 +189,30 @@ class PasswordSection extends Component implements HasSchemas, HasActions
                     ->success()
                     ->title(__('Lock PIN updated'))
                     ->send();
-                $this->dispatch('refresh-sidebar');
             }
         }
+    }
+
+    public function submitAppPin(array $data, \Livewire\Component $livewire): void
+    {
+        $pin = $data['app_pin'];
+        $currentPin = \Illuminate\Support\Facades\Cache::get('app_pin', null);
+        if ($pin === $currentPin) {
+            Notification::make()
+                ->danger()
+                ->title(__('Cannot be the same as the current one'))
+                ->send();
+            return;
+        }
+
+        \Illuminate\Support\Facades\Cache::put('app_pin', $pin);
+
+        $this->dispatch('refresh-app-pin')->to(DisplayAppPin::class);
+
+        Notification::make()
+            ->success()
+            ->title(__('Application PIN updated'))
+            ->send();
     }
 
     public function render(): \Illuminate\Contracts\View\View

@@ -385,12 +385,18 @@ class PurchaseShipmentForm
     public static function setProductExpDateByJs(): string
     {
         return <<<'JS'
-            const mfgDate = new Date($state);
-            const lifeCycle = $get('../../product_life_cycle');
-            const expDate = new Date(mfgDate);
-            expDate.setDate(expDate.getDate() + lifeCycle - 1);
-            if ($state && lifeCycle) {
-                $set('exp_date', expDate.toISOString().split("T")[0]);
+            if (!$state) {
+                // không có ngày sản xuất, bỏ qua
+            } else {
+                const [year, month, day] = $state.split('-').map(Number);
+                const mfgDate = new Date(year, month - 1, day);
+                const lifeCycle = parseInt($get('../../product_life_cycle') ?? 0, 10);
+                const expDate = new Date(mfgDate);
+
+                if (lifeCycle > 0) {
+                    expDate.setDate(expDate.getDate() + lifeCycle);
+                    $set('exp_date', expDate.toISOString().split("T")[0]);
+                }
             }
         JS;
     }

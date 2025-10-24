@@ -11,5 +11,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // Purchase Order API routes
     // Route::apiResource('purchase-orders', App\Http\Controllers\Api\PurchaseOrderController::class);
     Route::get('purchase-orders', [App\Http\Controllers\Api\PurchaseOrderController::class, 'index']);
-    Route::get('purchase-orders/{id}', [App\Http\Controllers\Api\PurchaseOrderController::class, 'show']);
+    // Route::get('purchase-orders/{id}', [App\Http\Controllers\Api\PurchaseOrderController::class, 'show']);
+
+    // Purchase Shipment API routes
 });
+
+    Route::get('purchase-orders/{id}', [App\Http\Controllers\Api\PurchaseOrderController::class, 'show']);
