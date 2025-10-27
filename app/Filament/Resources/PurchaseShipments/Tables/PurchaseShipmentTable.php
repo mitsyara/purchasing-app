@@ -104,7 +104,13 @@ class PurchaseShipmentTable
                     A\EditAction::make()
                         ->modal()->slideOver()
                         ->after(function (PurchaseShipment $record) {
+                            // Call all necessary services for the shipment
                             new CallAllPurchaseShipmentServices($record);
+                            // Sync inventory lines from shipment lines
+                            if ($record->purchaseShipmentLines()->exists()) {
+                                $record->purchaseShipmentLines()
+                                    ->each(fn($line) => new \App\Services\InventoryLine\SyncFromShipmentLine($line));
+                            }
                         }),
                 ])
             ])

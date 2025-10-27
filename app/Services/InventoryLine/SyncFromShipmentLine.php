@@ -18,6 +18,7 @@ class SyncFromShipmentLine
             // io price
             'io_price' => $shipmentLine->unit_price,
             'io_currency' => $shipmentLine->currency,
+            'break_price' => $shipmentLine->break_price,
         ]);
     }
 }

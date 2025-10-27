@@ -288,9 +288,6 @@ class PurchaseShipmentForm
                     ])
                     ->defaultItems(1)
                     ->addActionLabel(__('Add Lot/Batch'))
-                    ->after(function (PurchaseShipmentLine $record) {
-                        new \App\Services\InventoryLine\SyncFromShipmentLine($record);
-                    })
                     ->compact()
                     ->columnSpanFull(),
             ])
@@ -298,11 +295,6 @@ class PurchaseShipmentForm
             ->addable(false)
             ->deletable(false)
             ->minItems(1)
-            ->after(function (PurchaseShipment $record) {
-                foreach ($record->purchaseShipmentLines as $line) {
-                    new \App\Services\InventoryLine\SyncBreakPriceFromShipmentLine($line);
-                }
-            })
             ->columns()
             ->columnSpanFull()
             ->collapsible()
