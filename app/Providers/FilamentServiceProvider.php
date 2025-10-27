@@ -67,6 +67,11 @@ class FilamentServiceProvider extends ServiceProvider
             ;
         }, isImportant: true);
 
+        // \Filament\Tables\Columns\TextColumn::configureUsing(function (\Filament\Tables\Columns\TextColumn $column) {
+        //     $column
+        //         ->size('xs');
+        // }, isImportant: true);
+
         \Filament\Schemas\Components\Tabs::configureUsing(function (\Filament\Schemas\Components\Tabs $tabs) {
             $tabs->contained(false);
         }, isImportant: true);

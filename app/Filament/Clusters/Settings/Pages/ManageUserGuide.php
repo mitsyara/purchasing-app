@@ -17,7 +17,7 @@ class ManageUserGuide extends Page
     protected string $view = 'filament.clusters.settings.pages.manage-user-guide';
 
     protected static ?string $cluster = SettingsCluster::class;
-    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedLanguage;
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentText;
     protected static ?int $navigationSort = 31;
 
     public function getTitle(): string | Htmlable

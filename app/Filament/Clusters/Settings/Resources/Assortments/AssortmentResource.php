@@ -66,7 +66,6 @@ class AssortmentResource extends Resource
                     ->relationship('products', 'product_full_name')
                     ->tableConfiguration(ProductTable::class)
                     ->tableArguments(fn($get) => ['belong_category_id' => $get('category_id')])
-                    // ->searchable()
                     ->helperText(__('Select products to include in this assortment.'))
                     ->multiple()
                     ->columnSpanFull(),

@@ -14,9 +14,10 @@ return new class extends Migration
         Schema::create('inventory_transactions', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('company_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->foreignId('warehouse_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->foreignId('product_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->cascadeOnDelete();
+            $table->foreignId('warehouse_id')->nullable()->constrained('warehouses')->cascadeOnDelete();
+            $table->foreignId('product_id')->nullable()->constrained('products')->cascadeOnDelete();
+            $table->foreignId('parent_id')->nullable()->constrained('inventory_transactions')->cascadeOnDelete();
 
             $table->morphs('sourceable');
             $table->string('transaction_type')->nullable(); // e.g., 'in', 'out'
@@ -26,7 +27,9 @@ return new class extends Migration
             $table->date('mfg_date')->nullable();
             $table->date('exp_date')->nullable();
 
-            $table->decimal('import_price', 15, 4)->nullable();
+            $table->decimal('break_price', 15, 4)->nullable();
+            $table->decimal('io_price', 15, 4)->nullable();
+            $table->string('io_currency')->nullable();
 
             $table->boolean('is_checked')->default(false);
             $table->foreignId('checked_by')->nullable()->constrained('users')->nullOnDelete();

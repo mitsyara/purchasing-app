@@ -2,14 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
+#[ObservedBy([\App\Observers\InventoryTransactionObserver::class])]
 class InventoryTransaction extends Model
 {
+    use \App\Traits\HasCustomRecursiveQueryBuilder;
     use \App\Traits\HasLoggedActivity;
+
     protected $fillable = [
         'company_id',
         'warehouse_id',
@@ -17,6 +22,7 @@ class InventoryTransaction extends Model
 
         'sourceable_id',
         'sourceable_type',
+        'parent_id',
 
         'transaction_type',
         'transaction_date',
@@ -25,7 +31,9 @@ class InventoryTransaction extends Model
         'mfg_date',
         'exp_date',
 
-        'import_price',
+        'break_price',
+        'io_price',
+        'io_currency',
 
         'is_checked',
         'checked_by',
@@ -37,9 +45,11 @@ class InventoryTransaction extends Model
         'transaction_date' => 'date',
         'mfg_date' => 'date',
         'exp_date' => 'date',
+        'is_checked' => 'boolean',
 
         'qty' => 'decimal:3',
-        'is_checked' => 'boolean',
+        'io_price' => 'decimal:3',
+        'break_price' => 'decimal:3',
     ];
 
     public function company(): BelongsTo
@@ -67,4 +77,33 @@ class InventoryTransaction extends Model
         return $this->morphTo();
     }
 
+    // Helpers
+
+    /**
+     * Mark this transaction as checked.
+     */
+    public function checked(?int $userId = null): void
+    {
+        if ($this->is_checked) return;
+
+        $this->update([
+            'transaction_date' => today(),
+            'is_checked' => true,
+            'checked_by' => $userId ?? auth()->id(),
+        ]);
+    }
+
+    /**
+     * Unmark this transaction.
+     */
+    public function unchecked(): void
+    {
+        if (!$this->is_checked) return;
+
+        $this->update([
+            'transaction_date' => null,
+            'is_checked' => false,
+            'checked_by' => null,
+        ]);
+    }
 }

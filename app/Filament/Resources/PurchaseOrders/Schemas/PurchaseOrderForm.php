@@ -330,6 +330,9 @@ class PurchaseOrderForm
                 ->default(false)
                 ->columnSpanFull(),
 
+            __notes()
+                ->rows(4)
+                ->columnSpanFull(),
         ];
     }
 

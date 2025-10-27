@@ -298,6 +298,11 @@ class PurchaseShipmentForm
             ->addable(false)
             ->deletable(false)
             ->minItems(1)
+            ->after(function (PurchaseShipment $record) {
+                foreach ($record->purchaseShipmentLines as $line) {
+                    new \App\Services\InventoryLine\SyncBreakPriceFromShipmentLine($line);
+                }
+            })
             ->columns()
             ->columnSpanFull()
             ->collapsible()

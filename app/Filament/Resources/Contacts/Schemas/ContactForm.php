@@ -142,7 +142,14 @@ class ContactForm
             F\Toggle::make('is_cus')
                 ->label(__('Customer')),
             F\Toggle::make('is_trader')
-                ->label(__('Trader')),
+                ->label(__('Trader'))
+                ->rules([
+                    fn(callable $get): \Closure => function (string $attribute, $value, \Closure $fail) use ($get) {
+                        if ($value || $get('is_trader') || $get('is_mfg')) {
+                            $fail(__('At least one of Customer, Trader, or Manufacturer'));
+                        }
+                    },
+                ]),
 
             F\Checkbox::make('is_fav')
                 ->label(__('Favorite')),

@@ -69,7 +69,7 @@ class ProductResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->columns(ProductTable::configure($table)->getColumns())
+            ->columns(ProductTable::tableColumns())
             ->filters([
                 TF\SelectFilter::make('mfg_id')
                     ->label(__('Manufacturer'))

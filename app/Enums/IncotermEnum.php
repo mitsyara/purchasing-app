@@ -6,39 +6,39 @@ use Filament\Support\Contracts\HasLabel;
 
 enum IncotermEnum: string implements HasLabel
 {
-    case EXW = 'EXW';
-    case FCA = 'FCA';
-    case FOB = 'FOB';
-    case FAS = 'FAS';
     case CIF = 'CIF';
     case CIP = 'CIP';
-    case CFR = 'CFR';
     case CPT = 'CPT';
-    case DAT = 'DAT';
+    case CFR = 'CFR';
     case DAP = 'DAP';
+    case DAT = 'DAT';
     case DDP = 'DDP';
+    case EXW = 'EXW';
+    case FAS = 'FAS';
+    case FCA = 'FCA';
+    case FOB = 'FOB';
 
     public function getLabel(): ?string
     {
         return match ($this) {
-            self::EXW => 'EXW',
-            self::FCA => 'FCA',
-            self::FOB => 'FOB',
-            self::FAS => 'FAS',
             self::CIF => 'CIF',
             self::CIP => 'CIP',
-            self::CFR => 'CFR',
             self::CPT => 'CPT',
-            self::DAT => 'DAT',
+            self::CFR => 'CFR',
             self::DAP => 'DAP',
+            self::DAT => 'DAT',
             self::DDP => 'DDP',
+            self::EXW => 'EXW',
+            self::FAS => 'FAS',
+            self::FCA => 'FCA',
+            self::FOB => 'FOB',
         };
     }
 
-    public static function allCases() :array
+    public static function allCases(): array
     {
         $arr = [];
-        foreach (static::cases() as $case){
+        foreach (static::cases() as $case) {
             $arr[] = $case->value;
         }
         return $arr;

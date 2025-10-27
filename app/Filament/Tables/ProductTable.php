@@ -30,60 +30,14 @@ class ProductTable
                         ->orWhereNull('category_id'))
                 ;
             })
-            ->columns([
-                __index()
-                    ->size('xs'),
-
-                T\TextColumn::make('product_code')
-                    ->label(__('Code'))
-                    ->size('xs')
-                    ->sortable()
-                    ->searchable(),
-
-                T\TextColumn::make('product_name')
-                    ->label(__('Name'))
-                    ->size('xs')
-                    ->sortable()
-                    ->searchable(),
-
-                T\TextColumn::make('mfg.contact_name')
-                    ->label(__('Manufacturer'))
-                    ->size('xs')
-                    ->sortable()
-                    ->searchable(),
-
-                T\TextColumn::make('category.category_name')
-                    ->label(__('Category'))
-                    ->size('xs')
-                    // ->visibleOn(ProductResource::class)
-                    ->sortable()
-                    ->searchable(),
-
-                T\TextColumn::make('packing.packing_name')
-                    ->label(__('Packing'))
-                    ->size('xs')
-                    ->sortable()
-                    ->searchable(),
-
-                T\TextColumn::make('product_life_cycle')
-                    ->label(__('Life Cycle'))
-                    ->size('xs')
-                    ->sortable(),
-
-                T\TextColumn::make('productAssortments.assortment.assortment_code')
-                    ->label(__('Assortment'))
-                    ->size('xs')
-                    ->visibleOn(ProductResource::class)
-                    ->sortable()
-                    ->searchable(),
-            ])
+            ->columns(static::tableColumns())
             ->filters([
                 TF\SelectFilter::make('category_id')
                     ->label(__('Category'))
                     ->relationship(
                         name: 'category',
                         titleAttribute: 'category_name',
-                        modifyQueryUsing: fn($query) => $query
+                        modifyQueryUsing: fn($query): Builder => $query
                     ),
             ])
             ->headerActions([
@@ -97,5 +51,56 @@ class ProductTable
                     //
                 ]),
             ]);
+    }
+
+    public static function tableColumns(): array
+    {
+        return [
+            __index()
+                ->size('xs'),
+
+            T\TextColumn::make('product_code')
+                ->label(__('Code'))
+                ->size('xs')
+                ->sortable()
+                ->searchable(),
+
+            T\TextColumn::make('product_name')
+                ->label(__('Name'))
+                ->size('xs')
+                ->sortable()
+                ->searchable(),
+
+            T\TextColumn::make('mfg.contact_name')
+                ->label(__('Manufacturer'))
+                ->size('xs')
+                ->sortable()
+                ->searchable(),
+
+            T\TextColumn::make('category.category_name')
+                ->label(__('Category'))
+                ->size('xs')
+                // ->visibleOn(ProductResource::class)
+                ->sortable()
+                ->searchable(),
+
+            T\TextColumn::make('packing.packing_name')
+                ->label(__('Packing'))
+                ->size('xs')
+                ->sortable()
+                ->searchable(),
+
+            T\TextColumn::make('product_life_cycle')
+                ->label(__('Life Cycle'))
+                ->size('xs')
+                ->sortable(),
+
+            T\TextColumn::make('productAssortments.assortment.assortment_code')
+                ->label(__('Assortment'))
+                ->size('xs')
+                ->visibleOn(ProductResource::class)
+                ->sortable()
+                ->searchable(),
+        ];
     }
 }

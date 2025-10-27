@@ -8,6 +8,8 @@ use App\Filament\BaseResource as Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Database\Eloquent\Model;
 
 class PurchaseOrderResource extends Resource
 {
@@ -20,6 +22,10 @@ class PurchaseOrderResource extends Resource
     protected static ?int $navigationSort = 10;
 
     protected static ?string $recordTitleAttribute = 'order_number';
+    public static function getRecordTitle(?Model $record): string | Htmlable | null
+    {
+        return $record?->order_number ?? __('Draft');
+    }
 
     public static function form(Schema $schema): Schema
     {

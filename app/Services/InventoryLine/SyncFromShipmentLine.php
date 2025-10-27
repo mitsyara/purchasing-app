@@ -15,8 +15,9 @@ class SyncFromShipmentLine
             'warehouse_id' => $shipment->warehouse_id,
             'product_id' => $shipmentLine->product_id,
             'transaction_type' => \App\Enums\InventoryTransactionTypeEnum::Import->value,
-
-            'import_price' => $shipmentLine->break_price,
+            // io price
+            'io_price' => $shipmentLine->unit_price,
+            'io_currency' => $shipmentLine->currency,
         ]);
     }
 }

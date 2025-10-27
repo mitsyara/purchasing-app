@@ -16,6 +16,7 @@ enum InventoryTransactionTypeEnum: string implements HasLabel, HasIcon, HasColor
         return match ($this) {
             self::Import => __('Import'),
             self::Export => __('Export'),
+            default => __('All'),
         };
     }
 
@@ -24,6 +25,7 @@ enum InventoryTransactionTypeEnum: string implements HasLabel, HasIcon, HasColor
         return match ($this) {
             self::Import => 'heroicon-o-arrow-down',
             self::Export => 'heroicon-o-arrow-up',
+            default => 'heroicon-o-arrow-right',
         };
     }
 
@@ -32,6 +34,7 @@ enum InventoryTransactionTypeEnum: string implements HasLabel, HasIcon, HasColor
         return match ($this) {
             self::Import => 'success',
             self::Export => 'danger',
+            default => 'gray',
         };
     }
 }
