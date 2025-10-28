@@ -41,7 +41,7 @@ class PurchaseOrderForm
                             'lg' => 1,
                         ]),
                 ])
-                    ->from('xl')
+                    ->from('2xl')
                     ->columnSpanFull(),
 
                 // Products
@@ -80,6 +80,54 @@ class PurchaseOrderForm
                 )
                 ->required(),
 
+            S\Flex::make([
+                S\FusedGroup::make([
+                    F\Select::make('before_after')
+                        ->options([
+                            'before' => __('Before'),
+                            'after' => __('After'),
+                        ])
+                        ->selectablePlaceholder(false)
+                        ->default('after')
+                        ->grow(false)
+                        ->dehydrated(false)
+                        ->afterStateHydrated(fn(F\Field $component, $get)
+                        => (int) $get('pay_term_days') >= 0
+                            ? $component->state('after')
+                            : $component->state('before'))
+                        ,
+
+                    F\Select::make('pay_term_delay_at')
+                        ->label(__('Payment Term Delay At'))
+                        ->options(\App\Enums\PaytermDelayAtEnum::class)
+                        ->selectablePlaceholder(false)
+                        ,
+
+                    F\TextInput::make('pay_term_days')
+                        ->label(__('Payment Term Days'))
+                        ->suffix(__('Days'))
+                        ->afterStateHydrated(fn(F\Field $component, $state)
+                        => $component->state(abs($state)))
+                        ->dehydrateStateUsing(fn($state, $get)
+                        => $get('before_after') === 'before' ? -abs($state) : abs($state))
+                        ->integer()
+                        ->datalist([0, 30, 60])
+                        ,
+                ])
+                    ->label(__('Payment Terms'))
+                    ->columns([
+                        'default' => 3,
+                    ]),
+
+                F\TextInput::make('payment_method')
+                    ->label('Payment Method')
+                    ->extraInputAttributes([
+                        'class' => 'lg:max-w-[80px]',
+                    ])
+                    ->grow(false),
+            ])
+                ->from('lg'),
+
             F\Select::make('supplier_id')
                 ->label(__('Supplier'))
                 ->relationship(
@@ -96,6 +144,7 @@ class PurchaseOrderForm
                 ->editOptionForm(ContactForm::configure(new Schema())->getComponents())
                 ->editOptionAction(fn(Action $action): Action
                 => $action->slideOver())
+                ->columnSpanFull()
                 ->required(),
 
             F\Select::make('supplier_contract_id')
@@ -109,7 +158,8 @@ class PurchaseOrderForm
                 ->disableOptionWhen(fn($get, $value) => (int) $get('supplier_id') === (int) $value
                     || (int) $get('supplier_payment_id') === (int) $value)
                 ->preload()
-                ->searchable(),
+                ->searchable()
+                ->columnSpanFull(),
 
             F\Select::make('supplier_payment_id')
                 ->label(__('Payment Receiver'))
@@ -122,67 +172,29 @@ class PurchaseOrderForm
                 ->disableOptionWhen(fn($get, $value) => (int) $get('supplier_id') === (int) $value
                     || (int) $get('supplier_contract_id') === (int) $value)
                 ->preload()
-                ->searchable(),
-
-            F\Select::make('end_user_id')
-                ->label(__('End User'))
-                ->afterLabel(__('* If applicable'))
-                ->relationship(
-                    name: 'endUser',
-                    titleAttribute: 'contact_name',
-                    modifyQueryUsing: fn(Builder $query): Builder => $query->where('is_cus', true)->whereNotNull('contact_name'),
-                )
-                ->preload()
                 ->searchable()
-                ->extraAlpineAttributes([
-                    'x-init' => <<<'JS'
-                        window.addEventListener('toggle-end-user', event => {
-                            const { disabled } = event.detail ?? {};
-                            if (typeof select === 'undefined') return;
-                            disabled ? select.disable() : select.enable();
-                        })
-                    JS,
-                ]),
-
-            S\Group::make([
-                S\FusedGroup::make([
-                    F\Select::make('before_after')
-                        ->options([
-                            'before' => __('Before'),
-                            'after' => __('After'),
-                        ])
-                        ->selectablePlaceholder(false)
-                        ->default('after')
-                        ->grow(false)
-                        ->dehydrated(false)
-                        ->afterStateHydrated(fn(F\Field $component, $get)
-                        => (int) $get('pay_term_days') >= 0
-                            ? $component->state('after')
-                            : $component->state('before')),
-
-                    F\Select::make('pay_term_delay_at')
-                        ->label(__('Payment Term Delay At'))
-                        ->options(\App\Enums\PaytermDelayAtEnum::class)
-                        ->selectablePlaceholder(false)
-                        ->grow(false),
-
-                    F\TextInput::make('pay_term_days')
-                        ->label(__('Payment Term Days'))
-                        ->suffix(__('Days'))
-                        ->afterStateHydrated(fn(F\Field $component, $state)
-                        => $component->state(abs($state)))
-                        ->dehydrateStateUsing(fn($state, $get)
-                        => $get('before_after') === 'before' ? -abs($state) : abs($state))
-                        ->integer()
-                        ->datalist([0, 30, 60])
-                        ->grow(false),
-
-                ])
-                    ->label(__('Payment Terms'))
-                    ->columns(['default' => 3]),
-            ])
-                ->columns()
                 ->columnSpanFull(),
+
+            // F\Select::make('end_user_id')
+            //     ->label(__('End User'))
+            //     ->afterLabel(__('* If applicable'))
+            //     ->relationship(
+            //         name: 'endUser',
+            //         titleAttribute: 'contact_name',
+            //         modifyQueryUsing: fn(Builder $query): Builder => $query->where('is_cus', true)->whereNotNull('contact_name'),
+            //     )
+            //     ->preload()
+            //     ->searchable()
+            //     ->extraAlpineAttributes([
+            //         'x-init' => <<<'JS'
+            //             window.addEventListener('toggle-end-user', event => {
+            //                 const { disabled } = event.detail ?? {};
+            //                 if (typeof select === 'undefined') return;
+            //                 disabled ? select.disable() : select.enable();
+            //             })
+            //         JS,
+            //     ])
+            //     ->columnSpanFull(),
 
         ];
     }

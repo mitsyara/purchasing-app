@@ -14,6 +14,7 @@
         "defstudio/filament-searchable-input": "^4.0",
         "filament/filament": "^4.0",
         "filament/spatie-laravel-media-library-plugin": "^4.0",
+        "guava/filament-knowledge-base": "^2.0",
         "howdu/filament-record-switcher": "^2.0",
         "jenssegers/agent": "^2.6",
         "laravel-lang/lang": "^15.26",
@@ -26,6 +27,7 @@
         "spatie/laravel-activitylog": "^4.10",
         "spatie/laravel-permission": "^6.21",
         "spatie/simple-excel": "^3.8",
+        "staudenmeir/belongs-to-through": "^2.5",
         "staudenmeir/laravel-adjacency-list": "^1.0"
     },
     "require-dev": {

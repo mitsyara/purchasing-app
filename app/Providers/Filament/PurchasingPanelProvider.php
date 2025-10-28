@@ -25,7 +25,11 @@ class PurchasingPanelProvider extends PanelProvider
             ->default()
             ->id('purchasing')
             ->path('purchasing')
-            ->spa()
+            ->homeUrl('/')
+            ->spa(hasPrefetching: true)
+            // ->spaUrlExceptions([
+            //     '*/admin/posts/*',
+            // ])
 
             ->login()
             ->passwordReset()
@@ -38,15 +42,32 @@ class PurchasingPanelProvider extends PanelProvider
                     ->recoverable(),
             ])
 
+            ->broadcasting(false)
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
+
             ->databaseTransactions()
             ->unsavedChangesAlerts()
+
             ->globalSearch(false)
+            // ->errorNotifications(false)
+            // ->registerErrorNotification(
+            //     title: 'An error occurred',
+            //     body: 'Please try again later.',
+            // )
+            // ->registerErrorNotification(
+            //     title: 'Record not found',
+            //     body: 'A record you are looking for does not exist.',
+            //     statusCode: 404,
+            // )
 
             ->topNavigation()
             ->maxContentWidth(Width::Full)
             ->viteTheme('resources/css/filament/purchasing/theme.css')
+            // ->assets([
+            //     \Filament\Support\Assets\Css::make('custom-stylesheet', resource_path('css/custom.css')),
+            //     \Filament\Support\Assets\Js::make('custom-script', resource_path('js/custom.js')),
+            // ])
             ->colors([
                 'primary' => \Filament\Support\Colors\Color::Fuchsia,
                 'secondary' => \Filament\Support\Colors\Color::Cyan,

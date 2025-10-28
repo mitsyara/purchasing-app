@@ -47,6 +47,8 @@ class UserAuthenticationLog extends Component implements HasActions, HasSchemas,
                     ? $query->where('user_id', auth()->id())
                     : $query
             )
+            ->defaultSort('last_activity', 'desc')
+            ->defaultKeySort(false)
             ->poll('30s')
             ->columns([
                 __index(),
@@ -68,7 +70,7 @@ class UserAuthenticationLog extends Component implements HasActions, HasSchemas,
 
                 T\TextColumn::make('user_agent')
                     ->label(__('User Agent'))
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 T\TextColumn::make('last_activity_at')
                     ->label(__('Last Activity'))

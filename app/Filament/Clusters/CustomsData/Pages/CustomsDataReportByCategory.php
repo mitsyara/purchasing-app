@@ -30,8 +30,6 @@ class CustomsDataReportByCategory extends Page implements HasTable
 
     protected static ?int $navigationSort = 1;
 
-    protected static bool $shouldRegisterNavigation = false;
-
     public static function getNavigationLabel(): string
     {
         return __('Summary by Category');
@@ -40,23 +38,26 @@ class CustomsDataReportByCategory extends Page implements HasTable
     protected function getTableQuery(): Builder
     {
         return CustomsData::query()
-            ->select('importer')
+            ->with('category')
+            ->selectRaw('importer, customs_data_category_id')
             ->selectRaw('COUNT(product) as total_import')
             ->selectRaw('SUM(qty) as total_qty')
             ->selectRaw('SUM(value) as total_value')
-            ->groupBy(['importer']);
+            ->groupBy(['importer', 'customs_data_category_id']);
     }
 
     public function table(Table $table): Table
     {
         return $table
             ->defaultSort('total_value', 'desc')
+            ->defaultKeySort(false)
             ->deferLoading()
             ->columns([
                 T\TextColumn::make('index')->label('#')
                     ->rowIndex(),
 
                 T\TextColumn::make('importer')
+                    ->searchable()
                     ->sortable(),
 
                 T\TextColumn::make('category.name')
@@ -84,7 +85,9 @@ class CustomsDataReportByCategory extends Page implements HasTable
                     ->default()
                     ->schema([
                         F\Checkbox::make('is_vett'),
+
                         F\TextInput::make('importer'),
+
                         F\Select::make('customs_data_category_id')->label(__('Category'))
                             ->options(fn() => Cache::rememberForever('customs_data_categories.all', function (): Collection {
                                 return \App\Models\CustomsDataCategory::all(['id', 'name', 'keywords']);
@@ -92,11 +95,13 @@ class CustomsDataReportByCategory extends Page implements HasTable
                             ->preload()
                             ->searchable()
                             ->multiple(),
+
                         F\DatePicker::make('from_date')
-                            ->default(today()->addMonths(-3))
+                            ->default(\Carbon\Carbon::parse(CustomsData::max('import_date') ?? today())
+                                ->subMonths(3)->format('Y-m-d'))
                             ->maxDate(today()),
                         F\DatePicker::make('to_date')
-                            ->default(today())
+                            ->default(CustomsData::max('import_date') ?? today())
                             ->maxDate(today()),
                     ])
                     ->query(function (Builder $query, array $data) {

@@ -32,7 +32,7 @@ class CustomsDataReportByCompany extends Page implements HasTable
 
     protected static ?int $navigationSort = 2;
 
-    protected static bool $shouldRegisterNavigation = false;
+    // protected static bool $shouldRegisterNavigation = false;
 
     public static function getNavigationLabel(): string
     {
@@ -49,16 +49,18 @@ class CustomsDataReportByCompany extends Page implements HasTable
                     ->selectRaw('COUNT(product) as total_import')
                     ->selectRaw('SUM(qty) as total_qty')
                     ->selectRaw('SUM(value) as total_value')
-                    ->groupBy(['importer', 'customs_data_category_id', 'customs_data.id'])
+                    ->groupBy(['importer', 'customs_data_category_id'])
             )
             ->defaultSort('total_value', 'desc')
+            ->defaultKeySort(false)
             ->deferLoading()
             ->columns([
                 T\TextColumn::make('index')->label('#')
                     ->rowIndex(),
 
                 T\TextColumn::make('importer')
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(),
 
                 T\TextColumn::make('category.name')
                     ->default('Khác')
@@ -93,11 +95,14 @@ class CustomsDataReportByCompany extends Page implements HasTable
                             ->preload()
                             ->searchable()
                             ->multiple(),
+
                         F\DatePicker::make('from_date')
-                            ->default(today()->addMonths(-3))
+                            ->default(\Carbon\Carbon::parse(CustomsData::max('import_date') ?? today())
+                                ->subMonths(3)->format('Y-m-d'))
                             ->maxDate(today()),
+
                         F\DatePicker::make('to_date')
-                            ->default(today())
+                            ->default(CustomsData::max('import_date') ?? today())
                             ->maxDate(today()),
                     ])
                     ->query(function (Builder $query, array $data) {

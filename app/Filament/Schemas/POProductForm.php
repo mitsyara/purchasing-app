@@ -28,6 +28,10 @@ class POProductForm
     public static function formSchema(): array
     {
         return [
+            F\Hidden::make('product_uom')
+                ->afterStateHydrated(fn($get) => \App\Models\Product::find($get('product'))?->product_uom)
+                ->dehydrated(false),
+
             F\Select::make('product_id')
                 ->label(__('Product'))
                 ->relationship(
@@ -59,13 +63,17 @@ class POProductForm
                 ->disableOptionsWhenSelectedInSiblingRepeaterItems()
                 ->createOptionForm(ProductResource::form(new Schema())->getComponents())
                 ->editOptionForm(ProductResource::form(new Schema())->getComponents())
+                ->afterStateUpdated(fn($state, $set) => $set('product_uom', \App\Models\Product::find($state)?->product_uom))
                 ->afterStateUpdatedJs(<<<'JS'
-                        $state ? $set('assortment_id', null) : null;
-                    JS)
+                    $state ? $set('assortment_id', null) : null;
+                JS)
                 ->columnSpanFull()
                 ->requiredWithout(['assortment_id']),
 
             __number_field('qty')
+                ->suffix(fn($get) => $get('product_id') ? JsContent::make(<<<'JS'
+                    $get('product_uom')
+                JS) : null)
                 ->required(),
 
             __number_field('unit_price')
@@ -74,7 +82,7 @@ class POProductForm
                     ? $livewire->getOwnerRecord()->currency
                     : JsContent::make(<<<'JS'
                         $get('../../currency')
-                    JS))
+                JS))
                 ->required(),
 
             __number_field('contract_price')
