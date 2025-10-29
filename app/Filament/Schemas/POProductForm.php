@@ -5,6 +5,7 @@ namespace App\Filament\Schemas;
 use App\Filament\Clusters\Settings\Resources\Products\ProductResource;
 use App\Models\AssortmentProduct;
 use App\Models\Product;
+use App\Models\ProjectItem;
 use Filament\Resources\RelationManagers\RelationManager;
 
 use App\Models\PurchaseOrderLine;
@@ -41,14 +42,22 @@ class POProductForm
                         Builder $query,
                         string $operation,
                         \Livewire\Component $livewire,
-                        ?PurchaseOrderLine $record,
+                        null|PurchaseOrderLine|ProjectItem $record,
                     ): Builder {
                         if ($livewire instanceof RelationManager) {
-                            $purchaseOrder = $livewire->getOwnerRecord();
-                            $productIds = $purchaseOrder->purchaseOrderLines()
-                                ->when($record, fn(Builder $q) => $q->whereNot('id', $record->id))
-                                ->pluck('product_id')
-                                ->filter();
+                            $order = $livewire->getOwnerRecord();
+                            if ($order instanceof \App\Models\PurchaseOrder) {
+                                $productIds = $order->purchaseOrderLines()
+                                    ->when($record, fn(Builder $q) => $q->whereNot('id', $record->id))
+                                    ->pluck('product_id')
+                                    ->filter();
+                            } else if ($order instanceof \App\Models\Project) {
+                                $productIds = $order->projectItems()
+                                    ->when($record, fn(Builder $q) => $q->whereNot('id', $record->id))
+                                    ->pluck('product_id')
+                                    ->filter();
+                            }
+
                             if ($productIds) {
                                 $query = $query->whereNotIn('id', $productIds);
                             }
@@ -79,7 +88,7 @@ class POProductForm
             __number_field('unit_price')
                 ->suffix(fn(\Livewire\Component $livewire)
                 => $livewire instanceof RelationManager
-                    ? $livewire->getOwnerRecord()->currency
+                    ? ($livewire->getOwnerRecord()?->currency ?? 'N/A')
                     : JsContent::make(<<<'JS'
                         $get('../../currency')
                 JS))
@@ -123,7 +132,7 @@ class POProductForm
                     Builder $query,
                     string $operation,
                     \Livewire\Component $livewire,
-                    ?PurchaseOrderLine $record,
+                    null|PurchaseOrderLine|ProjectItem $record,
                 ): Builder {
                     if ($livewire instanceof RelationManager) {
                         $purchaseOrder = $livewire->getOwnerRecord();

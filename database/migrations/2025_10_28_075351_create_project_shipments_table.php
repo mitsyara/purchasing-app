@@ -21,7 +21,7 @@ return new class extends Migration
 
             $table->foreignId('staff_docs_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('staff_declarant_id')->nullable()->constrained('users')->nullOnDelete();
-            $table->foreignId('staff_sales_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('staff_declarant_processing_id')->nullable()->constrained('users')->nullOnDelete();
 
             $table->string('tracking_no')->nullable();
             $table->string('shipment_status')->nullable();

@@ -20,20 +20,21 @@ class CustomsDataCluster extends Cluster
     public static function aggregateAction(): \Filament\Actions\Action
     {
         return \Filament\Actions\Action::make('aggregateData')
-            ->label('Sync Reports')
+            ->label('Re-Assign Categories')
             ->icon(\Filament\Support\Icons\Heroicon::ChartBarSquare)
             ->color('success')
             ->action(function () {
-                \App\Jobs\RecalculateCustomsDataByImporterJob::dispatch();
-                \App\Jobs\RecalculateCustomsDataByImporterCategoryJob::dispatch();
+                $user = auth()->user();
+                // Assign Categories to CustomsData
+                \App\Jobs\CustomsData\DispatchCustomsDataBatchJob::dispatch($user);
 
                 \Filament\Notifications\Notification::make()
-                    ->title('Data Sync Started!')
+                    ->title('Job Started!')
                     ->body('This may take a while. You will be notified when complete.')
                     ->success()
                     ->send();
             })
             ->requiresConfirmation()
-            ->visible(fn() => auth()->id() === 1);
+            ->visible(fn() => auth()->user()->isAdmin());
     }
 }

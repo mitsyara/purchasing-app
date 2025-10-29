@@ -28,7 +28,8 @@
         "spatie/laravel-permission": "^6.21",
         "spatie/simple-excel": "^3.8",
         "staudenmeir/belongs-to-through": "^2.5",
-        "staudenmeir/laravel-adjacency-list": "^1.0"
+        "staudenmeir/laravel-adjacency-list": "^1.0",
+        "ua-parser/uap-php": "^3.10"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.16",

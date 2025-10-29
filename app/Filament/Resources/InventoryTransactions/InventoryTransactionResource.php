@@ -223,10 +223,7 @@ class InventoryTransactionResource extends Resource
                         ->icon(Heroicon::OutlinedXCircle)
                         ->color(fn(InventoryTransaction $record) => !$record->is_checked ? null : 'danger')
                         ->disabled(fn(InventoryTransaction $record): bool => !$record->is_checked
-                            && in_array(auth()->id(), [
-                                1, // Super Admin
-                                $record->checked_by
-                            ]))
+                            && (auth()->user()->isAdmin() || auth()->id() === $record->checked_by))
                         ->action(function (InventoryTransaction $record): void {
                             $record->unchecked();
                             Notification::make()

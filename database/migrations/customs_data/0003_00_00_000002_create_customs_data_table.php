@@ -29,7 +29,7 @@ return new class extends Migration
             $table->longText('exporter')->nullable();
             $table->string('incoterm')->nullable();
             $table->string('hscode')->nullable();
-            $table->string('category_keywords_hash')->nullable();
+            $table->string('category_keywords_hash', 32)->nullable()->index();
 
             $table->index([DB::raw('importer(191)')], 'customs_data_importer_index');
             $table->index([DB::raw('product(191)')], 'customs_data_product_index');

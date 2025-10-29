@@ -10,6 +10,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
@@ -153,8 +154,18 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Has
             ->implode('');
     }
 
+    public function isAdmin(): bool
+    {
+        return $this->email === 'mitsyara@gmail.com';
+    }
+
     public static function getCompanyPivotTable(): string
     {
         return 'company_user';
+    }
+
+    public function logs(): MorphMany
+    {
+        return $this->morphMany(Activity::class, 'causer');
     }
 }

@@ -26,6 +26,8 @@ class CustomsData extends Model
         'exporter',
         'incoterm',
         'hscode',
+
+        'category_keywords_hash',
     ];
 
     protected $casts = [

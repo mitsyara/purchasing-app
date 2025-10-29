@@ -166,7 +166,7 @@ class CustomsDataResource extends Resource
                         'mimes:csv,txt',
                         'max:10240',
                     ])
-                    ->visible(fn(): bool => auth()->id() === 1)
+                    ->visible(fn(): bool => auth()->user()->isAdmin())
                     ->requiresConfirmation(),
 
                 A\ExportAction::make()

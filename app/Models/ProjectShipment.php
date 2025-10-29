@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Znck\Eloquent\Relations\BelongsToThrough;
 use Znck\Eloquent\Traits\BelongsToThrough as HasBelongsToThrough;
 
@@ -17,7 +18,7 @@ class ProjectShipment extends Model
         'currency',
         'staff_docs_id',
         'staff_declarant_id',
-        'staff_sales_id',
+        'staff_declarant_processing_id',
         'tracking_no',
         'shipment_status',
         'etd_min',
@@ -68,6 +69,16 @@ class ProjectShipment extends Model
         return $this->belongsTo(Project::class, 'project_id');
     }
 
+    public function port(): BelongsTo
+    {
+        return $this->belongsTo(Port::class, 'port_id');
+    }
+
+    public function projectShipmentItems(): HasMany
+    {
+        return $this->hasMany(PurchaseShipmentLine::class, 'shipment_id');
+    }
+
     public function company(): BelongsToThrough
     {
         return $this->belongsToThrough(
@@ -109,6 +120,41 @@ class ProjectShipment extends Model
             Contact::class,
             Project::class,
             foreignKeyLookup: [Contact::class => 'end_user_id']
+        );
+    }
+
+    // Staffs
+
+    public function staffDocs(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'staff_docs_id');
+    }
+
+    public function staffDeclarant(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'staff_declarant_id');
+    }
+
+    public function staffDeclarantProcessing(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'staff_declarant_processing_id');
+    }
+    
+    public function staffBuy(): BelongsToThrough
+    {
+        return $this->belongsToThrough(
+            User::class,
+            Project::class,
+            foreignKeyLookup: [User::class => 'staff_buy_id']
+        );
+    }
+
+    public function staffSales(): BelongsToThrough
+    {
+        return $this->belongsToThrough(
+            User::class,
+            Project::class,
+            foreignKeyLookup: [User::class => 'staff_sales_id']
         );
     }
 }

@@ -16,6 +16,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 class ProjectResource extends Resource
 {
@@ -27,7 +28,7 @@ class ProjectResource extends Resource
 
     protected static ?string $cluster = ProjectCluster::class;
 
-    protected static bool $shouldRegisterNavigation = false;
+    // protected static bool $shouldRegisterNavigation = false;
 
     public static function form(Schema $schema): Schema
     {
@@ -47,7 +48,8 @@ class ProjectResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\ProjectItemsRelationManager::class,
+            RelationManagers\ProjectShipmentsRelationManager::class,
         ];
     }
 

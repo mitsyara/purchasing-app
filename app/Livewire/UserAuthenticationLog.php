@@ -13,6 +13,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use UAParser\Parser;
 
 use Filament\Actions as A;
 use Filament\Notifications\Notification;
@@ -37,13 +38,15 @@ class UserAuthenticationLog extends Component implements HasActions, HasSchemas,
 
     public function table(Table $table): Table
     {
+        $parser = Parser::create();
+
         return $table
             ->query(
                 \App\Models\Session::query()
             )
             ->modifyQueryUsing(
                 fn(Builder $query): Builder
-                => auth()->id() !== 1
+                => !auth()->user()->isAdmin()
                     ? $query->where('user_id', auth()->id())
                     : $query
             )
@@ -61,16 +64,20 @@ class UserAuthenticationLog extends Component implements HasActions, HasSchemas,
                 T\TextColumn::make('user.name')
                     ->label(__('User'))
                     ->searchable(['name', 'email', 'phone'])
+                    ->description(fn($record) => $record->ip_address)
                     ->sortable(),
 
                 T\TextColumn::make('ip_address')
                     ->label(__('IP Address'))
                     ->sortable()
-                    ->toggleable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 T\TextColumn::make('user_agent')
                     ->label(__('User Agent'))
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->formatStateUsing(fn($state) => $parser->parse($state)->ua->toString())
+                    ->description(fn($state) => $parser->parse($state)->os->toString())
+                    ->toggleable(),
 
                 T\TextColumn::make('last_activity_at')
                     ->label(__('Last Activity'))

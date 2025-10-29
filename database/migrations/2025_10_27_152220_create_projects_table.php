@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
 
-            $table->string('project_status')->default(\App\Enums\OrderStatusEnum::Draft->value);
+            $table->string('project_status')->nullable();
             $table->date('project_date')->nullable();
             $table->string('project_number')->unique()->nullable();
             $table->string('project_description')->nullable();
@@ -32,6 +32,7 @@ return new class extends Migration
             $table->foreignId('staff_approved_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('staff_docs_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('staff_declarant_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('staff_declarant_processing_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('staff_sales_id')->nullable()->constrained('users')->nullOnDelete();
 
             $table->string('etd')->nullable();

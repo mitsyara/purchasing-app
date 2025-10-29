@@ -36,7 +36,7 @@ class ManageUserGuide extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->id() === 1;
+        return auth()->user()->isAdmin();
     }
 
     protected string $docsPath = 'docs/user-guide';

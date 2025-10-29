@@ -27,7 +27,7 @@ class CommentForm
                     ->hiddenLabel()
                     ->columnSpanFull()
                     ->maxLength(10000)
-                    ->disabled(fn(?Comment $record): bool => $record?->user_id !== auth()->id() && auth()->id() !== 1)
+                    ->disabled(fn(?Comment $record): bool => $record?->user_id !== auth()->id() && !auth()->user()->isAdmin())
                     ->required(),
             )
             ->defaultItems(0)

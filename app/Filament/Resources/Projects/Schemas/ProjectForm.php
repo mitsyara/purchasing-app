@@ -220,7 +220,11 @@ class ProjectForm
 
             F\TextInput::make('project_number')
                 ->label('Project Number')
-                ->unique(),
+                ->unique()
+                ->requiredIf('project_status', [
+                    \App\Enums\OrderStatusEnum::Inprogress->value,
+                    \App\Enums\OrderStatusEnum::Completed->value,
+                ]),
 
             F\Select::make('import_port_id')
                 ->label('Import Port')

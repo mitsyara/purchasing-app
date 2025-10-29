@@ -115,7 +115,7 @@ class PasswordSection extends Component implements HasSchemas, HasActions
                             ->modal()->link()->outlined()->color('warning')
                             ->modalWidth(Width::Small)
                             ->icon(Heroicon::DevicePhoneMobile)
-                            ->disabled(fn(): bool => auth()->id() !== 1)
+                            ->disabled(fn(): bool => !auth()->user()->isAdmin())
 
                     ])
                         ->columns(['default' => 4])

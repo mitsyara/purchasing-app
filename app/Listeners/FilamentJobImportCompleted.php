@@ -24,11 +24,5 @@ class FilamentJobImportCompleted
 
         // Re-calculate aggregates CustomData's Categories.
         \App\Jobs\RecalculateCustomsDataAggregatesJob::dispatch();
-
-        // Re-calculate aggregates CustomsData's By Importer.
-        // \App\Jobs\RecalculateCustomsDataByImporterJob::dispatch();
-
-        // Re-calculate aggregates CustomsData's By Importer & Category.
-        // \App\Jobs\RecalculateCustomsDataByImporterCategoryJob::dispatch();
     }
 }

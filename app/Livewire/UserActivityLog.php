@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Models\User;
 use Livewire\Component;
 
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -37,20 +38,11 @@ class UserActivityLog extends Component implements HasActions, HasSchemas, HasTa
     public function table(Table $table): Table
     {
         return $table
-            ->query(
-                \App\Models\Activity::query()
-                    ->leftJoin('users', function ($join) {
-                        $join->on('users.id', '=', 'activity_log.causer_id')
-                            ->where('activity_log.causer_type', '=', \App\Models\User::class);
-                    })
-                    ->select('activity_log.*', 'users.name as user_name')
-            )
-            ->modifyQueryUsing(
-                fn(Builder $query): Builder
-                => auth()->id() !== 1
-                    ? $query->where('causer_type', \App\Models\User::class)->where('causer_id', auth()->id())
-                    : $query
-            )
+            ->query(\App\Models\Activity::query()->with(['causer', 'subject']))
+            ->modifyQueryUsing(fn(Builder $query): Builder => $query)
+            ->defaultSort('created_at', 'desc')
+            ->defaultKeySort(false)
+
             ->columns([
                 __index(),
 
@@ -75,16 +67,22 @@ class UserActivityLog extends Component implements HasActions, HasSchemas, HasTa
 
                 T\TextColumn::make('event_label')
                     ->getStateUsing(fn($record) => $record->getLabel())
-                    ->sortable(
-                        query: fn(Builder $query, string $direction): Builder
-                        => $query->orderBy('subject_type', $direction)
-                            ->orderBy('subject_id', $direction)
-                    )
+                    ->sortable(query: fn(Builder $query, string $direction): Builder
+                    => $query->orderBy('subject_type', $direction)
+                        ->orderBy('subject_id', $direction))
                     ->toggleable(),
 
-                T\TextColumn::make('user_name')
-                    ->label('User')
-                    ->sortable(condition: auth()->id() === 1)
+                T\TextColumn::make('causer.name')
+                    ->label('Cause by')
+                    ->sortable(query: fn(Builder $query, string $direction) =>
+                    $query->orderBy(
+                        User::select('name')
+                            ->whereColumn('users.id', 'activity_log.causer_id')
+                            ->where('activity_log.causer_type', User::class),
+                        $direction
+                    ))
+                    ->searchable(query: fn(Builder $query, string $search) =>
+                    $query->whereHas('causer', fn($q) => $q->where('name', 'like', "%{$search}%")))
                     ->default(__('System'))
                     ->toggleable(),
 
@@ -96,7 +94,23 @@ class UserActivityLog extends Component implements HasActions, HasSchemas, HasTa
                     ->toggleable(),
             ])
             ->filters([
-                //
+                TF\SelectFilter::make('event')
+                    ->label('Type')
+                    ->options([
+                        'created' => 'Created',
+                        'updated' => 'Updated',
+                        'deleted' => 'Deleted',
+                    ]),
+
+                TF\SelectFilter::make('subject_type')
+                    ->label('Subject Type')
+                    ->options(function () {
+                        return \App\Models\Activity::query()
+                            ->distinct()
+                            ->pluck('subject_type', 'subject_type')
+                            ->mapWithKeys(fn($item) => [$item => class_basename($item)])
+                            ->toArray();
+                    }),
             ])
             ->headerActions([
                 A\Action::make('clear')
@@ -110,7 +124,15 @@ class UserActivityLog extends Component implements HasActions, HasSchemas, HasTa
                     }),
             ])
             ->recordActions([
-                static::viewLogDetail(),
+                A\ActionGroup::make([
+                    static::viewLogDetail(),
+                    A\DeleteAction::make(),
+                ])
+            ])
+            ->toolbarActions([
+                A\BulkActionGroup::make([
+                    A\DeleteBulkAction::make(),
+                ]),
             ]);
     }
 

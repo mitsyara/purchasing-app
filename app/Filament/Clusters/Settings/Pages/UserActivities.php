@@ -28,7 +28,7 @@ class UserActivities extends Page implements HasActions, HasSchemas
 
     public static function canAccess(): bool
     {
-        return auth()->id() === 1;
+        return auth()->user()->isAdmin();
     }
 
     public static function getNavigationGroup(): string|\UnitEnum|null

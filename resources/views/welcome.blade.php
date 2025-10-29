@@ -1,9 +1,3 @@
-@php
-    if (function_exists('debugbar')) {
-        debugbar()->disable();
-    }
-@endphp
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -14,9 +8,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>VHL Trading Co., Ltd</title>
     <link rel="shortcut icon" href="../assets/images/favicon.svg" type="image/svg" />
+
     <link rel="stylesheet" href="assets/css/bootstrap.min.css" />
     <link href="https://cdn.lineicons.com/5.0/lineicons.css" rel="stylesheet" />
     <link rel="stylesheet" href="{{ asset('fe-style.css') }}" />
+
 </head>
 
 <body>
@@ -25,7 +21,7 @@
             <div class="row">
                 <div class="col-lg-12">
                     <nav class="navbar navbar-expand-lg">
-                        <a class="navbar-brand" href="index.html">
+                        <a class="navbar-brand" href="/">
                             <img class="img-logo" src="assets/images/VHL_logo_white.png" alt="Logo" />
                         </a>
                         <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
@@ -551,7 +547,7 @@
                             <!-- Single Widget -->
                             <div class="footer-widget f-about">
                                 <div class="logo">
-                                    <a href="index.html">
+                                    <a href="/">
                                         <img class="img-fluid" src="assets/images/VHL_logo.png" alt="#"
                                             class="img-fluid" />
                                     </a>
