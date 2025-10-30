@@ -29,7 +29,8 @@ Route::get('/test-schedule', function () {
 Route::get('/lock-screen', PinForm::class)->name('pin.form');
 
 // DLHQ
-Route::get('/data', Index::class)->name('customs-data.index');
+Route::get('/data', Index::class)->name('customs-data.index')
+    ->middleware(\App\Http\Middleware\CheckPin::class);
 
 // Polling Export Status
 Route::get('/export/status', function (Request $request) {

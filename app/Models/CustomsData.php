@@ -34,7 +34,7 @@ class CustomsData extends Model
         'import_date' => 'date',
         'qty' => 'decimal:3',
         'price' => 'decimal:3',
-        'total' => 'decimal:3',
+        'value' => 'decimal:3',
     ];
 
     /**

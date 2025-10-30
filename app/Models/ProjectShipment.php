@@ -76,7 +76,7 @@ class ProjectShipment extends Model
 
     public function projectShipmentItems(): HasMany
     {
-        return $this->hasMany(PurchaseShipmentLine::class, 'shipment_id');
+        return $this->hasMany(ProjectShipmentItem::class, 'project_shipment_id');
     }
 
     public function company(): BelongsToThrough

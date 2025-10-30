@@ -79,6 +79,12 @@ class FilamentServiceProvider extends ServiceProvider
         \Filament\Forms\Components\TextInput::configureUsing(function (\Filament\Forms\Components\TextInput $input) {
             $input->trim();
         }, isImportant: true);
+        \Filament\Forms\Components\Textarea::configureUsing(function (\Filament\Forms\Components\Textarea $input) {
+            $input->trim();
+        }, isImportant: true);
+        \Filament\Forms\Components\TagsInput::configureUsing(function (\Filament\Forms\Components\TagsInput $input) {
+            $input->trim();
+        }, isImportant: true);
 
         \Filament\Forms\Components\Repeater::configureUsing(function (\Filament\Forms\Components\Repeater $repeater) {
             $repeater

@@ -4,7 +4,8 @@
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
-    <meta name="description" content="" />
+    <meta name="description" content="VHL Trading Co., Ltd. is a leading distributor of veterinary pharmaceutical raw materials both domestically and internationally. We are committed to providing high-quality products that meet international standards for manufacturers and partners in the animal health industry." />
+
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>VHL Trading Co., Ltd</title>
     <link rel="shortcut icon" href="../assets/images/favicon.svg" type="image/svg" />

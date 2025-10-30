@@ -156,7 +156,7 @@ class PurchaseShipmentsRelationManager extends RelationManager
                     titleAttribute: 'port_name',
                     modifyQueryUsing: fn(Builder $query): Builder => $query
                 )
-                ->default(fn($livewire) => $livewire->getOwnerRecord()?->import_warehouse_id)
+                ->default(fn($livewire) => $livewire->getOwnerRecord()?->port_id)
                 ->required(function ($livewire): bool {
                     /** @var \App\Models\PurchaseOrder $order */
                     $order = $livewire->getOwnerRecord();

@@ -124,12 +124,9 @@
 
                 {{-- Theme switcher --}}
                 <x-filament::input.wrapper class="w-auto">
-                    <x-filament::input.select id="theme-switcher" 
-                    x-data="{ theme: localStorage.getItem('theme') ?? '@js(filament()->getDefaultThemeMode()->value)'  }" 
-                    x-init="theme = localStorage.getItem('theme') ?? '@js(filament()->getDefaultThemeMode()->value)' ;
+                    <x-filament::input.select id="theme-switcher" x-data="{ theme: localStorage.getItem('theme') ?? '@js(filament()->getDefaultThemeMode()->value)' }" x-init="theme = localStorage.getItem('theme') ?? '@js(filament()->getDefaultThemeMode()->value)';
                     $el.value = theme;
-                    loadDarkMode();
-                    "
+                    loadDarkMode();"
                         x-on:change="
                             theme = $event.target.value;
                             localStorage.setItem('theme', theme);

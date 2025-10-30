@@ -16,7 +16,7 @@ return new class extends Migration
     {
         Schema::connection('mysql_customs_data')->create('customs_data_categories', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name')->unique();
             $table->longText('keywords')->nullable();
             $table->longText('description')->nullable();
             $table->unsignedBigInteger('current_index')->default(0);

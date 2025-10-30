@@ -15,7 +15,6 @@ class ProjectShipmentItem extends Model
         'project_shipment_id',
         'product_id',
         'assortment_id',
-        'product_id',
         'qty',
         'unit_price',
         'contract_price',

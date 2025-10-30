@@ -12,7 +12,7 @@ class AppDown extends Command
      *
      * @var string
      */
-    protected $signature = 'app:app-down';
+    protected $signature = 'app:down';
 
     /**
      * The console command description.
