@@ -29,8 +29,7 @@ class DefragCustomsDataTables extends Command
             return;
         }
 
-
-
+        $database = 'mysql_customs_data';
         $tables = [
             'customs_data',
             'customs_data_categories',
@@ -41,17 +40,18 @@ class DefragCustomsDataTables extends Command
             $this->logInfo("Starting optimization for table: $table");
 
             try {
+                $connection = DB::connection($database);
                 // 1. Analyze table
-                DB::statement("ANALYZE TABLE `$table`");
+                $connection->statement("ANALYZE TABLE `$table`");
                 $this->logInfo("✅ Analyzed");
 
                 // 2. Optimize table
-                DB::statement("OPTIMIZE TABLE `$table`");
+                $connection->statement("OPTIMIZE TABLE `$table`");
                 $this->logInfo("✅ Optimized");
 
                 // 3. Optional rebuild table
                 if ($this->option('rebuild')) {
-                    DB::statement("ALTER TABLE `$table` ENGINE=InnoDB");
+                    $connection->statement("ALTER TABLE `$table` ENGINE=InnoDB");
                     $this->logInfo("✅ Rebuilt table (ENGINE=InnoDB)");
                 }
             } catch (\Exception $e) {
