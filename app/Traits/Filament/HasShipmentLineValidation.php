@@ -11,6 +11,7 @@ use App\Models\PurchaseShipmentLine;
 use App\Models\AssortmentProduct;
 use Closure;
 use Filament\Forms\Components\Field;
+use Filament\Forms\Components as F;
 use Filament\Resources\RelationManagers\RelationManager;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Component as Livewire;
@@ -29,6 +30,17 @@ trait HasShipmentLineValidation
         PurchaseShipmentsRelationManager::class,
         ProjectShipmentsRelationManager::class,
     ];
+
+    /**
+     * Kiểm tra xem implement đúng chỗ không?
+     * Được gọi trong __construct của class sử dụng trait
+     */
+    protected function validateTraitUsage(): void
+    {
+        if (!in_array(static::class, $this->allowedClasses, true)) {
+            throw new \Exception(static::class . " is not allowed to use trait " . __TRAIT__);
+        }
+    }
 
     /**
      * Config định nghĩa các relationships cho từng model type
@@ -71,17 +83,6 @@ trait HasShipmentLineValidation
     }
 
     /**
-     * Kiểm tra xem implement đúng chỗ không?
-     * Được gọi trong __construct của class sử dụng trait
-     */
-    protected function validateTraitUsage(): void
-    {
-        if (!in_array(static::class, $this->allowedClasses, true)) {
-            throw new \Exception(static::class . " is not allowed to use trait " . __TRAIT__);
-        }
-    }
-
-    /**
      * Tính toán available quantity cho shipment line hiện tại
      * Logic:
      * 1. Xác định order line tương ứng (theo product hoặc assortment)
@@ -119,7 +120,7 @@ trait HasShipmentLineValidation
         // Lấy tổng đã shipped (ngoại trừ shipment hiện tại)
         $shippedQty = $this->getShippedQuantity($owner, $productId, $shipment, $config);
 
-        // Lấy tổng trong repeater hiện tại (tới key hiện tại, gom theo orderline)
+        // Lấy tổng trong repeater hiện tại (trước key hiện tại, gom theo orderline)
         $currentRepeaterQty = $this->getCurrentRepeaterQuantity($component, $productId);
 
         // Tính available quantity bằng float
@@ -228,10 +229,8 @@ trait HasShipmentLineValidation
 
         // Loop foreach qua tất cả repeater items
         foreach ($allRepeaterItems as $key => $item) {
-            // Kiểm tra nếu đã tới key hiện tại thì dừng
-            if ($key == $currentKey) {
-                break;
-            }
+            // Chỉ tính tới trước $key của item hiện tại
+            if ($key === $currentKey) break;
 
             // Nếu item có product_id thuộc target products thì cộng qty
             if (isset($item['product_id']) && in_array((int) $item['product_id'], $targetProductIds)) {
@@ -321,6 +320,39 @@ trait HasShipmentLineValidation
                 $fail("Remaining: {$validQty}");
             }
         };
+    }
+
+    /**
+     * Tạo product select field với validation và auto-fill
+     */
+    protected function createProductSelectField(?Model $shipment): F\Select
+    {
+        return F\Select::make('product_id')
+            ->label(__('Product'))
+            ->relationship(
+                name: 'product',
+                titleAttribute: 'product_full_name',
+                modifyQueryUsing: fn(Builder $query): Builder
+                => $this->filterProductsForShipment($query)
+            )
+            ->afterStateUpdated(function (?string $state, F\Select $component, Set $set) use ($shipment) {
+                $this->handleProductSelectionUpdate($state, $component, $set, $shipment);
+            })
+            ->disableOptionsWhenSelectedInSiblingRepeaterItems()
+            ->required();
+    }
+
+    /**
+     * Tạo quantity field với validation
+     */
+    protected function createQuantityField(?Model $shipment): F\TextInput
+    {
+        return __number_field('qty')
+            ->rules([
+                fn(Get $get, F\TextInput $component): Closure
+                => $this->createQuantityValidationRule($get, $component, $shipment),
+            ])
+            ->required();
     }
 
     /**

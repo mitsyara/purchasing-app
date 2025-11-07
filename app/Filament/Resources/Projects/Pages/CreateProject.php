@@ -22,6 +22,6 @@ class CreateProject extends CreateRecord
         ]);
 
         // Call Services to update project totals
-        app(ProjectService::class)->updateProjectTotals($record->id);
+        app(ProjectService::class)->updateProjectInfo($record->id);
     }
 }

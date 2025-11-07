@@ -107,57 +107,9 @@ class PurchaseShipmentsRelationManager extends RelationManager
     public function shipmentInfoFields(): array
     {
         return [
-            S\Flex::make([
-                F\ToggleButtons::make('shipment_status')
-                    ->label(__('Shipment Status'))
-                    ->options(\App\Enums\ShipmentStatusEnum::class)
-                    ->default(\App\Enums\ShipmentStatusEnum::Pending->value)
-                    ->grouped()
-                    ->grow(false)
-                    ->disableOptionWhen(fn(string $value, string $operation): bool
-                    => $operation === 'create'
-                        && $value === \App\Enums\ShipmentStatusEnum::Cancelled->value)
-                    ->columnSpanFull()
-                    ->required(),
-
-                F\TextInput::make('tracking_no')
-                    ->label(__('Tracking Number')),
-            ])
-                ->from('lg')
-                ->columnSpanFull(),
-
-            S\Group::make([
-                F\Select::make('staff_docs_id')
-                    ->label(__('Docs Staff'))
-                    ->relationship(
-                        name: 'staffDocs',
-                        titleAttribute: 'name',
-                        modifyQueryUsing: fn(Builder $query): Builder => $query
-                    )
-                    ->default(fn($livewire) => $livewire->getOwnerRecord()?->staff_docs_id)
-                    ->required(),
-                F\Select::make('staff_declarant_id')
-                    ->relationship(
-                        name: 'staffDeclarant',
-                        titleAttribute: 'name',
-                        modifyQueryUsing: fn(Builder $query): Builder => $query
-                    )
-                    ->default(fn($livewire) => $livewire->getOwnerRecord()?->staff_declarant_id)
-                    ->required(),
-                F\Select::make('staff_declarant_processing_id')
-                    ->relationship(
-                        name: 'staffDeclarantProcessing',
-                        titleAttribute: 'name',
-                        modifyQueryUsing: fn(Builder $query): Builder => $query
-                    )
-                    ->default(fn($livewire) => $livewire->getOwnerRecord()?->staff_declarant_processing_id)
-                    ->required(),
-            ])
-                ->columns([
-                    'default' => 2,
-                    'lg' => 3,
-                ])
-                ->columnSpanFull(),
+            ...$this->shipmentBasicFields(),
+            
+            ...$this->shipmentStaffFields(),
 
             F\Select::make('port_id')
                 ->label(__('Port'))
@@ -184,7 +136,7 @@ class PurchaseShipmentsRelationManager extends RelationManager
                 ->required(),
 
             // Sử dụng helper function cho ETD/ETA fields
-            ...static::etdEtaFields(),
+            ...$this->etdEtaFields(),
         ];
     }
 
@@ -194,30 +146,13 @@ class PurchaseShipmentsRelationManager extends RelationManager
             ->label(__('Products'))
             ->relationship('purchaseShipmentLines')
             ->hiddenLabel()
-            ->table(static::shipmentLinesTableHeaders())
+            ->table($this->shipmentLinesTableHeaders())
             ->schema(function (?PurchaseShipment $record): array {
                 $shipment = $record;
                 return [
-                    F\Select::make('product_id')
-                        ->label(__('Product'))
-                        ->relationship(
-                            name: 'product',
-                            titleAttribute: 'product_full_name',
-                            modifyQueryUsing: fn(Builder $query): Builder
-                            => $this->filterProductsForShipment($query)
-                        )
-                        ->afterStateUpdated(function (?string $state, F\Select $component, Set $set) use ($shipment) {
-                            $this->handleProductSelectionUpdate($state, $component, $set, $shipment);
-                        })
-                        ->disableOptionsWhenSelectedInSiblingRepeaterItems()
-                        ->required(),
+                    $this->createProductSelectField($shipment),
 
-                    __number_field('qty')
-                        ->rules([
-                            fn(Get $get, F\TextInput $component): Closure
-                            => $this->createQuantityValidationRule($get, $component, $shipment),
-                        ])
-                        ->required(),
+                    $this->createQuantityField($shipment),
 
                     __number_field('unit_price')
                         ->label(__('Unit Price'))

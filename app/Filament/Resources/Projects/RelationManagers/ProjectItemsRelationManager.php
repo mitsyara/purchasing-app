@@ -72,19 +72,19 @@ class ProjectItemsRelationManager extends RelationManager
                 A\CreateAction::make()
                     ->after(function (): void {
                         $project = $this->getOwnerRecord();
-                        app(ProjectService::class)->updateProjectTotals($project->id);
+                        app(ProjectService::class)->updateProjectInfo($project->id);
                     }),
             ])
             ->recordActions([
                 A\EditAction::make()
                     ->after(function (): void {
                         $project = $this->getOwnerRecord();
-                        app(ProjectService::class)->updateProjectTotals($project->id);
+                        app(ProjectService::class)->updateProjectInfo($project->id);
                     }),
                 A\DeleteAction::make()
                     ->after(function (): void {
                         $project = $this->getOwnerRecord();
-                        app(ProjectService::class)->updateProjectTotals($project->id);
+                        app(ProjectService::class)->updateProjectInfo($project->id);
                     }),
             ])
             ->toolbarActions([]);

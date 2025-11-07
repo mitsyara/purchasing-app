@@ -46,7 +46,7 @@ class PurchaseOrderService
         $this->validateOrderData($data);
 
         $order = $this->purchaseOrderRepository->findOrFail($orderId);
-        
+
         $supplierCode = $order->supplier->contact_short_name
             ?? $order->supplier->contact_code
             ?? 'N/A';
@@ -102,11 +102,11 @@ class PurchaseOrderService
         }
 
         $baseNumber = OrderNumberGenerator::generatePurchaseOrderNumber($companyId, $orderDate);
-        
+
         return OrderNumberGenerator::makeUnique(
-            $baseNumber, 
-            PurchaseOrder::class, 
-            'order_number', 
+            $baseNumber,
+            PurchaseOrder::class,
+            'order_number',
             $orderId
         );
     }
@@ -117,19 +117,19 @@ class PurchaseOrderService
     public function syncOrderInfo(int $orderId): void
     {
         $order = $this->purchaseOrderRepository->findOrFail($orderId);
-        
+
         // Sync order lines info
         $this->syncOrderLinesInfo($orderId);
-        
+
         // Sync shipments info
         $this->syncShipmentsInfo($orderId);
-        
+
         // Update totals
         $this->updateTotals($orderId);
-        
+
         // Update foreign status
         $this->updateForeignStatus($orderId);
-        
+
         // TODO: calculate order's received / paid values
     }
 
@@ -139,7 +139,7 @@ class PurchaseOrderService
     public function syncOrderLinesInfo(int $orderId): void
     {
         $order = $this->purchaseOrderRepository->findOrFail($orderId);
-        
+
         $order->purchaseOrderLines()->update([
             'company_id' => $order->company_id ?? null,
             'warehouse_id' => $order->warehouse_id ?? null,
@@ -153,7 +153,7 @@ class PurchaseOrderService
     public function syncShipmentsInfo(int $orderId): void
     {
         $order = $this->purchaseOrderRepository->findOrFail($orderId);
-        
+
         $order->purchaseShipments()->update([
             'company_id' => $order->company_id,
             'currency' => $order->currency,
@@ -217,12 +217,11 @@ class PurchaseOrderService
     /**
      * Update order totals (from UpdateOrderTotals)
      */
-    public function updateOrderTotals(int $orderId): void
+    public function updateOrderInfo(int $orderId): void
     {
         $order = $this->purchaseOrderRepository->find($orderId);
-        if (!$order) {
-            return;
-        }
+
+        if (!$order) return;
 
         // Calculate Totals
         $totalValue = $order->purchaseOrderLines()->sum('value');

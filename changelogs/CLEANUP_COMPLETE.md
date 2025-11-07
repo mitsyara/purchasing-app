@@ -73,7 +73,7 @@ Successfully cleaned up all unused imports and removed all legacy service files 
 
 #### PurchaseOrderService
 **File:** `app/Services/Core/PurchaseOrderService.php`
-- ✅ Added: `updateOrderTotals(int $orderId)` method (from legacy UpdateOrderTotals)
+- ✅ Added: `updateOrderInfo(int $orderId)` method (from legacy UpdateOrderTotals)
 - ✅ Enhanced: Complete business logic consolidation
 
 #### PurchaseShipmentService  

@@ -87,7 +87,7 @@ class PurchaseOrderLinesRelationManager extends RelationManager
                         // Sync Purchase Order Info
                         $purchaseOrder = $this->getOwnerRecord();
                         app(PurchaseOrderService::class)->syncOrderLinesInfo($purchaseOrder->id);
-                        app(PurchaseOrderService::class)->updateOrderTotals($purchaseOrder->id);
+                        app(PurchaseOrderService::class)->updateOrderInfo($purchaseOrder->id);
                     }),
             ])
             ->recordActions([
@@ -96,13 +96,13 @@ class PurchaseOrderLinesRelationManager extends RelationManager
                         // Sync Purchase Order Info
                         $purchaseOrder = $this->getOwnerRecord();
                         app(PurchaseOrderService::class)->syncOrderLinesInfo($purchaseOrder->id);
-                        app(PurchaseOrderService::class)->updateOrderTotals($purchaseOrder->id);
+                        app(PurchaseOrderService::class)->updateOrderInfo($purchaseOrder->id);
                     }),
                 A\DeleteAction::make()
                     ->after(function (): void {
                         // Sync Purchase Order Info
                         $purchaseOrder = $this->getOwnerRecord();
-                        app(PurchaseOrderService::class)->updateOrderTotals($purchaseOrder->id);
+                        app(PurchaseOrderService::class)->updateOrderInfo($purchaseOrder->id);
                     }),
             ]);
     }
