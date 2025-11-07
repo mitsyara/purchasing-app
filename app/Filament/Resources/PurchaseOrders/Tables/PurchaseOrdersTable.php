@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\PurchaseOrders\Tables;
 
 use App\Models\PurchaseOrder;
+use App\Services\Core\PurchaseOrderService;
 use Filament\Actions as A;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
@@ -16,7 +17,9 @@ class PurchaseOrdersTable
 {
     public static function configure(Table $table): Table
     {
+        $userId = auth()->id();
         return $table
+            ->modifyQueryUsing(fn(Builder $query): Builder => $query->orderBy('order_date', 'desc'))
             ->columns([
                 __index(),
 
@@ -49,6 +52,12 @@ class PurchaseOrdersTable
 
                 T\TextColumn::make('staffBuy.name')
                     ->label(__('Purchasing Staff'))
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(),
+
+                T\TextColumn::make('staffDocs.name')
+                    ->label(__('Docs Staff'))
                     ->sortable()
                     ->searchable()
                     ->toggleable(),
@@ -108,7 +117,9 @@ class PurchaseOrdersTable
                                 'order_number' => $record->order_number,
                                 'order_date' => $record->order_date ?? today(),
                             ])
-                            ->action(fn(array $data, PurchaseOrder $record) => $record->processOrder($data))
+                            ->action(fn(array $data, PurchaseOrder $record) => 
+                                app(PurchaseOrderService::class)->processOrder($record->id, $data)
+                            )
                             ->disabled(fn(PurchaseOrder $record): bool => in_array($record->order_status, [
                                 \App\Enums\OrderStatusEnum::Completed,
                                 \App\Enums\OrderStatusEnum::Canceled,
@@ -123,7 +134,9 @@ class PurchaseOrdersTable
                                 default => 'danger',
                             })
                             ->requiresConfirmation()
-                            ->action(fn(PurchaseOrder $record) => $record->cancelOrder())
+                            ->action(fn(PurchaseOrder $record) => 
+                                app(PurchaseOrderService::class)->cancelOrder($record->id)
+                            )
                             ->disabled(fn(PurchaseOrder $record): bool
                             => $record->order_status === \App\Enums\OrderStatusEnum::Canceled),
                     ])

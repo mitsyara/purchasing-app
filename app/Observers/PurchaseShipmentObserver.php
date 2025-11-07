@@ -3,9 +3,14 @@
 namespace App\Observers;
 
 use App\Models\PurchaseShipment;
+use App\Services\Core\PurchaseOrderService;
 
 class PurchaseShipmentObserver
 {
+    public function __construct(
+        private PurchaseOrderService $purchaseOrderService
+    ) {}
+
     /**
      * Handle the PurchaseShipment "created" event.
      */
@@ -28,7 +33,7 @@ class PurchaseShipmentObserver
     public function deleted(PurchaseShipment $purchaseShipment): void
     {
         $order = $purchaseShipment->purchaseOrder;
-        new \App\Services\PurchaseOrder\UpdateOrderTotals($order);
+        $this->purchaseOrderService->updateTotals($order->id);
     }
 
     /**

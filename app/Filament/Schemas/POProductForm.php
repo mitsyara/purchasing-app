@@ -17,6 +17,7 @@ use Filament\Support\Icons\Heroicon;
 
 use Filament\Forms\Components as F;
 use Filament\Infolists\Components as I;
+use Illuminate\Database\Eloquent\Model;
 
 class POProductForm
 {
@@ -30,7 +31,8 @@ class POProductForm
     {
         return [
             F\Hidden::make('product_uom')
-                ->afterStateHydrated(fn($get) => \App\Models\Product::find($get('product'))?->product_uom)
+                ->afterStateHydrated(fn(callable $get, $component)
+                => $component->state(\App\Models\Product::find($get('product_id'))?->product_uom))
                 ->dehydrated(false),
 
             F\Select::make('product_id')
@@ -46,20 +48,45 @@ class POProductForm
                     ): Builder {
                         if ($livewire instanceof RelationManager) {
                             $order = $livewire->getOwnerRecord();
+                            $excludeProductIds = collect();
+
                             if ($order instanceof \App\Models\PurchaseOrder) {
-                                $productIds = $order->purchaseOrderLines()
+                                // Lấy products đã được chọn direct
+                                $directProductIds = $order->purchaseOrderLines()
                                     ->when($record, fn(Builder $q) => $q->whereNot('id', $record->id))
                                     ->pluck('product_id')
                                     ->filter();
+
+                                // Lấy products từ assortments đã được chọn
+                                $assortmentProductIds = $order->purchaseOrderLines()
+                                    ->when($record, fn(Builder $q) => $q->whereNot('id', $record->id))
+                                    ->whereNotNull('assortment_id')
+                                    ->with('assortment.products')
+                                    ->get()
+                                    ->flatMap(fn($line) => $line->assortment?->products?->pluck('id') ?? []);
+
+                                $excludeProductIds = $directProductIds->merge($assortmentProductIds);
+
                             } else if ($order instanceof \App\Models\Project) {
-                                $productIds = $order->projectItems()
+                                // Lấy products đã được chọn direct
+                                $directProductIds = $order->projectItems()
                                     ->when($record, fn(Builder $q) => $q->whereNot('id', $record->id))
                                     ->pluck('product_id')
                                     ->filter();
+
+                                // Lấy products từ assortments đã được chọn
+                                $assortmentProductIds = $order->projectItems()
+                                    ->when($record, fn(Builder $q) => $q->whereNot('id', $record->id))
+                                    ->whereNotNull('assortment_id')
+                                    ->with('assortment.products')
+                                    ->get()
+                                    ->flatMap(fn($item) => $item->assortment?->products?->pluck('id') ?? []);
+
+                                $excludeProductIds = $directProductIds->merge($assortmentProductIds);
                             }
 
-                            if ($productIds) {
-                                $query = $query->whereNotIn('id', $productIds);
+                            if ($excludeProductIds->isNotEmpty()) {
+                                $query = $query->whereNotIn('id', $excludeProductIds);
                             }
                         }
                         return $operation === 'create'
@@ -72,17 +99,94 @@ class POProductForm
                 ->disableOptionsWhenSelectedInSiblingRepeaterItems()
                 ->createOptionForm(ProductResource::form(new Schema())->getComponents())
                 ->editOptionForm(ProductResource::form(new Schema())->getComponents())
-                ->afterStateUpdated(fn($state, $set) => $set('product_uom', \App\Models\Product::find($state)?->product_uom))
+                ->afterStateUpdated(fn($state, $set)
+                => $set('product_uom', \App\Models\Product::find($state)?->product_uom))
                 ->afterStateUpdatedJs(<<<'JS'
                     $state ? $set('assortment_id', null) : null;
                 JS)
                 ->columnSpanFull()
                 ->requiredWithout(['assortment_id']),
 
+            F\Select::make('assortment_id')
+                ->label(__('Assortment'))
+                ->relationship(
+                    name: 'assortment',
+                    titleAttribute: 'assortment_name',
+                    modifyQueryUsing: function (
+                        Builder $query,
+                        string $operation,
+                        \Livewire\Component $livewire,
+                        null|PurchaseOrderLine|ProjectItem $record,
+                    ): Builder {
+                        if ($livewire instanceof RelationManager) {
+                            $order = $livewire->getOwnerRecord();
+                            $excludeAssortmentIds = collect();
+
+                            if ($order instanceof \App\Models\PurchaseOrder) {
+                                // Loại bỏ assortments đã được chọn trực tiếp
+                                $directAssortmentIds = $order->purchaseOrderLines()
+                                    ->when($record, fn(Builder $q) => $q->whereNot('id', $record->id))
+                                    ->pluck('assortment_id')
+                                    ->filter();
+
+                                // Lấy products đã được chọn direct để loại bỏ assortments chứa products này
+                                $selectedProductIds = $order->purchaseOrderLines()
+                                    ->when($record, fn(Builder $q) => $q->whereNot('id', $record->id))
+                                    ->whereNotNull('product_id')
+                                    ->pluck('product_id');
+
+                                if ($selectedProductIds->isNotEmpty()) {
+                                    $conflictAssortmentIds = \App\Models\AssortmentProduct::whereIn('product_id', $selectedProductIds)
+                                        ->pluck('assortment_id');
+                                    $excludeAssortmentIds = $directAssortmentIds->merge($conflictAssortmentIds);
+                                } else {
+                                    $excludeAssortmentIds = $directAssortmentIds;
+                                }
+
+                            } else if ($order instanceof \App\Models\Project) {
+                                // Loại bỏ assortments đã được chọn trực tiếp
+                                $directAssortmentIds = $order->projectItems()
+                                    ->when($record, fn(Builder $q) => $q->whereNot('id', $record->id))
+                                    ->pluck('assortment_id')
+                                    ->filter();
+
+                                // Lấy products đã được chọn direct để loại bỏ assortments chứa products này
+                                $selectedProductIds = $order->projectItems()
+                                    ->when($record, fn(Builder $q) => $q->whereNot('id', $record->id))
+                                    ->whereNotNull('product_id')
+                                    ->pluck('product_id');
+
+                                if ($selectedProductIds->isNotEmpty()) {
+                                    $conflictAssortmentIds = \App\Models\AssortmentProduct::whereIn('product_id', $selectedProductIds)
+                                        ->pluck('assortment_id');
+                                    $excludeAssortmentIds = $directAssortmentIds->merge($conflictAssortmentIds);
+                                } else {
+                                    $excludeAssortmentIds = $directAssortmentIds;
+                                }
+                            }
+
+                            if ($excludeAssortmentIds->isNotEmpty()) {
+                                $query = $query->whereNotIn('id', $excludeAssortmentIds);
+                            }
+                        }
+                        return $operation === 'create'
+                            ? $query->where('is_active', true)
+                            : $query;
+                    }
+                )
+                ->searchable()
+                ->preload()
+                ->disableOptionsWhenSelectedInSiblingRepeaterItems()
+                ->afterStateUpdatedJs(<<<'JS'
+                    $state ? $set('product_id', null) : null;
+                JS)
+                ->columnSpanFull()
+                ->requiredWithout(['product_id']),
+
             __number_field('qty')
                 ->suffix(fn($get) => $get('product_id') ? JsContent::make(<<<'JS'
                     $get('product_uom')
-                JS) : null)
+                JS) : ($get('assortment_id') ? 'kg' : null))
                 ->required(),
 
             __number_field('unit_price')
@@ -162,7 +266,10 @@ class POProductForm
                         I\RepeatableEntry::make('products')
                             ->hiddenLabel()
                             ->getStateUsing(
-                                Product::whereIn('id', AssortmentProduct::whereAssortmentId($component->getState())->pluck('product_id'))
+                                Product::whereIn(
+                                    'id',
+                                    AssortmentProduct::whereAssortmentId($component->getState())->pluck('product_id')
+                                )
                                     ->get()
                             )
                             ->schema([

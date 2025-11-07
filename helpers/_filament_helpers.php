@@ -23,20 +23,21 @@ if (!function_exists('__index')) {
 if (!function_exists('__eta_etd_fields')) {
     function __eta_etd_fields(bool $isRequired = false, bool $isVisible = true): array
     {
+        $errorMessage = 'At least one of the Estimate Dates must be presented.';
         return [
             \Filament\Schemas\Components\Fieldset::make(__('ETD'))
                 ->schema([
                     F\DatePicker::make('etd_min')->label(__('From'))
                         ->requiredWithoutAll(fn() => $isRequired ? ['etd_max', 'eta_min', 'eta_max', 'atd', 'ata'] : null)
                         ->validationMessages([
-                            'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
+                            'required_without_all' => __($errorMessage),
                         ])
                         ->extraInputAttributes(['id' => 'data-custom-etd_min']),
 
                     F\DatePicker::make('etd_max')->label(__('To'))
                         ->requiredWithoutAll(fn() => $isRequired ? ['etd_min', 'eta_min', 'eta_max', 'atd', 'ata'] : null)
                         ->validationMessages([
-                            'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
+                            'required_without_all' => __($errorMessage),
                         ])
                         ->extraInputAttributes(['id' => 'data-custom-etd_max']),
                 ])
@@ -52,14 +53,14 @@ if (!function_exists('__eta_etd_fields')) {
                     F\DatePicker::make('eta_min')->label(__('From'))
                         ->requiredWithoutAll(fn() => $isRequired ? ['etd_min', 'etd_max', 'eta_max', 'atd', 'ata'] : null)
                         ->validationMessages([
-                            'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
+                            'required_without_all' => __($errorMessage),
                         ])
                         ->extraInputAttributes(['id' => 'data-custom-eta_min']),
 
                     F\DatePicker::make('eta_max')->label(__('To'))
                         ->requiredWithoutAll(fn() => $isRequired ? ['etd_min', 'etd_max', 'eta_min', 'atd', 'ata'] : null)
                         ->validationMessages([
-                            'required_without_all' => __('At least one of the ETA/ETD must be presented.'),
+                            'required_without_all' => __($errorMessage),
                         ])
                         ->extraInputAttributes(['id' => 'data-custom-eta_max']),
                 ])

@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\PurchaseOrders\Pages;
 
 use App\Filament\Resources\PurchaseOrders\PurchaseOrderResource;
-use App\Services\PurchaseOrder\CallAllPurchaseOrderServices;
+use App\Services\Core\PurchaseOrderService;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -14,6 +14,7 @@ class EditPurchaseOrder extends EditRecord
     use \Howdu\FilamentRecordSwitcher\Filament\Concerns\HasRecordSwitcher {
         afterSave as recordSwitcherAfterSave;
     }
+
     protected function modifyRecordSwitcherQuery(Builder $query, ?string $search): Builder
     {
         return $query->where('order_status', '!=', \App\Enums\OrderStatusEnum::Canceled);
@@ -69,8 +70,8 @@ class EditPurchaseOrder extends EditRecord
             $record->updateQuietly(['updated_by' => auth()->id()]);
         }
 
-        // Call Services
-        new CallAllPurchaseOrderServices($record);
+        // Use service to handle business logic
+        app(PurchaseOrderService::class)->syncOrderInfo($record->id);
 
         $this->recordSwitcherAfterSave();
     }

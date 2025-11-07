@@ -2,7 +2,7 @@
 
 namespace App\Livewire\CustomsData;
 
-use App\Services\VcbExchangeRatesService;
+use App\Services\Core\ExchangeRateService;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
@@ -20,6 +20,13 @@ class ExchangeRate extends Component implements HasTable, HasSchemas, HasActions
 
     public ?array $data = null;
     public ?string $timestamp = null;
+
+    public function __construct(
+        private ?ExchangeRateService $exchangeRateService = null
+    ) {
+        parent::__construct();
+        $this->exchangeRateService ??= app(ExchangeRateService::class);
+    }
 
     public function mount(): void
     {
@@ -47,7 +54,7 @@ class ExchangeRate extends Component implements HasTable, HasSchemas, HasActions
 
         // If not cached, fetch new data
         if (!$result) {
-            $probe = VcbExchangeRatesService::fetch($dateStr);
+            $probe = $this->exchangeRateService->fetchRates($dateStr);
             $this->timestamp = $probe['timestamp'] ?? null;
 
             // Transform before caching

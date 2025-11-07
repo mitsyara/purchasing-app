@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('purchase_order_lines', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('purchase_order_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->foreignId('company_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->foreignId('warehouse_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->foreignId('assortment_id')->nullable()->constrained()->cascadeOnDelete();
-            $table->foreignId('product_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('purchase_order_id')->nullable()->constrained('purchase_orders')->cascadeOnDelete();
+            $table->foreignId('company_id')->nullable()->constrained('companies')->cascadeOnDelete();
+            $table->foreignId('warehouse_id')->nullable()->constrained('warehouses')->cascadeOnDelete();
+            $table->foreignId('assortment_id')->nullable()->constrained('assortments')->cascadeOnDelete();
+            $table->foreignId('product_id')->nullable()->constrained('products')->cascadeOnDelete();
 
             $table->decimal('qty', 15, 3);
             $table->decimal('unit_price', 15, 3);

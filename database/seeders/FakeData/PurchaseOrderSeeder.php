@@ -33,7 +33,10 @@ class PurchaseOrderSeeder extends Seeder
                 $orderLines[] = $this->randomOrderLine();
             }
             $order->purchaseOrderLines()->createMany($orderLines);
-            $order->syncOrderInfo();
+            
+            // Use service instead of model method
+            $purchaseOrderService = app(\App\Services\Core\PurchaseOrderService::class);
+            $purchaseOrderService->syncOrderInfo($order->id);
         }
     }
 

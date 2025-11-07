@@ -174,7 +174,7 @@ class Project extends Model
             ProjectShipmentItem::class,
             ProjectShipment::class,
             'project_id',
-            'shipment_id'
+            'project_shipment_id'
         );
     }
 }

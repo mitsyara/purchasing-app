@@ -262,8 +262,9 @@ class ProjectForm
                 ->columns()
                 ->columnSpanFull(),
 
-            // 'import_extra_costs',
-            // 'export_extra_costs',
+            // auto calculate:
+            // 'import_extra_costs', 
+            // 'export_extra_costs', 
 
             // 'shipping_address',
             // 'billing_address',

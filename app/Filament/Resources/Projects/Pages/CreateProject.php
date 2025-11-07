@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Projects\Pages;
 
 use App\Filament\Resources\Projects\ProjectResource;
+use App\Services\Core\ProjectService;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateProject extends CreateRecord
@@ -20,7 +21,7 @@ class CreateProject extends CreateRecord
             'created_by' => auth()->id(),
         ]);
 
-        // Call Services
-        new \App\Services\Project\ProjectService($record);
+        // Call Services to update project totals
+        app(ProjectService::class)->updateProjectTotals($record->id);
     }
 }

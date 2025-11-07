@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Services\PurchaseShipment\MarkShipmentDelivered;
+use App\Services\Core\PurchaseShipmentService;
 use App\Traits\HasInventoryTransactions;
 use App\Traits\HasPayment;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -153,7 +153,7 @@ class PurchaseShipment extends Model
     // Helpers
     public function markAsDelivered(): void
     {
-        new MarkShipmentDelivered($this);
+        app(PurchaseShipmentService::class)->markShipmentDelivered($this->id);
     }
 
     public function getEtd(?string $format = 'd/m/Y'): ?string

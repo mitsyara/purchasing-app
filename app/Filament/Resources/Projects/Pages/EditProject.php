@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Projects\Pages;
 
 use App\Filament\Resources\Projects\ProjectResource;
+use App\Services\Core\ProjectService;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
@@ -52,7 +53,7 @@ class EditProject extends EditRecord
             $record->updateQuietly(['updated_by' => auth()->id()]);
         }
 
-        // Call Services
-        new \App\Services\Project\ProjectService($record);
+        // Call Services to update project totals
+        app(ProjectService::class)->updateProjectTotals($record->id);
     }
 }

@@ -94,14 +94,12 @@ class PurchaseOrderForm
                         ->afterStateHydrated(fn(F\Field $component, $get)
                         => (int) $get('pay_term_days') >= 0
                             ? $component->state('after')
-                            : $component->state('before'))
-                        ,
+                            : $component->state('before')),
 
                     F\Select::make('pay_term_delay_at')
                         ->label(__('Payment Term Delay At'))
                         ->options(\App\Enums\PaytermDelayAtEnum::class)
-                        ->selectablePlaceholder(false)
-                        ,
+                        ->selectablePlaceholder(false),
 
                     F\TextInput::make('pay_term_days')
                         ->label(__('Payment Term Days'))
@@ -111,8 +109,7 @@ class PurchaseOrderForm
                         ->dehydrateStateUsing(fn($state, $get)
                         => $get('before_after') === 'before' ? -abs($state) : abs($state))
                         ->integer()
-                        ->datalist([0, 30, 60])
-                        ,
+                        ->datalist([0, 30, 60]),
                 ])
                     ->label(__('Payment Terms'))
                     ->columns([
@@ -175,27 +172,6 @@ class PurchaseOrderForm
                 ->searchable()
                 ->columnSpanFull(),
 
-            // F\Select::make('end_user_id')
-            //     ->label(__('End User'))
-            //     ->afterLabel(__('* If applicable'))
-            //     ->relationship(
-            //         name: 'endUser',
-            //         titleAttribute: 'contact_name',
-            //         modifyQueryUsing: fn(Builder $query): Builder => $query->where('is_cus', true)->whereNotNull('contact_name'),
-            //     )
-            //     ->preload()
-            //     ->searchable()
-            //     ->extraAlpineAttributes([
-            //         'x-init' => <<<'JS'
-            //             window.addEventListener('toggle-end-user', event => {
-            //                 const { disabled } = event.detail ?? {};
-            //                 if (typeof select === 'undefined') return;
-            //                 disabled ? select.disable() : select.enable();
-            //             })
-            //         JS,
-            //     ])
-            //     ->columnSpanFull(),
-
         ];
     }
 
@@ -221,10 +197,7 @@ class PurchaseOrderForm
                     )
                     ->preload()
                     ->searchable(),
-            ])
-                ->columns(),
 
-            S\Group::make([
                 F\Select::make('staff_docs_id')
                     ->label(__('Clearance Docs staff'))
                     ->relationship(
@@ -243,7 +216,12 @@ class PurchaseOrderForm
                     ->preload()
                     ->searchable(),
             ])
-                ->columns(),
+                ->columns([
+                    'default' => 1,
+                    'sm' => 2,
+                    'lg' => 4,
+                ])
+                ->columnSpanFull(),
 
 
         ];
@@ -278,20 +256,22 @@ class PurchaseOrderForm
                         ->label(__('Generate Order Number'))
                         ->icon(Heroicon::OutlinedArrowPath)
                         ->action(function (F\TextInput $component, ?PurchaseOrder $record, callable $get) {
+                            $purchaseOrderService = app(\App\Services\Core\PurchaseOrderService::class);
+
                             if ($record) {
-                                $component->state($record->generateOrderNumber());
+                                $orderNumber = $purchaseOrderService->generateOrderNumber(orderId: $record->id);
                             } else {
                                 $id = $get('company_id');
                                 $orderDate = $get('order_date');
                                 if (!$id || !$orderDate) {
                                     return;
                                 }
-                                $orderNumber = (new PurchaseOrder())->generateOrderNumber([
+                                $orderNumber = $purchaseOrderService->generateOrderNumber(data: [
                                     'id' => $id,
                                     'order_date' => $orderDate,
                                 ]);
-                                $component->state($orderNumber);
                             }
+                            $component->state($orderNumber);
                         })
                         ->color('info')
                 ),
@@ -318,18 +298,7 @@ class PurchaseOrderForm
             F\Select::make('incoterm')
                 ->label(__('Incoterm'))
                 ->options(\App\Enums\IncotermEnum::class)
-                ->default(\App\Enums\IncotermEnum::CIP)
-                ->extraInputAttributes([
-                    'x-init' => <<<'JS'
-                        $watch('$state', value => {
-                            window.dispatchEvent(
-                                new CustomEvent('toggle-end-user', {
-                                    detail: { disabled: value !== 'CIF' }
-                                })
-                            )
-                        })
-                    JS,
-                ]),
+                ->default(\App\Enums\IncotermEnum::CIF),
 
             F\Select::make('currency')
                 ->label(__('Currency'))
