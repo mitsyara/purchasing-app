@@ -5,8 +5,8 @@ namespace App\Filament\Resources\PurchaseShipments\Tables;
 use Filament\Tables\Table;
 use App\Models\PurchaseShipment;
 use Filament\Support\Icons\Heroicon;
-use App\Services\Core\PurchaseShipmentService;
-use App\Services\Core\InventoryService;
+use App\Services\PurchaseShipment\PurchaseShipmentService;
+use App\Services\Inventory\InventoryService;
 
 use Filament\Actions as A;
 use Filament\Tables\Columns as T;

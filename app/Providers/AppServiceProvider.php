@@ -11,7 +11,21 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Đăng ký Services như singleton để tái sử dụng
+        $this->app->singleton(\App\Services\Contact\ContactService::class);
+        $this->app->singleton(\App\Services\PurchaseOrder\PurchaseOrderService::class);
+        $this->app->singleton(\App\Services\Inventory\InventoryService::class);
+        $this->app->singleton(\App\Services\Payment\PaymentService::class);
+        $this->app->singleton(\App\Services\Project\ProjectService::class);
+        $this->app->singleton(\App\Services\Common\ValidationService::class);
+        $this->app->singleton(\App\Services\Common\ExchangeRateService::class);
+        
+        // Đăng ký PurchaseShipmentService với dependency injection
+        $this->app->singleton(\App\Services\PurchaseShipment\PurchaseShipmentService::class, function ($app) {
+            return new \App\Services\PurchaseShipment\PurchaseShipmentService(
+                $app->make(\App\Services\Inventory\InventoryService::class)
+            );
+        });
     }
 
     /**

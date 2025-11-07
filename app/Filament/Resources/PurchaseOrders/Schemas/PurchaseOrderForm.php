@@ -256,18 +256,21 @@ class PurchaseOrderForm
                         ->label(__('Generate Order Number'))
                         ->icon(Heroicon::OutlinedArrowPath)
                         ->action(function (F\TextInput $component, ?PurchaseOrder $record, callable $get) {
-                            $purchaseOrderService = app(\App\Services\Core\PurchaseOrderService::class);
+                            $purchaseOrderService = app(\App\Services\PurchaseOrder\PurchaseOrderService::class);
 
                             if ($record) {
-                                $orderNumber = $purchaseOrderService->generateOrderNumber(orderId: $record->id);
+                                $orderNumber = $purchaseOrderService->generateOrderNumber([
+                                    'company_id' => $record->company_id,
+                                    'order_date' => $record->order_date ?? now()->format('Y-m-d')
+                                ]);
                             } else {
                                 $id = $get('company_id');
                                 $orderDate = $get('order_date');
                                 if (!$id || !$orderDate) {
                                     return;
                                 }
-                                $orderNumber = $purchaseOrderService->generateOrderNumber(data: [
-                                    'id' => $id,
+                                $orderNumber = $purchaseOrderService->generateOrderNumber([
+                                    'company_id' => $id,
                                     'order_date' => $orderDate,
                                 ]);
                             }

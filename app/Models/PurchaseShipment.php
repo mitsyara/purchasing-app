@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Services\Core\PurchaseShipmentService;
+use App\Services\PurchaseShipment\PurchaseShipmentService;
 use App\Traits\HasInventoryTransactions;
 use App\Traits\HasPayment;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;

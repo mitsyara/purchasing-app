@@ -35,7 +35,7 @@ class PurchaseOrderSeeder extends Seeder
             $order->purchaseOrderLines()->createMany($orderLines);
             
             // Use service instead of model method
-            $purchaseOrderService = app(\App\Services\Core\PurchaseOrderService::class);
+            $purchaseOrderService = app(\App\Services\PurchaseOrder\PurchaseOrderService::class);
             $purchaseOrderService->syncOrderInfo($order->id);
         }
     }

@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\PurchaseOrders\Tables;
 
 use App\Models\PurchaseOrder;
-use App\Services\Core\PurchaseOrderService;
+use App\Services\PurchaseOrder\PurchaseOrderService;
 use Filament\Actions as A;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;

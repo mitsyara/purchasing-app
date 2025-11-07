@@ -9,7 +9,7 @@ use App\Traits\Filament\HasShipmentFormFields;
 use App\Traits\Filament\HasShipmentLineValidation;
 use Filament\Resources\RelationManagers\RelationManager;
 use Illuminate\Database\Eloquent\Builder;
-use App\Services\Core\PurchaseShipmentService;
+use App\Services\PurchaseShipment\PurchaseShipmentService;
 use Closure;
 
 use Filament\Schemas\Schema;

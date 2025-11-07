@@ -2,7 +2,7 @@
 
 namespace App\Livewire\CustomsData;
 
-use App\Services\Core\ExchangeRateService;
+use App\Services\Common\ExchangeRateService;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
@@ -21,28 +21,21 @@ class ExchangeRate extends Component implements HasTable, HasSchemas, HasActions
     public ?array $data = null;
     public ?string $timestamp = null;
 
-    public function __construct(
-        private ?ExchangeRateService $exchangeRateService = null
-    ) {
-        parent::__construct();
-        $this->exchangeRateService ??= app(ExchangeRateService::class);
-    }
-
     public function mount(): void
     {
         $this->fetchRate();
     }
 
-    #[\Livewire\Attributes\On('dateChanged')]
     /**
      * Fetch exchange rates for a specific date (or today if no date is provided).
      * - Caches results to minimize API calls.
      * - Cache duration: 30 minutes for today's rates, 1 day for older dates
      */
+    #[\Livewire\Attributes\On('dateChanged')]
     public function fetchRate(?string $date = null): void
     {
         // Determine date
-        $dateStr = $date ?? now()->toDateString();
+        $dateStr = $date ?: now()->format('Y-m-d');
         $dateObj = \Carbon\Carbon::createFromFormat('Y-m-d', $dateStr);
         $isToday = $dateObj->isToday();
 
@@ -54,7 +47,7 @@ class ExchangeRate extends Component implements HasTable, HasSchemas, HasActions
 
         // If not cached, fetch new data
         if (!$result) {
-            $probe = $this->exchangeRateService->fetchRates($dateStr);
+            $probe = ExchangeRateService::fetch($dateStr);
             $this->timestamp = $probe['timestamp'] ?? null;
 
             // Transform before caching

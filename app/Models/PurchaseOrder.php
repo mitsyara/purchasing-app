@@ -188,52 +188,5 @@ class PurchaseOrder extends Model
 
     // Helpers
 
-    /**
-     * Sync order information using service
-     * @deprecated Use PurchaseOrderService instead
-     */
-    public function syncOrderInfo(): void
-    {
-        app(\App\Services\Core\PurchaseOrderService::class)->syncOrderInfo($this->id);
-    }
 
-    /**
-     * Process order using service
-     * @deprecated Use PurchaseOrderService instead
-     */
-    public function processOrder(array $data): bool
-    {
-        return app(\App\Services\Core\PurchaseOrderService::class)->processOrder($this->id, $data);
-    }
-
-    /**
-     * Validate order data using service
-     * @deprecated Use ValidationService instead
-     */
-    public function validateOrderData(array $data, ?string $format = 'Y-m-d'): void
-    {
-        app(\App\Services\Core\ValidationService::class)->validateDate($data['order_date'], $format);
-        
-        if (!$data['order_number'] || !$data['order_date']) {
-            throw new \Exception('Order number and order date are required.');
-        }
-    }
-
-    /**
-     * Cancel order using service
-     * @deprecated Use PurchaseOrderService instead
-     */
-    public function cancelOrder(): bool
-    {
-        return app(\App\Services\Core\PurchaseOrderService::class)->cancelOrder($this->id);
-    }
-
-    /**
-     * Generate order number using service
-     * @deprecated Use PurchaseOrderService instead
-     */
-    public function generateOrderNumber(?array $data = null): string
-    {
-        return app(\App\Services\Core\PurchaseOrderService::class)->generateOrderNumber($data, $this->id);
-    }
 }

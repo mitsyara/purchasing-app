@@ -3,7 +3,7 @@
 namespace App\Observers;
 
 use App\Models\InventoryTransaction;
-use App\Services\Core\InventoryService;
+use App\Services\Inventory\InventoryService;
 
 class InventoryTransactionObserver
 {

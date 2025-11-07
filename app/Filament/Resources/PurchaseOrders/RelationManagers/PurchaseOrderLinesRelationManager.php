@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\PurchaseOrders\RelationManagers;
 
 use App\Filament\Schemas\POProductForm;
-use App\Services\Core\PurchaseOrderService;
+use App\Services\PurchaseOrder\PurchaseOrderService;
 use Filament\Resources\RelationManagers\RelationManager;
 
 use Illuminate\Database\Eloquent\Builder;

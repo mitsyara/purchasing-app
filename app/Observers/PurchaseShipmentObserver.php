@@ -3,7 +3,7 @@
 namespace App\Observers;
 
 use App\Models\PurchaseShipment;
-use App\Services\Core\PurchaseOrderService;
+use App\Services\PurchaseOrder\PurchaseOrderService;
 
 class PurchaseShipmentObserver
 {

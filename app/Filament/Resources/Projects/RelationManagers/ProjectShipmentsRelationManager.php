@@ -6,7 +6,7 @@ use App\Models\ProjectShipment;
 use App\Models\ProjectShipmentItem;
 use App\Traits\Filament\HasShipmentFormFields;
 use App\Traits\Filament\HasShipmentLineValidation;
-use App\Services\Core\ProjectService;
+use App\Services\Project\ProjectService;
 use Filament\Resources\RelationManagers\RelationManager;
 use Illuminate\Database\Eloquent\Model;
 use Closure;
@@ -254,7 +254,7 @@ class ProjectShipmentsRelationManager extends RelationManager
         $currency = $get('currency');
         $date = $get('customs_clearance_date') ?? $get('customs_declaration_date') ?? null;
         if ($date && $currency && $currency !== 'VND') {
-            $exchangeRateService = app(\App\Services\Core\ExchangeRateService::class);
+            $exchangeRateService = app(\App\Services\Common\ExchangeRateService::class);
             $rate = $exchangeRateService->getRate($currency, 'VND', $date);
             if ($rate) $rate = __number_string_converter($rate);
             if ($rate) {

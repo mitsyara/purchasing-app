@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Projects\RelationManagers;
 
 use App\Filament\Schemas\POProductForm;
-use App\Services\Core\ProjectService;
+use App\Services\Project\ProjectService;
 use Filament\Resources\RelationManagers\RelationManager;
 use Illuminate\Database\Eloquent\Model;
 
