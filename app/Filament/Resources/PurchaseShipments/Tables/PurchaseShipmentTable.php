@@ -91,7 +91,7 @@ class PurchaseShipmentTable
                             ->icon(Heroicon::CheckCircle)
                             ->requiresConfirmation()
                             ->action(fn(PurchaseShipment $record)
-                            => app(PurchaseShipmentService::class)->markShipmentDelivered($record->id))
+                            => app(PurchaseShipmentService::class)->markDelivered($record))
                             ->disabled(fn(PurchaseShipment $record): bool
                             => in_array($record->shipment_status, [
                                 \App\Enums\ShipmentStatusEnum::Delivered,

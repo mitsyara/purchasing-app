@@ -5,11 +5,8 @@ namespace App\Services\PurchaseOrder;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderLine;
 use App\Enums\OrderStatusEnum;
-use App\Helpers\OrderNumberGenerator;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Service xử lý business logic cho Purchase Order
@@ -23,17 +20,23 @@ class PurchaseOrderService
      */
     public function syncOrderInfo(int $orderId): void
     {
+        /** @var PurchaseOrder $order */
         $order = PurchaseOrder::findOrFail($orderId);
-        // Cập nhật lại tổng giá trị order
+
+        // Cập nhật lại tổng giá trị
         $order->total_value = $this->calculateOrderTotal($order);
         $order->total_contract_value = $this->calculateContractValue($order);
 
-        // Nếu có shipment rồi thì process order
+        // Cập nhật lại đơn hàng ngoại
+        $order->is_foreign = $this->isForeign($order);
+
+        // Nếu có shipment => process order
         if ($order->purchaseShipments()->exists()) {
-            $this->processOrder($orderId);
+            $this->processOrder($order);
         }
 
-        $this->logEditUser($orderId);
+        // Log người cập nhật
+        $this->logEditUser($order);
 
         $order->save();
     }
@@ -41,10 +44,8 @@ class PurchaseOrderService
     /**
      * Xử lý order (chuyển trạng thái sang In Progress)
      */
-    public function processOrder(int $orderId): bool
+    public function processOrder(PurchaseOrder $order): bool
     {
-        $order = PurchaseOrder::findOrFail($orderId);
-
         // Validate order có thể xử lý được
         if (!$order->order_status || $order->order_status === OrderStatusEnum::Draft) {
             $order->order_status = OrderStatusEnum::Inprogress;
@@ -71,12 +72,19 @@ class PurchaseOrderService
     }
 
     /**
+     * Kiểm tra xem order có phải là đơn hàng ngoại không
+     */
+    public function isForeign(PurchaseOrder $order): bool
+    {
+        $partnerCountryId = $order->supplierContract?->country_id ?? $order->supplier?->country_id;
+        return $partnerCountryId !== $order->company->country_id;
+    }
+
+    /**
      * Hoàn thành order (chuyển trạng thái sang Completed)
      */
-    public function markAsCompleted(int $orderId): bool
+    public function markAsCompleted(PurchaseOrder $order): bool
     {
-        $order = PurchaseOrder::findOrFail($orderId);
-
         // Validate order có thể hủy
         if (
             $order->order_status !== OrderStatusEnum::Inprogress
@@ -95,10 +103,8 @@ class PurchaseOrderService
     /**
      * Hủy order (chuyển trạng thái sang Canceled)
      */
-    public function cancelOrder(int $orderId): bool
+    public function cancelOrder(PurchaseOrder $order): bool
     {
-        $order = PurchaseOrder::findOrFail($orderId);
-
         // Validate order có thể hoàn thành
         if ($order->order_status === OrderStatusEnum::Completed) {
             throw ValidationException::withMessages([
@@ -126,7 +132,7 @@ class PurchaseOrderService
     {
         return $order->purchaseOrderLines
             ->sum(fn(PurchaseOrderLine $line)
-            => $line->contract_price ? $line->qty * $line->contract_price : null);
+            => $line->qty * ($line->contract_price ?? $line->unit_price));
     }
 
     /**
@@ -170,10 +176,8 @@ class PurchaseOrderService
     /**
      * Log người cập nhật khi có thay đổi thông tin order
      */
-    public function logEditUser(int $orderId): void
+    public function logEditUser(PurchaseOrder $order): void
     {
-        $order = PurchaseOrder::findOrFail($orderId);
-
         // Log the user who updated the record
         if ($order->wasChanged([
             'order_status',
@@ -206,6 +210,37 @@ class PurchaseOrderService
 
     // -------------------------- PURCHASE SHIPMENTs SERVICES --------------------------
 
+    /**
+     * Đồng bộ thông tin từ order sang tất cả các shipment của order
+     */
+    public function syncAllShipmentsInfo(PurchaseOrder $order): void
+    {
+        if ($order->purchaseShipments()->exists()) {
+            // Update thẳng từ DB, ko gọi model events
+            $order->purchaseShipments()->update([
+                'company_id' => $order->company_id,
+                'supplier_id' => $order->supplier_id,
+                'supplier_contract_id' => $order->supplier_contract_id,
+                'supplier_payment_id' => $order->supplier_payment_id,
+                'currency' => $order->currency,
+            ]);
+        }
+    }
+
     // -------------------------- PURCHASE ORDER LINEs SERVICES --------------------------
 
+    /**
+     * Đồng bộ thông tin từ order sang tất cả các line của order
+     */
+    public function syncAllOrderLinesInfo(PurchaseOrder $order): void
+    {
+        if ($order->purchaseOrderLines()->exists()) {
+            // Update thẳng từ DB, ko gọi model events
+            $order->purchaseOrderLines()->update([
+                'company_id' => $order->company_id,
+                'import_warehouse_id' => $order->import_warehouse_id,
+                'currency' => $order->currency,
+            ]);
+        }
+    }
 }

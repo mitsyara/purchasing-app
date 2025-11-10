@@ -151,10 +151,6 @@ class PurchaseShipment extends Model
     }
 
     // Helpers
-    public function markAsDelivered(): void
-    {
-        app(PurchaseShipmentService::class)->markShipmentDelivered($this->id);
-    }
 
     public function getEtd(?string $format = 'd/m/Y'): ?string
     {

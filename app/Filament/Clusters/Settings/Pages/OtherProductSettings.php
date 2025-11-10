@@ -16,6 +16,8 @@ use UnitEnum;
 
 class OtherProductSettings extends Page
 {
+    use \BezhanSalleh\FilamentShield\Traits\HasPageShield;
+
     protected string $view = 'filament.clusters.settings.pages.other-product-settings';
 
     protected static ?int $navigationSort = 9;

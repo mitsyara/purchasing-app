@@ -24,6 +24,8 @@ use Filament\Actions as A;
 
 class CustomsDataSummary extends Page implements HasTable
 {
+    use \BezhanSalleh\FilamentShield\Traits\HasPageShield;
+
     use InteractsWithTable;
 
     protected string $view = 'filament.clusters.customs-data.pages.customs-data-summary';

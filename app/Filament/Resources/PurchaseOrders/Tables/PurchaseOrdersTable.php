@@ -117,8 +117,9 @@ class PurchaseOrdersTable
                                 'order_number' => $record->order_number,
                                 'order_date' => $record->order_date ?? today(),
                             ])
-                            ->action(fn(array $data, PurchaseOrder $record) => 
-                                app(PurchaseOrderService::class)->processOrder($record->id, $data)
+                            ->action(
+                                fn(array $data, PurchaseOrder $record) =>
+                                app(PurchaseOrderService::class)->processOrder($record, $data)
                             )
                             ->disabled(fn(PurchaseOrder $record): bool => in_array($record->order_status, [
                                 \App\Enums\OrderStatusEnum::Completed,
@@ -134,8 +135,9 @@ class PurchaseOrdersTable
                                 default => 'danger',
                             })
                             ->requiresConfirmation()
-                            ->action(fn(PurchaseOrder $record) => 
-                                app(PurchaseOrderService::class)->cancelOrder($record->id)
+                            ->action(
+                                fn(PurchaseOrder $record) =>
+                                app(PurchaseOrderService::class)->cancelOrder($record)
                             )
                             ->disabled(fn(PurchaseOrder $record): bool
                             => $record->order_status === \App\Enums\OrderStatusEnum::Canceled),

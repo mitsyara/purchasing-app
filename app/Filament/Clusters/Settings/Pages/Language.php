@@ -21,6 +21,8 @@ use Illuminate\Contracts\Support\Htmlable;
 
 class Language extends Page implements HasSchemas, HasActions
 {
+    use \BezhanSalleh\FilamentShield\Traits\HasPageShield;
+
     use InteractsWithSchemas, InteractsWithActions;
 
     protected string $view = 'filament.clusters.settings.pages.language';

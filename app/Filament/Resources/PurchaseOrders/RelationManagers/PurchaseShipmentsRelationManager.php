@@ -86,8 +86,7 @@ class PurchaseShipmentsRelationManager extends RelationManager
             ->headerActions([
                 A\CreateAction::make()
                     ->after(function (PurchaseShipment $record): void {
-                        app(PurchaseShipmentService::class)->syncShipmentInfo($record->id);
-                        $this->dispatch('refresh-order-status');
+                        $this->sync($record->id);
                     })
                     ->disabled(fn(): bool => $this->getOwnerRecord()->order_number == null)
                     ->modal()->slideOver(),
@@ -95,8 +94,7 @@ class PurchaseShipmentsRelationManager extends RelationManager
             ->recordActions([
                 A\EditAction::make()
                     ->after(function (PurchaseShipment $record): void {
-                        app(PurchaseShipmentService::class)->syncShipmentInfo($record->id);
-                        $this->dispatch('refresh-order-status');
+                        $this->sync($record->id);
                     })
                     ->modal()->slideOver(),
 
@@ -104,11 +102,18 @@ class PurchaseShipmentsRelationManager extends RelationManager
             ]);
     }
 
+    public function sync(int $id): void
+    {
+        app(PurchaseShipmentService::class)->syncShipmentInfo($id);
+        $this->dispatch('refresh-order-status');
+        return;
+    }
+
     public function shipmentInfoFields(): array
     {
         return [
             ...$this->shipmentBasicFields(),
-            
+
             ...$this->shipmentStaffFields(),
 
             F\Select::make('port_id')

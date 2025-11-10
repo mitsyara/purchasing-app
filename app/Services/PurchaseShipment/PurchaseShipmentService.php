@@ -33,10 +33,10 @@ class PurchaseShipmentService
         $order = $shipment->purchaseOrder;
 
         // Chuyển trạng thái order nếu cần
-        app(PurchaseOrderService::class)->processOrder($order->id);
+        app(PurchaseOrderService::class)->processOrder($order);
 
         // Đồng bộ thông tin từ order sang shipment
-        $this->syncInfoFromOrder($shipmentId);
+        $this->syncInfoFromOrder($shipment);
 
         // Tính toán lại tổng giá trị shipment
         $totalAmount = $this->calculateShipmentTotal($shipment);
@@ -49,13 +49,11 @@ class PurchaseShipmentService
     }
 
     /**
-     * Đồng bộ thông tin từ order sang shipment
-     * - Chỉ cập nhật Nếu chưa có thông tin:
+     * Đồng bộ thông tin từ order sang shipment. Chỉ cập nhật Nếu chưa có thông tin:
      *   company_id, supplier_id, supplier_contract_id, supplier_payment_id, currency
      */
-    public function syncInfoFromOrder(int $shipmentId): void
+    public function syncInfoFromOrder(PurchaseShipment $shipment): void
     {
-        $shipment = PurchaseShipment::findOrFail($shipmentId);
         $order = $shipment->purchaseOrder;
 
         $fields = [
@@ -78,18 +76,16 @@ class PurchaseShipmentService
     /**
      * Đánh dấu shipment đã giao hàng
      */
-    public function markShipmentDelivered(int $shipmentId): void
+    public function markDelivered(PurchaseShipment $shipment): void
     {
-        $shipment = PurchaseShipment::findOrFail($shipmentId);
         $shipment->update(['shipment_status' => ShipmentStatusEnum::Delivered]);
     }
 
     /**
      * Đánh dấu shipment đã hủy
      */
-    public function markShipmentCancelled(int $shipmentId): void
+    public function markCancelled(PurchaseShipment $shipment): void
     {
-        $shipment = PurchaseShipment::findOrFail($shipmentId);
         $shipment->update(['shipment_status' => ShipmentStatusEnum::Cancelled]);
     }
 
@@ -109,7 +105,7 @@ class PurchaseShipmentService
     {
         return $shipment->purchaseShipmentLines
             ->sum(fn(PurchaseShipmentLine $line)
-            => $line->contract_price ? $line->qty * $line->contract_price : null);
+            => $line->qty * ($line->contract_price ?? $line->unit_price));
     }
 
     /**

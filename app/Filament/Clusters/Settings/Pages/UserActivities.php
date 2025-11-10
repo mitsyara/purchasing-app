@@ -14,6 +14,8 @@ use Filament\Actions\Action;
 
 class UserActivities extends Page implements HasActions, HasSchemas
 {
+    use \BezhanSalleh\FilamentShield\Traits\HasPageShield;
+
     use InteractsWithActions, InteractsWithSchemas;
 
     protected string $view = 'filament.clusters.settings.pages.user-activities';
@@ -25,11 +27,6 @@ class UserActivities extends Page implements HasActions, HasSchemas
     protected static ?int $navigationSort = 1;
 
     public string $activePanel = 'activities';
-
-    public static function canAccess(): bool
-    {
-        return auth()->user()->isAdmin();
-    }
 
     public static function getNavigationGroup(): string|\UnitEnum|null
     {

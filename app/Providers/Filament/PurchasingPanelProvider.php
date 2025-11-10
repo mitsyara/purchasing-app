@@ -121,6 +121,26 @@ class PurchasingPanelProvider extends PanelProvider
             ])
 
             ->plugins([
+                // Shieldon Filament Spatie Roles & Permissions
+                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
+                    ->registerNavigation(false)
+                    ->gridColumns([
+                        'default' => 1,
+                        'sm' => 2,
+                        'lg' => 3,
+                        '2xl' => 4,
+                    ])
+                    ->sectionColumnSpan(1)
+                    ->checkboxListColumns([
+                        'default' => 1,
+                        'sm' => 2,
+                        'lg' => 4,
+                    ])
+                    ->resourceCheckboxListColumns([
+                        'default' => 1,
+                    ]),
+
+
                 \AchyutN\FilamentLogViewer\FilamentLogViewer::make()
                     ->navigationGroup('system')
                     ->navigationLabel(__('System Logs'))
@@ -130,7 +150,6 @@ class PurchasingPanelProvider extends PanelProvider
                     ->pollingTime(null)
                     ->authorize(fn() => auth()->user()->isAdmin()),
 
-                // Shieldon Filament Spatie Roles & Permissions
 
                 // Record switcher
                 \Howdu\FilamentRecordSwitcher\FilamentRecordSwitcherPlugin::make(),
