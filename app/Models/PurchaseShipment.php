@@ -117,17 +117,17 @@ class PurchaseShipment extends Model
 
     public function port(): BelongsTo
     {
-        return $this->belongsTo(Port::class);
+        return $this->belongsTo(Port::class, 'port_id');
     }
 
     public function company(): BelongsTo
     {
-        return $this->belongsTo(Company::class);
+        return $this->belongsTo(Company::class, 'company_id');
     }
 
     public function warehouse(): BelongsTo
     {
-        return $this->belongsTo(Warehouse::class);
+        return $this->belongsTo(Warehouse::class, 'warehouse_id');
     }
 
     public function staffBuy(): BelongsTo

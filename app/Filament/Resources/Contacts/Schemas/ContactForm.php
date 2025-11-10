@@ -137,19 +137,21 @@ class ContactForm
     public static function additionalInfoFields(): array
     {
         return [
-            F\Toggle::make('is_mfg')
-                ->label(__('Manufacturer')),
-            F\Toggle::make('is_cus')
-                ->label(__('Customer')),
-            F\Toggle::make('is_trader')
-                ->label(__('Trader'))
-                ->rules([
-                    fn(callable $get): \Closure => function (string $attribute, $value, \Closure $fail) use ($get) {
-                        if ($value || $get('is_trader') || $get('is_mfg')) {
-                            $fail(__('At least one of Customer, Trader, or Manufacturer'));
-                        }
-                    },
-                ]),
+            S\Group::make([
+                F\Toggle::make('is_mfg')
+                    ->label(__('Manufacturer')),
+                F\Toggle::make('is_cus')
+                    ->label(__('Customer')),
+                F\Toggle::make('is_trader')
+                    ->label(__('Trader'))
+                    ->rules([
+                        fn(callable $get): \Closure => function (string $attribute, $value, \Closure $fail) use ($get) {
+                            if (!$value && !$get('is_mfg') && !$get('is_cus')) {
+                                $fail(__('Choose at least one type'));
+                            }
+                        },
+                    ]),
+            ]),
 
             F\Checkbox::make('is_fav')
                 ->label(__('Favorite')),

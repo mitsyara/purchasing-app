@@ -18,28 +18,6 @@ class OrderNumberGenerator
     }
 
     /**
-     * Generate shipment number
-     */
-    public static function generateShipmentNumber(int $companyId, string $shipmentDate): string
-    {
-        $id = str_pad($companyId, 2, '0', STR_PAD_LEFT);
-        $date = Carbon::parse($shipmentDate)->format('ymd');
-        
-        return "SH-{$id}{$date}";
-    }
-
-    /**
-     * Generate invoice number
-     */
-    public static function generateInvoiceNumber(int $companyId, string $invoiceDate): string
-    {
-        $id = str_pad($companyId, 2, '0', STR_PAD_LEFT);
-        $date = Carbon::parse($invoiceDate)->format('ymd');
-        
-        return "INV-{$id}{$date}";
-    }
-
-    /**
      * Make number unique by checking database
      */
     public static function makeUnique(string $baseNumber, string $modelClass, string $column = 'order_number', ?int $excludeId = null): string

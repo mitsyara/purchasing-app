@@ -16,6 +16,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 use Filament\Actions as A;
+use Filament\Forms\Components as F;
 use Filament\Tables\Columns as T;
 use Filament\Tables\Filters as TF;
 use Filament\Infolists\Components as I;
@@ -66,7 +67,7 @@ class UserActivityLog extends Component implements HasActions, HasSchemas, HasTa
                     ->toggleable(),
 
                 T\TextColumn::make('event_label')
-                    ->getStateUsing(fn($record) => $record->getLabel())
+                    ->getStateUsing(fn($record) => str(class_basename($record->subject_type))->headline())
                     ->sortable(query: fn(Builder $query, string $direction): Builder
                     => $query->orderBy('subject_type', $direction)
                         ->orderBy('subject_id', $direction))
@@ -95,7 +96,7 @@ class UserActivityLog extends Component implements HasActions, HasSchemas, HasTa
             ])
             ->filters([
                 TF\SelectFilter::make('event')
-                    ->label('Type')
+                    ->label('Event Type')
                     ->options([
                         'created' => 'Created',
                         'updated' => 'Updated',
@@ -108,9 +109,23 @@ class UserActivityLog extends Component implements HasActions, HasSchemas, HasTa
                         return \App\Models\Activity::query()
                             ->distinct()
                             ->pluck('subject_type', 'subject_type')
-                            ->mapWithKeys(fn($item) => [$item => class_basename($item)])
+                            ->mapWithKeys(fn($item) => [$item => str(class_basename($item))->headline()])
                             ->toArray();
                     }),
+
+                TF\Filter::make('custom_filters')
+                    ->schema([
+                        F\TextInput::make('subject_no')
+                            ->label('Subject No'),
+                    ])
+                    ->query(
+                        fn(Builder $query, array $data): Builder
+                        => $query
+                            ->when(($data['subject_no'] ?? null),
+                                fn(Builder $query, $value)
+                                => $query->where('subject_id', $value)
+                            )
+                    ),
             ])
             ->headerActions([
                 A\Action::make('clear')
@@ -124,8 +139,8 @@ class UserActivityLog extends Component implements HasActions, HasSchemas, HasTa
                     }),
             ])
             ->recordActions([
+                static::viewLogDetail(),
                 A\ActionGroup::make([
-                    static::viewLogDetail(),
                     A\DeleteAction::make(),
                 ])
             ])
@@ -172,24 +187,9 @@ class UserActivityLog extends Component implements HasActions, HasSchemas, HasTa
                         ->timezone('Asia/Ho_Chi_Minh')
                         ->columnSpanFull(),
 
-                    I\KeyValueEntry::make('properties.attributes')
-                        ->label('Values')
-                        ->keyLabel('Attribute')
-                        ->valueLabel('Value')
-                        ->visible(fn($record) => $record->event === 'created')
-                        ->columnSpanFull(),
-
-                    I\KeyValueEntry::make('properties.old')
-                        ->label('Original')
-                        ->keyLabel('Attribute')
-                        ->valueLabel('Value')
-                        ->visible(fn($record) => $record->event === 'deleted')
-                        ->columnSpanFull(),
-
                     \App\Filament\Infolists\Components\ActivityChangesTable::make('changes')
                         ->label('Changes')
                         ->state($merged)
-                        ->visible(fn($record) => $record->event === 'updated')
                         ->columnSpanFull(),
                 ];
             })

@@ -56,6 +56,7 @@ class PurchaseOrder extends Model
 
         'pay_term_delay_at',
         'pay_term_days',
+        'payment_method',
 
         'total_value',
         'total_contract_value',

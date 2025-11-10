@@ -53,7 +53,10 @@ class ContactTable
                 T\TextColumn::make('company_types')
                     ->label(__('Type'))
                     ->badge()
-                    // ->listWithLineBreaks()
+                    ->sortable(query: fn(Builder $query, string $direction): Builder
+                    => $query->orderBy('is_mfg', $direction)
+                        ->orderBy('is_trader', $direction)
+                        ->orderBy('is_cus', $direction))
                     ->toggleable(),
 
                 T\TextColumn::make('contact_info')

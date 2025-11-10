@@ -5,11 +5,13 @@ namespace App\Filament\Resources\PurchaseOrders\Schemas;
 use App\Filament\Resources\Contacts\Schemas\ContactForm;
 use App\Filament\Schemas\POProductForm;
 use App\Models\PurchaseOrder;
+use App\Services\PurchaseOrder\PurchaseOrderService;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 
 use Filament\Schemas\Components as S;
 use Filament\Forms\Components as F;
+use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -254,29 +256,34 @@ class PurchaseOrderForm
                 ->suffixAction(
                     Action::make('generate')
                         ->label(__('Generate Order Number'))
-                        ->icon(Heroicon::OutlinedArrowPath)
-                        ->action(function (F\TextInput $component, ?PurchaseOrder $record, callable $get) {
-                            $purchaseOrderService = app(\App\Services\PurchaseOrder\PurchaseOrderService::class);
-
-                            if ($record) {
-                                $orderNumber = $purchaseOrderService->generateOrderNumber([
-                                    'company_id' => $record->company_id,
-                                    'order_date' => $record->order_date ?? now()->format('Y-m-d')
-                                ]);
-                            } else {
-                                $id = $get('company_id');
-                                $orderDate = $get('order_date');
-                                if (!$id || !$orderDate) {
-                                    return;
-                                }
-                                $orderNumber = $purchaseOrderService->generateOrderNumber([
-                                    'company_id' => $id,
-                                    'order_date' => $orderDate,
-                                ]);
+                        ->icon(Heroicon::OutlinedPlay)
+                        ->action(function (callable $set, callable $get, ?PurchaseOrder $record) {
+                            $purchaseOrderService = app(PurchaseOrderService::class);
+                            // Nếu chưa có date, set date là hôm nay
+                            if ($get('company_id') && $get('supplier_id')) {
+                                if (!$get('order_date')) $set('order_date', today());
                             }
-                            $component->state($orderNumber);
+
+                            // Tạo số order
+                            $orderNumber = $purchaseOrderService->generateOrderNumber([
+                                'company_id' => $get('company_id'),
+                                'order_date' => $get('order_date'),
+                                'supplier_id' => $get('supplier_id'),
+                            ], $record?->id);
+                            // Set số order vào form
+                            $set('order_number', $orderNumber);
                         })
                         ->color('info')
+                )
+                ->hintAction(
+                    Action::make('resetOrderNumber')
+                        ->label(__('Reset'))
+                        ->icon(Heroicon::OutlinedArrowPath)
+                        ->action(function (F\Field $component, ?PurchaseOrder $record) {
+                            $component->set('order_number', $record?->order_number);
+                        })
+                        ->color('secondary')
+                        ->disabled(fn(?PurchaseOrder $record) => !$record)
                 ),
 
             F\DatePicker::make('order_date')

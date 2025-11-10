@@ -6,6 +6,7 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderLine;
 use App\Enums\OrderStatusEnum;
 use App\Helpers\OrderNumberGenerator;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
@@ -16,133 +17,80 @@ use Illuminate\Support\Facades\DB;
 class PurchaseOrderService
 {
     /**
-     * Tạo mới purchase order
+     * Sync order info
      */
-    public function create(array $data): PurchaseOrder
+    public function syncOrderInfo(int $orderId): void
     {
-        // Validate dữ liệu
-        $this->validateOrderData($data);
-        
-        // Set user tạo nếu đã đăng nhập
-        if (auth()->check()) {
-            $data['created_by'] = auth()->id();
+        $order = PurchaseOrder::findOrFail($orderId);
+        // Cập nhật lại tổng giá trị order
+        $order->total_value = $this->calculateOrderTotal($order);
+        $order->total_contract_value = $this->calculateContractValue($order);
+
+        // Nếu có shipment rồi thì process order
+        if ($order->purchaseShipments()->exists()) {
+            $this->processOrder($orderId);
         }
 
-        // Tạo order number nếu chưa có
-        if (empty($data['order_no']) && !empty($data['company_id'])) {
-            $orderDate = $data['order_date'] ?? now()->format('Y-m-d');
-            $data['order_no'] = OrderNumberGenerator::generatePurchaseOrderNumber($data['company_id'], $orderDate);
-        }
+        $this->logEditUser($orderId);
 
-        return DB::transaction(function () use ($data) {
-            // Tách order lines khỏi data chính
-            $orderLines = $data['lines'] ?? [];
-            unset($data['lines']);
-            
-            // Tạo purchase order
-            $purchaseOrder = PurchaseOrder::create($data);
-            
-            // Tạo order lines nếu có
-            if (!empty($orderLines)) {
-                $this->createOrderLines($purchaseOrder, $orderLines);
-            }
-            
-            return $purchaseOrder;
-        });
-    }
-
-    /**
-     * Cập nhật purchase order
-     */
-    public function update(int $id, array $data): bool
-    {
-        $purchaseOrder = PurchaseOrder::findOrFail($id);
-        
-        // Validate dữ liệu
-        $this->validateOrderData($data, $id);
-        
-        // Set user cập nhật
-        if (auth()->check()) {
-            $data['updated_by'] = auth()->id();
-        }
-
-        return DB::transaction(function () use ($purchaseOrder, $data) {
-            // Tách order lines khỏi data chính
-            $orderLines = $data['lines'] ?? [];
-            unset($data['lines']);
-            
-            // Cập nhật purchase order
-            $result = $purchaseOrder->update($data);
-            
-            // Cập nhật order lines nếu có
-            if (!empty($orderLines)) {
-                $this->updateOrderLines($purchaseOrder, $orderLines);
-            }
-            
-            return $result;
-        });
+        $order->save();
     }
 
     /**
      * Xử lý order (chuyển trạng thái sang In Progress)
      */
-    public function processOrder(int $orderId, array $data = []): bool
+    public function processOrder(int $orderId): bool
     {
         $order = PurchaseOrder::findOrFail($orderId);
 
         // Validate order có thể được xử lý
-        if ($order->order_status !== OrderStatusEnum::Draft) {
-            throw ValidationException::withMessages([
-                'order_status' => 'Chỉ có thể xử lý order ở trạng thái Draft.'
-            ]);
+        if (!$order->order_status || $order->order_status === OrderStatusEnum::Draft) {
+            $order->order_status = OrderStatusEnum::Inprogress;
+            // Thiết lập ngày order nếu chưa có
+            if (!isset($order->order_date)) {
+                $order->order_date = today();
+            }
+            // Tạo số order nếu chưa có
+            if (!isset($order->order_number) || empty($order->order_number)) {
+                $orderNumber = $this->generateOrderNumber([
+                    'company_id' => $order->company_id,
+                    'order_date' => $order->order_date ?? today()->format('Y-m-d'),
+                    'supplier_id' => $order->supplier_id,
+                ]);
+                $order->order_number = $orderNumber;
+            }
+            return $order->save();
         }
 
-        return DB::transaction(function () use ($order, $data) {
-            // Cập nhật supplier code và status
-            $updateData = [
-                'order_status' => OrderStatusEnum::Inprogress,
-                'processed_at' => now(),
-                'processed_by' => auth()->id(),
-            ];
-
-            // Tạo supplier code nếu chưa có
-            if (empty($order->supplier_order_no) && $order->supplier) {
-                $supplierCode = $order->supplier->contact_short_name ?? 'SUP';
-                $updateData['supplier_order_no'] = $this->generateSupplierOrderNumber($supplierCode);
-            }
-
-            // Merge với data bổ sung
-            $updateData = array_merge($updateData, $data);
-
-            return $order->update($updateData);
-        });
+        return false;
     }
 
     /**
-     * Hoàn thành order
+     * Hoàn thành order (chuyển trạng thái sang Completed)
      */
-    public function completeOrder(int $orderId): bool
+    public function markAsCompleted(int $orderId): bool
     {
         $order = PurchaseOrder::findOrFail($orderId);
 
         // Validate order có thể hủy
-        if ($order->order_status !== OrderStatusEnum::Inprogress) {
+        if (
+            $order->order_status !== OrderStatusEnum::Inprogress
+            // TODO: Thêm điều kiện kiểm tra tất cả shipment của order đã được giao chưa
+        ) {
             throw ValidationException::withMessages([
                 'order_status' => 'Chỉ có thể hủy order ở trạng thái InProgress.'
             ]);
         }
 
         return $order->update([
-            'order_status' => OrderStatusEnum::Canceled,
-            'completed_at' => now(),
-            'completed_by' => auth()->id(),
+            'order_status' => OrderStatusEnum::Completed,
         ]);
     }
 
     /**
-     * Hủy order
+     * Hủy order (chuyển trạng thái sang Canceled)
      */
-    public function cancelOrder(int $orderId, ?string $reason = null): bool
+    public function cancelOrder(int $orderId): bool
     {
         $order = PurchaseOrder::findOrFail($orderId);
 
@@ -154,52 +102,8 @@ class PurchaseOrderService
         }
 
         return $order->update([
-            'order_status' => OrderStatusEnum::Completed,
-            'cancelled_at' => now(),
-            'cancelled_by' => auth()->id(),
-            'cancel_reason' => $reason,
+            'order_status' => OrderStatusEnum::Canceled,
         ]);
-    }
-
-    /**
-     * Lấy orders theo trạng thái
-     */
-    public function getOrdersByStatus(OrderStatusEnum $status): Collection
-    {
-        return PurchaseOrder::where('order_status', $status)
-            ->with(['supplier', 'purchaseOrderLines.product'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-    }
-
-    /**
-     * Tìm kiếm orders
-     */
-    public function search(array $criteria): Collection
-    {
-        $query = PurchaseOrder::with(['supplier', 'purchaseOrderLines.product']);
-
-        if (!empty($criteria['order_no'])) {
-            $query->where('order_no', 'LIKE', '%' . $criteria['order_no'] . '%');
-        }
-
-        if (!empty($criteria['supplier_id'])) {
-            $query->where('supplier_id', $criteria['supplier_id']);
-        }
-
-        if (!empty($criteria['status'])) {
-            $query->where('status', $criteria['status']);
-        }
-
-        if (!empty($criteria['date_from'])) {
-            $query->whereDate('created_at', '>=', $criteria['date_from']);
-        }
-
-        if (!empty($criteria['date_to'])) {
-            $query->whereDate('created_at', '<=', $criteria['date_to']);
-        }
-
-        return $query->orderBy('created_at', 'desc')->get();
     }
 
     /**
@@ -207,78 +111,44 @@ class PurchaseOrderService
      */
     public function calculateOrderTotal(PurchaseOrder $order): float
     {
-        return $order->purchaseOrderLines->sum(fn($line) => $line->qty * $line->unit_price);
+        return $order->purchaseOrderLines
+            ->sum(fn(PurchaseOrderLine $line) => $line->qty * $line->unit_price);
+    }
+    /**
+     * Tính tổng giá trị hợp đồng order
+     */
+    public function calculateContractValue(PurchaseOrder $order): float
+    {
+        return $order->purchaseOrderLines
+            ->sum(fn(PurchaseOrderLine $line) => $line->qty * ($line->contract_price ?? $line->unit_price));
     }
 
     /**
-     * Tạo order lines
+     * Tạo số order tự động (PO-{companyId}{ymd}/{supplierId}.###)
+     * Tìm theo prefix, pad số thứ tự 3 chữ số
      */
-    private function createOrderLines(PurchaseOrder $purchaseOrder, array $lines): void
+    public function generateOrderNumber(array $data, ?int $orderId = null): string
     {
-        foreach ($lines as $lineData) {
-            $lineData['purchase_order_id'] = $purchaseOrder->id;
-            PurchaseOrderLine::create($lineData);
-        }
-    }
-
-    /**
-     * Cập nhật order lines
-     */
-    private function updateOrderLines(PurchaseOrder $purchaseOrder, array $lines): void
-    {
-        // Xóa tất cả lines cũ
-        $purchaseOrder->purchaseOrderLines()->delete();
-        
-        // Tạo lại lines mới
-        $this->createOrderLines($purchaseOrder, $lines);
-    }
-
-    /**
-     * Validate dữ liệu order
-     */
-    private function validateOrderData(array $data, ?int $excludeId = null): void
-    {
-        $errors = [];
-
-        // Kiểm tra supplier
-        if (empty($data['supplier_id'])) {
-            $errors['supplier_id'] = 'Nhà cung cấp là bắt buộc.';
+        if (
+            !isset($data['company_id']) ||
+            !isset($data['order_date']) ||
+            !isset($data['supplier_id'])
+        ) {
+            throw new \InvalidArgumentException('Thiếu thông tin để tạo số order.');
         }
 
-        // Kiểm tra order number nếu có
-        if (!empty($data['order_no'])) {
-            $query = PurchaseOrder::where('order_no', $data['order_no']);
-            if ($excludeId) {
-                $query->where('id', '!=', $excludeId);
-            }
-            if ($query->exists()) {
-                $errors['order_no'] = 'Số order đã tồn tại.';
-            }
-        }
+        $prefix = 'PO-' . $data['company_id'];
+        $date = Carbon::createFromFormat('Y-m-d', $data['order_date']);
+        $date = $date->format('ymd');
+        // $supplierId = str_pad($data['supplier_id'], 3, '0', STR_PAD_LEFT);
+        $supplierId = $data['supplier_id'];
 
-        // Kiểm tra ngày order
-        if (!empty($data['order_date'])) {
-            if (strtotime($data['order_date']) === false) {
-                $errors['order_date'] = 'Ngày order không đúng định dạng.';
-            }
-        }
+        $code = "{$prefix}{$date}/{$supplierId}.";
 
-        if (!empty($errors)) {
-            throw ValidationException::withMessages($errors);
-        }
-    }
-
-    /**
-     * Tạo supplier order number
-     */
-    private function generateSupplierOrderNumber(string $supplierCode): string
-    {
-        $prefix = strtoupper($supplierCode);
-        $date = now()->format('Ymd');
-        
         // Tìm số thứ tự cuối cùng trong ngày
-        $lastOrder = PurchaseOrder::where('supplier_order_no', 'LIKE', "{$prefix}{$date}%")
-            ->orderBy('supplier_order_no', 'desc')
+        $lastOrder = PurchaseOrder::where('order_number', 'LIKE', "{$prefix}{$date}%")
+            ->when($orderId, fn($query) => $query->where('id', '!=', $orderId))
+            ->orderBy('order_number', 'desc')
             ->first();
 
         if (!$lastOrder) {
@@ -288,13 +158,13 @@ class PurchaseOrderService
             $sequence = $lastSequence + 1;
         }
 
-        return $prefix . $date . str_pad($sequence, 3, '0', STR_PAD_LEFT);
+        return $code . str_pad($sequence, 3, '0', STR_PAD_LEFT);
     }
 
     /**
-     * Đồng bộ thông tin order (method được gọi từ Model)
+     * Log người cập nhật khi có thay đổi thông tin order
      */
-    public function syncOrderInfo(int $orderId): void
+    public function logEditUser(int $orderId): void
     {
         $order = PurchaseOrder::findOrFail($orderId);
 
@@ -326,52 +196,5 @@ class PurchaseOrderService
         ])) {
             $order->updateQuietly(['updated_by' => auth()->id()]);
         }
-        
-        // Logic đồng bộ thông tin order nếu cần
-        // Ví dụ: cập nhật tổng tiền, trạng thái, etc.
-        $totalAmount = $order->purchaseOrderLines->sum(fn($line) => $line->qty * $line->unit_price);
-        
-        $order->update([
-            'total_value' => $totalAmount,
-        ]);
     }
-
-    /**
-     * Tạo số order tự động
-     */
-    public function generateOrderNumber(array $data, ?int $excludeId = null): string
-    {
-        if (!empty($data['company_id'])) {
-            $orderDate = $data['order_date'] ?? now()->format('Y-m-d');
-            return OrderNumberGenerator::generatePurchaseOrderNumber($data['company_id'], $orderDate);
-        }
-        
-        return 'PO-' . now()->format('ymd') . '-' . str_pad(rand(1, 999), 3, '0', STR_PAD_LEFT);
-    }
-
-    /**
-     * Cập nhật tổng tiền cho order
-     */
-    public function updateTotals(int $orderId): void
-    {
-        $this->syncOrderInfo($orderId);
-    }
-
-    /**
-     * Sync order lines info (backward compatibility)
-     */
-    public function syncOrderLinesInfo(int $orderId): void
-    {
-        $this->syncOrderInfo($orderId);
-    }
-
-    /**
-     * Update order info (backward compatibility) 
-     */
-    public function updateOrderInfo(int $orderId): void
-    {
-        $this->syncOrderInfo($orderId);
-    }
-
-
 }

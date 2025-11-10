@@ -1,5 +1,34 @@
 @php
     $state = $getState() ?? [];
+    function renderValue($value, $level = 0)
+    {
+        // Nếu null hoặc rỗng
+        if ($value === null || $value === '') {
+            return '—';
+        }
+
+        // Nếu là bool
+        if (is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+
+        // Nếu không phải array → render text
+        if (!is_array($value)) {
+            return e((string) $value);
+        }
+
+        // Nếu là array → render danh sách đệ quy
+        $indent = $level >= 2 ? str_repeat('&nbsp;&nbsp;', $level - 1) : '';
+        $html = '<ol style="margin:0;">';
+
+        foreach ($value as $key => $subValue) {
+            $html .= '<li>' . $indent . e((string) $key) . ': ' . renderValue($subValue, $level + 1) . '</li>';
+        }
+
+        $html .= '</ol>';
+
+        return $html;
+    }
 @endphp
 <x-dynamic-component :component="$getEntryWrapperView()" :entry="$entry">
     <div class="changes-table-wrapper">
@@ -20,17 +49,17 @@
                     @endphp
                     <tr>
                         <td>{{ $item['attribute'] }}</td>
-                        <td class="text-muted">{{ $old === '' || $old === null ? '—' : $old }}</td>
+                        <td class="text-muted">{!! renderValue($old) !!}</td>
                         <td @class([
                             'text-changed' => $old !== $new,
                             'text-muted' => $old === $new,
                         ])>
-                            {{ $new === '' || $new === null ? '—' : $new }}
+                            {!! renderValue($new) !!}
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="3" class="text-center text-muted py-2">No changes found.</td>
+                        <td colspan="3" class="text-center text-muted py-2">{{ __('No changes found') }}</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -54,8 +83,6 @@
         width: 100%;
         border-collapse: collapse;
         table-layout: auto;
-        /* ✅ để cột đầu auto theo nội dung */
-        /* border-color: var(--gray-200); */
         font-size: var(--text-sm);
         line-height: var(--text-sm--line-height, 1.25rem);
     }
@@ -64,9 +91,7 @@
     .changes-table th:first-child,
     .changes-table td:first-child {
         white-space: nowrap;
-        /* Attribute không wrap */
         width: 1%;
-        /* fit nội dung nhưng vẫn cho table-layout tự tính */
     }
 
     .changes-table th:nth-child(2),
@@ -74,9 +99,7 @@
     .changes-table th:nth-child(3),
     .changes-table td:nth-child(3) {
         width: 50%;
-        /* From / To chia đôi phần còn lại */
         white-space: normal;
-        /* ✅ cho phép xuống dòng */
         word-break: break-word;
         overflow-wrap: anywhere;
     }
@@ -87,6 +110,7 @@
         padding-inline: calc(var(--spacing) * 3);
         padding-block: calc(var(--spacing) * 2);
         text-align: start;
+        font-size: 0.8rem;
         border-bottom: 1px solid var(--gray-200);
         vertical-align: top;
     }
@@ -109,6 +133,5 @@
 
     .text-changed {
         color: var(--primary-600);
-        font-weight: 500;
     }
 </style>
