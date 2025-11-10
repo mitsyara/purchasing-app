@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\DB;
  */
 class PurchaseOrderService
 {
+    // -------------------------- PURCHASE ORDER SERVICES --------------------------
+
     /**
      * Sync order info
      */
@@ -43,13 +45,10 @@ class PurchaseOrderService
     {
         $order = PurchaseOrder::findOrFail($orderId);
 
-        // Validate order có thể được xử lý
+        // Validate order có thể xử lý được
         if (!$order->order_status || $order->order_status === OrderStatusEnum::Draft) {
             $order->order_status = OrderStatusEnum::Inprogress;
-            // Thiết lập ngày order nếu chưa có
-            if (!isset($order->order_date)) {
-                $order->order_date = today();
-            }
+
             // Tạo số order nếu chưa có
             if (!isset($order->order_number) || empty($order->order_number)) {
                 $orderNumber = $this->generateOrderNumber([
@@ -57,8 +56,14 @@ class PurchaseOrderService
                     'order_date' => $order->order_date ?? today()->format('Y-m-d'),
                     'supplier_id' => $order->supplier_id,
                 ]);
+
+                // Thiết lập ngày order nếu chưa có
+                if (!isset($order->order_date)) {
+                    $order->order_date = today();
+                }
                 $order->order_number = $orderNumber;
             }
+
             return $order->save();
         }
 
@@ -117,10 +122,11 @@ class PurchaseOrderService
     /**
      * Tính tổng giá trị hợp đồng order
      */
-    public function calculateContractValue(PurchaseOrder $order): float
+    public function calculateContractValue(PurchaseOrder $order): ?float
     {
         return $order->purchaseOrderLines
-            ->sum(fn(PurchaseOrderLine $line) => $line->qty * ($line->contract_price ?? $line->unit_price));
+            ->sum(fn(PurchaseOrderLine $line)
+            => $line->contract_price ? $line->qty * $line->contract_price : null);
     }
 
     /**
@@ -197,4 +203,9 @@ class PurchaseOrderService
             $order->updateQuietly(['updated_by' => auth()->id()]);
         }
     }
+
+    // -------------------------- PURCHASE SHIPMENTs SERVICES --------------------------
+
+    // -------------------------- PURCHASE ORDER LINEs SERVICES --------------------------
+
 }

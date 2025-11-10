@@ -279,8 +279,8 @@ class PurchaseOrderForm
                     Action::make('resetOrderNumber')
                         ->label(__('Reset'))
                         ->icon(Heroicon::OutlinedArrowPath)
-                        ->action(function (F\Field $component, ?PurchaseOrder $record) {
-                            $component->set('order_number', $record?->order_number);
+                        ->action(function (callable $set, ?PurchaseOrder $record) {
+                            $set('order_number', $record?->order_number);
                         })
                         ->color('secondary')
                         ->disabled(fn(?PurchaseOrder $record) => !$record)
