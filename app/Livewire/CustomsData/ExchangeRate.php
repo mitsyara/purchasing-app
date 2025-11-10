@@ -2,7 +2,7 @@
 
 namespace App\Livewire\CustomsData;
 
-use App\Services\VcbExchangeRatesService;
+use App\Services\Common\ExchangeRateService;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
@@ -26,16 +26,16 @@ class ExchangeRate extends Component implements HasTable, HasSchemas, HasActions
         $this->fetchRate();
     }
 
-    #[\Livewire\Attributes\On('dateChanged')]
     /**
      * Fetch exchange rates for a specific date (or today if no date is provided).
      * - Caches results to minimize API calls.
      * - Cache duration: 30 minutes for today's rates, 1 day for older dates
      */
+    #[\Livewire\Attributes\On('dateChanged')]
     public function fetchRate(?string $date = null): void
     {
         // Determine date
-        $dateStr = $date ?? now()->toDateString();
+        $dateStr = $date ?: now()->format('Y-m-d');
         $dateObj = \Carbon\Carbon::createFromFormat('Y-m-d', $dateStr);
         $isToday = $dateObj->isToday();
 
@@ -47,7 +47,7 @@ class ExchangeRate extends Component implements HasTable, HasSchemas, HasActions
 
         // If not cached, fetch new data
         if (!$result) {
-            $probe = VcbExchangeRatesService::fetch($dateStr);
+            $probe = ExchangeRateService::fetch($dateStr);
             $this->timestamp = $probe['timestamp'] ?? null;
 
             // Transform before caching

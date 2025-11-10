@@ -16,6 +16,7 @@ use Filament\Tables\Filters as TF;
 use Filament\Actions as A;
 use Filament\Forms\Components as F;
 use Filament\Schemas\Components as S;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class UserResource extends Resource
@@ -31,11 +32,6 @@ class UserResource extends Resource
     public static function getNavigationGroup(): string|\UnitEnum|null
     {
         return __('User Settings');
-    }
-
-    public static function canAccess(): bool
-    {
-        return auth()->user()->isAdmin();
     }
 
     public static function form(Schema $schema): Schema
@@ -112,14 +108,23 @@ class UserResource extends Resource
                 ])
                     ->columns(),
 
+                F\Select::make('roles')
+                    ->relationship('roles', 'name')
+                    ->multiple()
+                    ->preload()
+                    ->searchable()
+                    ->columnSpanFull(),
+
             ]);
     }
 
     public static function table(Table $table): Table
     {
+        $user = auth()->user();
+
         return $table
             ->modifyQueryUsing(fn(Builder $query): Builder
-            => $query->with('companies')->whereNot('id', 1))
+            => !$user->isAdmin() ? $query->whereNot('id', 1) : $query)
             ->columns([
                 __index(),
 
@@ -148,6 +153,10 @@ class UserResource extends Resource
                     ->label(__('Company'))
                     ->badge()
                     ->sortable(),
+
+                T\TextColumn::make('roles.name')
+                    ->label(__('Roles'))
+                    ->sortable(),
             ])
             ->filters([
                 TF\TernaryFilter::make('email_verified_at')
@@ -164,7 +173,10 @@ class UserResource extends Resource
                             $record->markEmailAsVerified();
                         }),
 
-                    A\EditAction::make(),
+                    A\EditAction::make()
+                        ->after(function (\App\Models\User $record) {
+                            // Generate UUID
+                        }),
                     A\DeleteAction::make(),
                 ]),
             ])
@@ -174,6 +186,7 @@ class UserResource extends Resource
                         static::bulkEmailVerification(),
                         static::bulkStatus(),
                         static::bulkCompanies(),
+                        static::bulkRoles(),
                     ])
                         ->dropdown(false),
 
@@ -266,6 +279,30 @@ class UserResource extends Resource
                 User::query()->whereIn('id', $records)
                     ->where('email_verified_at', null)
                     ->update(['email_verified_at' => now()]);
+            });
+    }
+
+    public static function bulkRoles(): A\BulkAction
+    {
+        return A\BulkAction::make('assign_roles')
+            ->label(__('Assign Roles'))
+            ->icon(Heroicon::OutlinedShieldCheck)
+            ->color('primary')
+            ->schema([
+                F\CheckboxList::make('roles')
+                    ->label(__('Roles'))
+                    ->options(fn() => \App\Models\Role::all()->pluck('name', 'id'))
+                    ->searchable(),
+            ])
+            ->action(function (array $data, mixed $records) {
+                $roles = \App\Models\Role::whereIn('id', $data)->pluck('name');
+
+                User::whereIn('id', $records)
+                    ->chunk(500, function ($users) use ($roles) {
+                        foreach ($users as $user) {
+                            $user->syncRoles($roles);
+                        }
+                    });
             });
     }
 }

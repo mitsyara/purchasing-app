@@ -13,12 +13,7 @@ class ManagePurchaseShipments extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
-            // CreateAction::make()
-            //     ->modal()->slideOver()
-            //     ->modalWidth(Width::SevenExtraLarge)
-            //     ->after(function (PurchaseShipment $record) {
-            //         new CallAllPurchaseShipmentServices($record);
-            //     }),
+            // TODO: Implement header actions when needed
         ];
     }
 }

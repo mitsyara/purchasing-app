@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Services\PurchaseOrder\ProcessingOrder;
 use App\Traits\HasCustomQueryBuilder;
 use App\Traits\HasPayment;
 use Illuminate\Database\Eloquent\Model;
@@ -57,6 +56,7 @@ class PurchaseOrder extends Model
 
         'pay_term_delay_at',
         'pay_term_days',
+        'payment_method',
 
         'total_value',
         'total_contract_value',
@@ -183,68 +183,11 @@ class PurchaseOrder extends Model
             PurchaseShipmentLine::class,
             PurchaseShipment::class,
             'purchase_order_id',
-            'purchase_shipment_id'
+            'purchase_shipment_id',
         );
     }
 
     // Helpers
 
-    public function syncOrderInfo(): void
-    {
-        new \App\Services\PurchaseOrder\CallAllPurchaseOrderServices($this);
-    }
 
-    public function processOrder(array $data): bool
-    {
-        $supplierCode = $this->supplier->contact_short_name
-            ?? $this->supplier->contact_code
-            ?? 'N/A';
-
-        $this->validateOrderData($data);
-
-        return $this->update([
-            'order_status' => \App\Enums\OrderStatusEnum::Inprogress,
-            'order_number' => $data['order_number'],
-            'order_date' => $data['order_date'],
-            'order_description' => $data['order_date'] . ' ' . $data['order_number'] . ' [' . $supplierCode . ']',
-        ]);
-    }
-    // validate date
-    public function validateOrderData(array $data, ?string $format = 'Y-m-d'): void
-    {
-        if (!$data['order_number'] || !$data['order_date']) {
-            throw new \Exception('Order number and order date are required.');
-        }
-
-        $date = \Carbon\Carbon::createFromFormat($format, $data['order_date']);
-
-        if (!$date || $date->format($format) !== $data['order_date']) {
-            throw new \Exception('Invalid order date format. Expected format: ' . $format);
-        }
-    }
-
-    public function cancelOrder(): bool
-    {
-        return $this->update([
-            'order_status' => \App\Enums\OrderStatusEnum::Canceled,
-        ]);
-    }
-
-    // auto assign order number
-    public function generateOrderNumber(?array $data = null): string
-    {
-        $id = str_pad($data['id'] ?? $this->company_id, 2, '0', STR_PAD_LEFT);
-        $date = \Carbon\Carbon::parse($data['order_date'] ?? $this->order_date)->format('ymd');
-        $base = "PO-{$id}{$date}";
-
-        for (
-            $i = 0;
-            self::when($this->id, fn($q) => $q->where('id', '!=', $this->id))
-                ->where('order_number', $order = $base . ($i ? sprintf('.%02d', $i) : ''))
-                ->exists();
-            $i++
-        );
-
-        return $order;
-    }
 }

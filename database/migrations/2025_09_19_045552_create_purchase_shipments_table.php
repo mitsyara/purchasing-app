@@ -57,7 +57,6 @@ return new class extends Migration
             $table->json('extra_costs')->nullable();
             $table->decimal('total_extra_cost', 24, 6)->nullable();
             $table->decimal('average_cost', 15, 3)->nullable();
-            $table->decimal('display_total_contract_value', 24, 6)->storedAs('COALESCE(total_contract_value, total_value)');
 
             $table->text('notes')->nullable();
 

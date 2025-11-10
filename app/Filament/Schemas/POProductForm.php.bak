@@ -1,0 +1,189 @@
+<?php
+
+namespace App\Filament\Schemas;
+
+use App\Filament\Clusters\Settings\Resources\Products\ProductResource;
+use App\Models\AssortmentProduct;
+use App\Models\Product;
+use App\Models\ProjectItem;
+use Filament\Resources\RelationManagers\RelationManager;
+
+use App\Models\PurchaseOrderLine;
+use Illuminate\Database\Eloquent\Builder;
+
+use Filament\Schemas\Schema;
+use Filament\Schemas\JsContent;
+use Filament\Support\Icons\Heroicon;
+
+use Filament\Forms\Components as F;
+use Filament\Infolists\Components as I;
+use Illuminate\Database\Eloquent\Model;
+
+class POProductForm
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema
+            ->components(static::formSchema());
+    }
+
+    public static function formSchema(): array
+    {
+        return [
+            F\Hidden::make('product_uom')
+                ->afterStateHydrated(fn(callable $get, $component)
+                => $component->state(\App\Models\Product::find($get('product_id'))?->product_uom))
+                ->dehydrated(false),
+
+
+            static::assortmentField(),
+
+            F\Select::make('product_id')
+                ->label(__('Product'))
+                ->relationship(
+                    name: 'product',
+                    titleAttribute: 'product_description',
+                    modifyQueryUsing: function (
+                        Builder $query,
+                        string $operation,
+                        \Livewire\Component $livewire,
+                        null|PurchaseOrderLine|ProjectItem $record,
+                    ): Builder {
+                        if ($livewire instanceof RelationManager) {
+                            $order = $livewire->getOwnerRecord();
+                            $excludeProductIds = collect();
+
+                            if ($order instanceof \App\Models\PurchaseOrder) {
+                                // Lấy products đã được chọn direct
+                                $directProductIds = $order->purchaseOrderLines()
+                                    ->when($record, fn(Builder $q) => $q->whereNot('id', $record->id))
+                                    ->pluck('product_id')
+                                    ->filter();
+
+                                // Lấy products từ assortments đã được chọn
+                                $assortmentProductIds = $order->purchaseOrderLines()
+                                    ->when($record, fn(Builder $q) => $q->whereNot('id', $record->id))
+                                    ->whereNotNull('assortment_id')
+                                    ->with('assortment.products')
+                                    ->get()
+                                    ->flatMap(fn($line) => $line->assortment?->products?->pluck('id') ?? []);
+
+                                $excludeProductIds = $directProductIds->merge($assortmentProductIds);
+                            } else if ($order instanceof \App\Models\Project) {
+                                // Lấy products đã được chọn direct
+                                $directProductIds = $order->projectItems()
+                                    ->when($record, fn(Builder $q) => $q->whereNot('id', $record->id))
+                                    ->pluck('product_id')
+                                    ->filter();
+
+                                // Lấy products từ assortments đã được chọn
+                                $assortmentProductIds = $order->projectItems()
+                                    ->when($record, fn(Builder $q) => $q->whereNot('id', $record->id))
+                                    ->whereNotNull('assortment_id')
+                                    ->with('assortment.products')
+                                    ->get()
+                                    ->flatMap(fn($item) => $item->assortment?->products?->pluck('id') ?? []);
+
+                                $excludeProductIds = $directProductIds->merge($assortmentProductIds);
+                            }
+
+                            if ($excludeProductIds->isNotEmpty()) {
+                                $query = $query->whereNotIn('id', $excludeProductIds);
+                            }
+                        }
+                        return $operation === 'create'
+                            ? $query->where('is_active', true)
+                            : $query;
+                    }
+                )
+                ->searchable()
+                ->preload()
+                ->disableOptionsWhenSelectedInSiblingRepeaterItems()
+                ->createOptionForm(ProductResource::form(new Schema())->getComponents())
+                ->editOptionForm(ProductResource::form(new Schema())->getComponents())
+                ->afterStateUpdated(fn($state, $set)
+                => $set('product_uom', \App\Models\Product::find($state)?->product_uom))
+                ->afterStateUpdatedJs(<<<'JS'
+                    $state ? $set('assortment_id', null) : null;
+                JS)
+                ->columnSpanFull()
+                ->requiredWithout(['assortment_id']),
+
+            __number_field('qty')
+                ->suffix(fn($get) => $get('product_id') ? JsContent::make(<<<'JS'
+                    $get('product_uom')
+                JS) : ($get('assortment_id') ? 'kg' : null))
+                ->required(),
+
+            __number_field('unit_price')
+                ->suffix(fn(\Livewire\Component $livewire)
+                => $livewire instanceof RelationManager
+                    ? ($livewire->getOwnerRecord()?->currency ?? 'N/A')
+                    : JsContent::make(<<<'JS'
+                        $get('../../currency')
+                JS))
+                ->required(),
+
+            __number_field('contract_price')
+                ->suffix(fn(\Livewire\Component $livewire)
+                => $livewire instanceof RelationManager
+                    ? $livewire->getOwnerRecord()->currency
+                    : JsContent::make(<<<'JS'
+                        $get('../../currency')
+                    JS)),
+        ];
+    }
+
+    public static function repeaterHeaders(): array
+    {
+        return [
+            F\Repeater\TableColumn::make('Assortment')
+                ->width('280px'),
+            F\Repeater\TableColumn::make('Product'),
+            F\Repeater\TableColumn::make('Qty')
+                ->markAsRequired()
+                ->width('180px'),
+            F\Repeater\TableColumn::make('Unit Price')
+                ->markAsRequired()
+                ->width('180px'),
+            F\Repeater\TableColumn::make('Contract Price')
+                ->width('180px'),
+        ];
+    }
+
+    public static function assortmentField(): F\Select
+    {
+        return F\Select::make('assortment_id')
+            ->label(__('Assortment'))
+            ->relationship(
+                name: 'assortment',
+                titleAttribute: 'assortment_name',
+                modifyQueryUsing: function (
+                    Builder $query,
+                    string $operation,
+                    \Livewire\Component $livewire,
+                    null|PurchaseOrderLine|ProjectItem $record,
+                ): Builder {
+                    if ($livewire instanceof RelationManager) {
+                        $purchaseOrder = $livewire->getOwnerRecord();
+                        $assortmentIds = $purchaseOrder->purchaseOrderLines()
+                            ->when($record, fn(Builder $q) => $q->whereNot('id', $record->id))
+                            ->pluck('assortment_id')
+                            ->filter();
+                        if ($assortmentIds) {
+                            $query = $query->whereNotIn('id', $assortmentIds);
+                        }
+                    }
+                    return $operation === 'create' ? $query->where('is_active', true) : $query;
+                }
+            )
+            ->searchable()
+            ->preload()
+            ->disableOptionsWhenSelectedInSiblingRepeaterItems()
+            ->afterStateUpdatedJs(<<<'JS'
+                    $state ? $set('product_id', null) : null;
+                JS)
+            ->columnSpanFull()
+            ->requiredWithout(['product_id']);
+    }
+}

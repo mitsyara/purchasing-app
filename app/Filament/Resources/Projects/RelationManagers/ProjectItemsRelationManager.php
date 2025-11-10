@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Projects\RelationManagers;
 
 use App\Filament\Schemas\POProductForm;
+use App\Services\Project\ProjectService;
 use Filament\Resources\RelationManagers\RelationManager;
 use Illuminate\Database\Eloquent\Model;
 
@@ -68,11 +69,23 @@ class ProjectItemsRelationManager extends RelationManager
                 //
             ])
             ->headerActions([
-                A\CreateAction::make(),
+                A\CreateAction::make()
+                    ->after(function (): void {
+                        $project = $this->getOwnerRecord();
+                        app(ProjectService::class)->updateProjectInfo($project->id);
+                    }),
             ])
             ->recordActions([
-                A\EditAction::make(),
-                A\DeleteAction::make(),
+                A\EditAction::make()
+                    ->after(function (): void {
+                        $project = $this->getOwnerRecord();
+                        app(ProjectService::class)->updateProjectInfo($project->id);
+                    }),
+                A\DeleteAction::make()
+                    ->after(function (): void {
+                        $project = $this->getOwnerRecord();
+                        app(ProjectService::class)->updateProjectInfo($project->id);
+                    }),
             ])
             ->toolbarActions([]);
     }

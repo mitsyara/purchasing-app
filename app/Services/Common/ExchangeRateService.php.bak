@@ -1,13 +1,16 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Common;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
-class VcbExchangeRatesService
+/**
+ * Service xử lý tỷ giá hối đoái
+ */
+class ExchangeRateService
 {
     private string $xmlEndpoint = 'https://portal.vietcombank.com.vn/Usercontrols/TVPortal.TyGia/pXML.aspx';
     private string $apiEndpoint = 'https://www.vietcombank.com.vn/api/exchangerates?date=';

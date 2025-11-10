@@ -10,10 +10,10 @@
 
     $products = array_map(function ($product) use ($curr, &$totalAmount, &$totalVat) {
         $unitPrice = $product['unit_price'] ?? 0;
-        $quantity = $product['quantity'] ?? 0;
+        $qty = $product['qty'] ?? 0;
         $vatPercent = $product['vat'] ?? 0;
 
-        $lineTotal = $unitPrice * $quantity;
+        $lineTotal = $unitPrice * $qty;
         $lineVat = ($lineTotal * $vatPercent) / 100;
 
         // Cộng dồn
@@ -23,7 +23,7 @@
         // Format hiển thị
         $product['formated_price'] = Number::currency($unitPrice, $curr, 'vi');
         $product['formated_total'] = Number::currency($lineTotal, $curr, 'vi');
-        $product['formated_qty'] = Number::format($quantity, locale: 'vi');
+        $product['formated_qty'] = Number::format($qty, locale: 'vi');
         $product['formated_vat'] = Number::currency($lineVat, $curr, 'vi');
 
         return $product;

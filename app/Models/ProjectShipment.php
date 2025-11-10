@@ -38,7 +38,6 @@ class ProjectShipment extends Model
         'extra_costs',
         'total_extra_cost',
         'average_cost',
-        'display_total_contract_value',
         'notes',
     ];
 
@@ -61,7 +60,6 @@ class ProjectShipment extends Model
         'total_value' => 'decimal:6',
         'total_contract_value' => 'decimal:6',
         'total_extra_cost' => 'decimal:6',
-        'display_total_contract_value' => 'decimal:6',
     ];
 
     public function project(): BelongsTo

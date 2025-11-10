@@ -50,20 +50,22 @@ class DatabaseSeeder extends Seeder
 
     // Helper methods
 
-    public function getSeeders(string $folder): \Illuminate\Support\Collection
+    private function getSeeders(string $folder): \Illuminate\Support\Collection
     {
         $this->command?->info("Discovering seeders in: {$folder}");
 
         $files = \Illuminate\Support\Facades\File::allFiles(database_path("seeders/{$folder}"));
 
-        return collect($files)->map(function ($file) use ($folder) {
-            $className = __NAMESPACE__ . "\\{$folder}\\" . strtr($file->getFilenameWithoutExtension(), '/', '\\');
-            $this->command?->info("---> " . $file->getFilename());
-            return $className;
-        });
+        return collect($files)
+            ->filter(fn($file) => $file->getExtension() === 'php') // chỉ lấy file php
+            ->map(function ($file) use ($folder) {
+                $className = __NAMESPACE__ . "\\{$folder}\\" . strtr($file->getFilenameWithoutExtension(), '/', '\\');
+                $this->command?->info("---> " . $file->getFilename());
+                return $className;
+            });
     }
 
-    public function runSeeders(string $path_to_seeders, ?array $skip = []): void
+    private function runSeeders(string $path_to_seeders, ?array $skip = []): void
     {
         $seeders = $this->getSeeders($path_to_seeders);
 

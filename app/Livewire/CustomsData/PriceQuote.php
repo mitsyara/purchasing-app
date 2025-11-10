@@ -199,7 +199,7 @@ class PriceQuote extends Component implements HasSchemas, HasActions
                         })
                         ->required(),
 
-                    __number_field('quantity')
+                    __number_field('qty')
                         ->label('Số lượng')
                         ->numeric()
                         ->required(),

@@ -5,7 +5,8 @@ namespace App\Filament\Resources\PurchaseShipments\Tables;
 use Filament\Tables\Table;
 use App\Models\PurchaseShipment;
 use Filament\Support\Icons\Heroicon;
-use App\Services\PurchaseShipment\CallAllPurchaseShipmentServices;
+use App\Services\PurchaseShipment\PurchaseShipmentService;
+use App\Services\Inventory\InventoryService;
 
 use Filament\Actions as A;
 use Filament\Tables\Columns as T;
@@ -90,7 +91,7 @@ class PurchaseShipmentTable
                             ->icon(Heroicon::CheckCircle)
                             ->requiresConfirmation()
                             ->action(fn(PurchaseShipment $record)
-                            => $record->markAsDelivered())
+                            => app(PurchaseShipmentService::class)->markDelivered($record))
                             ->disabled(fn(PurchaseShipment $record): bool
                             => in_array($record->shipment_status, [
                                 \App\Enums\ShipmentStatusEnum::Delivered,
@@ -104,12 +105,15 @@ class PurchaseShipmentTable
                     A\EditAction::make()
                         ->modal()->slideOver()
                         ->after(function (PurchaseShipment $record) {
-                            // Call all necessary services for the shipment
-                            new CallAllPurchaseShipmentServices($record);
+                            // Use new service instead of legacy service
+                            $purchaseShipmentService = app(PurchaseShipmentService::class);
+                            $purchaseShipmentService->syncShipmentInfo($record->id);
+                            
                             // Sync inventory lines from shipment lines
                             if ($record->purchaseShipmentLines()->exists()) {
+                                $inventoryService = app(InventoryService::class);
                                 $record->purchaseShipmentLines()
-                                    ->each(fn($line) => new \App\Services\InventoryLine\SyncFromShipmentLine($line));
+                                    ->each(fn($line) => $inventoryService->syncFromShipmentLine($line));
                             }
                         }),
                 ])

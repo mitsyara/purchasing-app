@@ -9,6 +9,7 @@
                 type="date"
                 class="w-auto"
                 value="{{ now('Asia/Ho_Chi_Minh')->toDateString() }}"
+                min="{{ now('Asia/Ho_Chi_Minh')->subMonths(6)->toDateString() }}"
                 max="{{ now('Asia/Ho_Chi_Minh')->toDateString() }}"
                 x-on:change="$dispatch('dateChanged', { date: $event.target.value })"
             />

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Services\PurchaseShipment\MarkShipmentDelivered;
+use App\Services\PurchaseShipment\PurchaseShipmentService;
 use App\Traits\HasInventoryTransactions;
 use App\Traits\HasPayment;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -117,17 +117,17 @@ class PurchaseShipment extends Model
 
     public function port(): BelongsTo
     {
-        return $this->belongsTo(Port::class);
+        return $this->belongsTo(Port::class, 'port_id');
     }
 
     public function company(): BelongsTo
     {
-        return $this->belongsTo(Company::class);
+        return $this->belongsTo(Company::class, 'company_id');
     }
 
     public function warehouse(): BelongsTo
     {
-        return $this->belongsTo(Warehouse::class);
+        return $this->belongsTo(Warehouse::class, 'warehouse_id');
     }
 
     public function staffBuy(): BelongsTo
@@ -151,10 +151,6 @@ class PurchaseShipment extends Model
     }
 
     // Helpers
-    public function markAsDelivered(): void
-    {
-        new MarkShipmentDelivered($this);
-    }
 
     public function getEtd(?string $format = 'd/m/Y'): ?string
     {

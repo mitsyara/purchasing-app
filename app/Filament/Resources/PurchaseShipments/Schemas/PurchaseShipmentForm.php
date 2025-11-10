@@ -358,7 +358,8 @@ class PurchaseShipmentForm
         $currency = $get('currency');
         $date = $get('customs_clearance_date') ?? $get('customs_declaration_date') ?? null;
         if ($date && $currency && $currency !== 'VND') {
-            $rate = \App\Services\VcbExchangeRatesService::fetch($date)[$currency][VCB_RATE_TARGET] ?? null;
+            $exchangeRateService = app(\App\Services\Common\ExchangeRateService::class);
+            $rate = $exchangeRateService->getRate($currency, 'VND', $date);
             if ($rate) $rate = __number_string_converter($rate);
             if ($rate) {
                 $set('exchange_rate', $rate);

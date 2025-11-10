@@ -3,8 +3,7 @@
 namespace App\Filament\Resources\PurchaseOrders\RelationManagers;
 
 use App\Filament\Schemas\POProductForm;
-use App\Services\PurchaseOrder\SyncOrderLinesInfo;
-use App\Services\PurchaseOrder\UpdateOrderTotals;
+use App\Services\PurchaseOrder\PurchaseOrderService;
 use Filament\Resources\RelationManagers\RelationManager;
 
 use Illuminate\Database\Eloquent\Builder;
@@ -42,19 +41,20 @@ class PurchaseOrderLinesRelationManager extends RelationManager
         return $table
             ->modelLabel(fn(): string => __('Product'))
             ->pluralModelLabel(static::title())
-            // ->modifyQueryUsing(
-            //     fn(Builder $query): Builder
-            //     => $query
-            //         ->with(['product', 'assortment'])
-            //         ->leftJoin('products', 'purchase_order_lines.product_id', '=', 'products.id')
-            //         ->leftJoin('assortments', 'purchase_order_lines.assortment_id', '=', 'assortments.id')
-            //         ->selectRaw('purchase_order_lines.*, COALESCE(products.product_full_name, assortments.assortment_name) as combined_product')
-            // )
+            ->modifyQueryUsing(
+                fn(Builder $query): Builder
+                => $query
+                    ->with(['product', 'assortment'])
+                    ->leftJoin('products', 'purchase_order_lines.product_id', '=', 'products.id')
+                    ->leftJoin('assortments', 'purchase_order_lines.assortment_id', '=', 'assortments.id')
+                    ->selectRaw('purchase_order_lines.*, COALESCE(products.product_description, assortments.assortment_name) as combined_product')
+            )
             ->columns([
                 __index(),
 
-                T\TextColumn::make('product.product_description')
+                T\TextColumn::make('combined_product')
                     ->label(__('Product'))
+                    ->color(fn($record) => $record->assortment_id ? 'danger' : null)
                     ->sortable(),
 
                 T\TextColumn::make('qty')
@@ -86,8 +86,6 @@ class PurchaseOrderLinesRelationManager extends RelationManager
                     ->after(function (): void {
                         // Sync Purchase Order Info
                         $purchaseOrder = $this->getOwnerRecord();
-                        new SyncOrderLinesInfo($purchaseOrder);
-                        new UpdateOrderTotals($purchaseOrder);
                     }),
             ])
             ->recordActions([
@@ -95,14 +93,11 @@ class PurchaseOrderLinesRelationManager extends RelationManager
                     ->after(function (): void {
                         // Sync Purchase Order Info
                         $purchaseOrder = $this->getOwnerRecord();
-                        new SyncOrderLinesInfo($purchaseOrder);
-                        new UpdateOrderTotals($purchaseOrder);
                     }),
                 A\DeleteAction::make()
                     ->after(function (): void {
                         // Sync Purchase Order Info
                         $purchaseOrder = $this->getOwnerRecord();
-                        new UpdateOrderTotals($purchaseOrder);
                     }),
             ]);
     }

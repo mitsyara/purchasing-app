@@ -59,7 +59,7 @@
                 // Chuẩn hoá số (xóa dấu . ngăn cách nghìn, đổi , thành .)
                 if (data.products && typeof data.products === 'object') {
                     Object.values(data.products).forEach(p => {
-                        ['quantity', 'unit_price'].forEach(field => {
+                        ['qty', 'unit_price'].forEach(field => {
                             if (p[field]) {
                                 p[field] = p[field].toString()
                                     .replace(/\./g, '')
@@ -179,7 +179,7 @@
                 // Định dạng lại số để hiển thị đẹp
                 if (data.products && typeof data.products === 'object') {
                     Object.values(data.products).forEach(p => {
-                        ['quantity', 'unit_price'].forEach(field => {
+                        ['qty', 'unit_price'].forEach(field => {
                             if (p[field]) p[field] = this.formatNumber(p[field]);
                         });
                     });

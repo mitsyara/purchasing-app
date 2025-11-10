@@ -14,6 +14,8 @@ use Filament\Notifications\Notification;
 
 class ManageUserGuide extends Page
 {
+    use \BezhanSalleh\FilamentShield\Traits\HasPageShield;
+
     protected string $view = 'filament.clusters.settings.pages.manage-user-guide';
 
     protected static ?string $cluster = SettingsCluster::class;
@@ -32,11 +34,6 @@ class ManageUserGuide extends Page
     public static function getNavigationGroup(): string|\UnitEnum|null
     {
         return __('General Settings');
-    }
-
-    public static function canAccess(): bool
-    {
-        return auth()->user()->isAdmin();
     }
 
     protected string $docsPath = 'docs/user-guide';

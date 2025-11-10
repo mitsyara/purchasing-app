@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('project_id')->nullable()->constrained('projects')->cascadeOnDelete();
-            $table->foreignId('assortment_id')->nullable()->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('assortment_id')->nullable()->nullable()->constrained('assortments')->cascadeOnDelete();
             $table->foreignId('product_id')->nullable()->constrained('products')->nullOnDelete();
 
             $table->decimal('qty', 15, 3);
