@@ -22,6 +22,7 @@ class PurchaseOrderResource extends Resource
     protected static ?int $navigationSort = 10;
 
     protected static ?string $recordTitleAttribute = 'order_number';
+
     public static function getRecordTitle(?Model $record): string | Htmlable | null
     {
         return $record?->order_number ?? __('Draft');

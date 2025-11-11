@@ -58,6 +58,7 @@ class PurchaseOrderForm
                             ->schema([
                                 ...POProductForm::formSchema(),
                             ])
+                            ->compact()
                             ->defaultItems(1)
                             ->minItems(1)
                             ->addActionLabel(__('Add Product'))

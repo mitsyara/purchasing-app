@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Traits\HasPayment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SalesOrder extends Model
 {
@@ -72,11 +73,63 @@ class SalesOrder extends Model
         'pay_term_days' => 'integer',
     ];
 
+    // Relationships
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class, 'company_id');
+    }
+
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class, 'export_warehouse_id');
+    }
+
+    public function port(): BelongsTo
+    {
+        return $this->belongsTo(Port::class, 'export_port_id');
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'customer_id');
+    }
+
+    public function customerContract(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'customer_contract_id');
+    }
+
+    public function customerPayment(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'customer_payment_id');
+    }
+
+    public function staffSales(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'staff_sales_id');
+    }
+
+    public function staffApproved(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'staff_approved_id');
+    }
+
+    public function salesOrderLines(): HasMany
+    {
+        return $this->hasMany(SalesOrderLine::class, 'sales_order_id');
+    }
+
+    public function deliverySchedules(): HasMany
+    {
+        return $this->hasMany(SalesDeliverySchedule::class, 'sales_order_id');
+    }
+
     // Edit history
     public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
     public function updatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');

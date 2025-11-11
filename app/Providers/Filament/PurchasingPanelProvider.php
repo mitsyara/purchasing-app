@@ -42,6 +42,7 @@ class PurchasingPanelProvider extends PanelProvider
                     ->recoverable(),
             ])
 
+            ->globalSearch(false)
             ->broadcasting(false)
             ->databaseNotifications()
             ->databaseNotificationsPolling('30s')
@@ -49,7 +50,6 @@ class PurchasingPanelProvider extends PanelProvider
             ->databaseTransactions()
             ->unsavedChangesAlerts()
 
-            ->globalSearch(false)
             // ->errorNotifications(false)
             // ->registerErrorNotification(
             //     title: 'An error occurred',
@@ -57,7 +57,7 @@ class PurchasingPanelProvider extends PanelProvider
             // )
             // ->registerErrorNotification(
             //     title: 'Record not found',
-            //     body: 'A record you are looking for does not exist.',
+            //     body: 'The resource you are looking for does not exist.',
             //     statusCode: 404,
             // )
 
@@ -82,7 +82,10 @@ class PurchasingPanelProvider extends PanelProvider
                 ...static::getNavGroups(),
             ])
 
+            ->userMenu(true, \Filament\Enums\UserMenuPosition::Topbar)
             ->userMenuItems([
+                // dd(route('exports.clear'));
+
                 'profile' => fn(\Filament\Actions\Action $action) => $action->url(
                     \App\Filament\Clusters\Settings\Pages\MyProfile::getUrl(),
                 ),
@@ -92,20 +95,12 @@ class PurchasingPanelProvider extends PanelProvider
                     ->action(function (): void {
                         session(['screen_locked' => true]);
                     })
-                    ->hidden(fn() => auth()->user()->lock_pin === null)
+                    ->visible(fn() => isset(auth()->user()->lock_pin))
                     ->requiresConfirmation(),
 
                 \Filament\Actions\Action::make('clearExportedFiles')
                     ->label(__('Clear Exported Files'))
                     ->icon('heroicon-o-trash')->color('danger')
-                    ->schema([
-                        \Filament\Forms\Components\TextInput::make('current_password')
-                            ->label(__('Current Password'))
-                            ->password()
-                            ->required()
-                            ->dehydrated(false)
-                            ->currentPassword(),
-                    ])
                     ->action(fn() => $this->deleteFilamentExportedFiles())
                     ->visible(fn() => auth()->user()->isAdmin())
                     ->requiresConfirmation(),
@@ -121,7 +116,7 @@ class PurchasingPanelProvider extends PanelProvider
             ])
 
             ->plugins([
-                // Shieldon Filament Spatie Roles & Permissions
+                // Shield add-on Spatie Roles & Permissions
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
                     ->registerNavigation(false)
                     ->gridColumns([
@@ -139,7 +134,6 @@ class PurchasingPanelProvider extends PanelProvider
                     ->resourceCheckboxListColumns([
                         'default' => 1,
                     ]),
-
 
                 \AchyutN\FilamentLogViewer\FilamentLogViewer::make()
                     ->navigationGroup('system')

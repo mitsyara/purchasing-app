@@ -38,12 +38,6 @@ class POProductForm
     public static function formSchema(): array
     {
         return [
-            // Product UOM
-            F\Hidden::make('product_uom')
-                ->afterStateHydrated(fn(callable $get, $component) =>
-                $component->state(Product::find($get('product_id'))?->product_uom))
-                ->dehydrated(false),
-
             // Assortment select
             F\Select::make('assortment_id')
                 ->label(__('Assortment'))
@@ -94,32 +88,24 @@ class POProductForm
                 ->disableOptionsWhenSelectedInSiblingRepeaterItems()
                 ->createOptionForm(ProductResource::form(new Schema())->getComponents())
                 ->editOptionForm(ProductResource::form(new Schema())->getComponents())
-                ->afterStateUpdated(fn($state, $set) => $set('product_uom', Product::find($state)?->product_uom))
                 ->afterStateUpdatedJs(self::clearOppositeField('assortment_id'))
                 ->columnSpanFull()
                 ->requiredWithout(['assortment_id']),
 
             // Quantity
             __number_field('qty')
-                ->suffix(fn($get) => $get('product_id')
-                    ? JsContent::make('$get("product_uom")')
-                    : ($get('assortment_id') ? 'N/A' : null))
                 ->required(),
 
             // Unit price
             __number_field('unit_price')
-                ->suffix(fn(\Livewire\Component $livewire) =>
-                $livewire instanceof RelationManager
-                    ? $livewire->getOwnerRecord()?->currency
-                    : JsContent::make('$get("../../currency")'))
+                ->suffix(fn(\Livewire\Component $livewire, F\Field $component)
+                => static::currencyContent($livewire, $component))
                 ->required(),
 
             // Contract price
             __number_field('contract_price')
-                ->suffix(fn(\Livewire\Component $livewire) =>
-                $livewire instanceof RelationManager
-                    ? $livewire->getOwnerRecord()?->currency
-                    : JsContent::make('$get("../../currency")')),
+                ->suffix(fn(\Livewire\Component $livewire, F\Field $component)
+                => static::currencyContent($livewire, $component)),
         ];
     }
 
@@ -186,6 +172,29 @@ class POProductForm
                 \$set('$field', null);
             }
         JS;
+    }
+
+    // Currency (concurrency)
+    public static function currencyContent(\Livewire\Component $livewire, F\Field $component): mixed
+    {
+        if ($livewire instanceof RelationManager) {
+            return $livewire->getOwnerRecord()?->currency;
+        }
+
+        // Đếm số cấp repeater cha
+        $level = 0;
+        $parent = $component->getParentRepeater();
+        while ($parent) {
+            $level++;
+            $parent = $parent->getParentRepeater();
+        }
+
+        // Tạo prefix ../ cho mỗi cấp
+        $prefix = str_repeat('../../', $level);
+
+        // Trả về giá trị động
+        $result = JsContent::make(sprintf('$get("%scurrency")', $prefix));
+        return $result;
     }
 
     // Assortment field Tham khảo

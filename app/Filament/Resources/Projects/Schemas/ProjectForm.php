@@ -283,6 +283,7 @@ class ProjectForm
                 ->relationship()
                 ->table(POProductForm::repeaterHeaders())
                 ->schema(POProductForm::formSchema())
+                ->compact()
                 ->defaultItems(1)
                 ->minItems(1),
         ];

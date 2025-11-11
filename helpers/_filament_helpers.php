@@ -293,9 +293,10 @@ if (!function_exists('__certificates')) {
 }
 
 if (!function_exists('__notes')) {
-    function __notes(?string $column = 'notes'): F\Textarea
+    function __notes(?string $column = 'notes', ?string $label = null): F\Textarea
     {
-        return F\Textarea::make($column);
+        return F\Textarea::make($column)
+            ->label($label ?? __('Notes'));
     }
 }
 

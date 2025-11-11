@@ -94,6 +94,7 @@ class FilamentServiceProvider extends ServiceProvider
 
         \Filament\Forms\Components\Select::configureUsing(function (\Filament\Forms\Components\Select $select) {
             $select
+                ->placeholder(__('Options'))
                 ->optionsLimit(10);
         }, isImportant: true);
 
