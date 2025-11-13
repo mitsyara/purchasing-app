@@ -5,7 +5,6 @@ namespace App\Filament\Clusters\Settings\Resources\Categories;
 use App\Filament\Clusters\Settings\Resources\Categories\Pages\ManageCategories;
 use App\Filament\Clusters\Settings\SettingsCluster;
 use App\Models\Category;
-use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -24,7 +23,6 @@ use Filament\Schemas\Components as S;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Illuminate\Database\Eloquent\Builder;
-use UnitEnum;
 
 class CategoryResource extends Resource
 {
@@ -32,11 +30,11 @@ class CategoryResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleGroup;
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleGroup;
 
     protected static ?string $cluster = SettingsCluster::class;
 
-    public static function getNavigationGroup(): string|UnitEnum|null
+    public static function getNavigationGroup(): string|\UnitEnum|null
     {
         return __('Product Settings');
     }

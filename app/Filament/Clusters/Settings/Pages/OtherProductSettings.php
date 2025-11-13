@@ -6,13 +6,11 @@ use App\Filament\Clusters\Settings\SettingsCluster;
 use App\Filament\Schemas\SettingsClusters\PackingSchema;
 use App\Filament\Schemas\SettingsClusters\UnitSchema;
 use App\Filament\Schemas\SettingsClusters\VatSchema;
-use BackedEnum;
 use Filament\Notifications\Notification;
 use App\Filament\BasePage as Page;
 use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Model;
-use UnitEnum;
 
 class OtherProductSettings extends Page
 {
@@ -24,12 +22,12 @@ class OtherProductSettings extends Page
 
     protected static ?string $cluster = SettingsCluster::class;
 
-    public static function getNavigationGroup(): string|UnitEnum|null
+    public static function getNavigationGroup(): string|\UnitEnum|null
     {
         return __('Product Settings');
     }
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedSquares2x2;
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedSquares2x2;
 
     // vat, unit, packing
     public ?string $activePanel = 'vat';

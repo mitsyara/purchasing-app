@@ -79,13 +79,11 @@ class PurchasingPanelProvider extends PanelProvider
                 ...\Filament\Support\Colors\Color::all(),
             ])
             ->navigationGroups([
-                ...static::getNavGroups(),
+                ...$this->getNavGroups(),
             ])
 
             ->userMenu(true, \Filament\Enums\UserMenuPosition::Topbar)
             ->userMenuItems([
-                // dd(route('exports.clear'));
-
                 'profile' => fn(\Filament\Actions\Action $action) => $action->url(
                     \App\Filament\Clusters\Settings\Pages\MyProfile::getUrl(),
                 ),
@@ -166,7 +164,10 @@ class PurchasingPanelProvider extends PanelProvider
             ]);
     }
 
-    public static function getNavGroups(): array
+
+    // Helpers
+
+    public function getNavGroups(): array
     {
         $navGroups = [
             'purchasing' => \Filament\Support\Icons\Heroicon::OutlinedShoppingCart,

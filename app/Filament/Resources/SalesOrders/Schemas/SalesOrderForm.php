@@ -5,11 +5,14 @@ namespace App\Filament\Resources\SalesOrders\Schemas;
 use App\Filament\Resources\Contacts\Schemas\ContactForm;
 use App\Filament\Schemas\POProductForm;
 use App\Models\SalesOrder;
+use DefStudio\SearchableInput\Forms\Components\SearchableInput;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 
 use Filament\Schemas\Components as S;
 use Filament\Forms\Components as F;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\JsContent;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Builder;
@@ -37,10 +40,11 @@ class SalesOrderForm
                     ->columnSpanFull(),
 
                 // Đợt giao hàng
-                S\Section::make(__('Delivery Schedules'))
+                S\Section::make(__('Products'))
                     ->schema([
-                        ...static::deliveryScheduleForm(),
+                        ...static::orderLines(),
                     ])
+                    ->visible(fn(string $operation) => $operation === 'create')
                     ->columnSpanFull(),
 
             ]);
@@ -56,7 +60,8 @@ class SalesOrderForm
                     name: 'company',
                     titleAttribute: 'company_name',
                     modifyQueryUsing: fn(Builder $query): Builder => $query
-                ),
+                )
+                ->required(),
 
             S\Flex::make([
                 S\FusedGroup::make([
@@ -94,12 +99,12 @@ class SalesOrderForm
                         'default' => 3,
                     ]),
 
-                F\TextInput::make('payment_method')
-                    ->label('Payment Method')
-                    ->extraInputAttributes([
-                        'class' => 'lg:max-w-[80px]',
-                    ])
-                    ->grow(false),
+                F\Select::make('currency')
+                    ->label(__('Currency'))
+                    ->options(fn() => \App\Models\Country::whereIsFav(true)->pluck('curr_code', 'curr_code'))
+                    ->default(fn() => 'VND')
+                    ->grow(false)
+                    ->required(),
             ])
                 ->from('lg'),
 
@@ -159,27 +164,17 @@ class SalesOrderForm
     public static function generalFields(): array
     {
         return [
+            F\ToggleButtons::make('order_status')
+                ->label(__('Order Status'))
+                ->options(\App\Enums\OrderStatusEnum::class)
+                ->default(\App\Enums\OrderStatusEnum::Draft)
+                ->disableOptionWhen(fn($value, $operation): bool
+                => $operation === 'create'
+                    && $value === \App\Enums\OrderStatusEnum::Canceled->value)
+                ->grouped()
+                ->required(),
+
             S\Flex::make([
-                F\ToggleButtons::make('order_status')
-                    ->label(__('Order Status'))
-                    ->options(\App\Enums\OrderStatusEnum::class)
-                    ->default(\App\Enums\OrderStatusEnum::Draft)
-                    ->disableOptionWhen(fn($value, $operation): bool
-                    => $operation === 'create'
-                        && $value === \App\Enums\OrderStatusEnum::Canceled->value)
-                    ->grouped()
-                    ->columnSpanFull()
-                    ->required(),
-
-                F\Select::make('currency')
-                    ->label(__('Currency'))
-                    ->options(fn() => \App\Models\Country::whereIsFav(true)->pluck('curr_code', 'curr_code'))
-                    ->default(fn() => 'VND')
-                    ->grow(false)
-                    ->required(),
-            ]),
-
-            S\Group::make([
                 F\DatePicker::make('order_date')
                     ->label(__('Order Date'))
                     ->minDate(today()->subMonths(6))
@@ -202,11 +197,24 @@ class SalesOrderForm
                             ->icon(Heroicon::OutlinedPlay)
                             ->action(function (callable $set, callable $get, ?SalesOrder $record) {
                                 // Nếu chưa có date, set date là hôm nay
-                                if ($get('company_id') && $get('supplier_id')) {
-                                    if (!$get('order_date')) $set('order_date', today());
+                                if ($get('company_id') && $get('customer_id')) {
+                                    if (!$get('order_date')) {
+                                        $date = today()->format('Y-m-d');
+                                        $set('order_date', $date);
+                                    } else {
+                                        $date = $get('order_date');
+                                    }
                                 }
-
                                 // TODO: Làm service cho đơn bán SalesOrder
+                                $service = app(\App\Services\SalesOrder\SalesOrderService::class);
+                                // Tạo số order
+                                $orderNumber = $service->generateOrderNumber([
+                                    'company_id' => $get('company_id'),
+                                    'order_date' => $date,
+                                    'customer_id' => $get('customer_id'),
+                                ], $record?->id);
+                                // Set số order vào form
+                                $set('order_number', $orderNumber);
                             })
                             ->color('info')
                     )
@@ -220,9 +228,7 @@ class SalesOrderForm
                             ->color('secondary')
                             ->disabled(fn(?SalesOrder $record) => !$record)
                     ),
-            ])
-                ->columns(),
-
+            ]),
 
             S\Flex::make([
                 F\Select::make('staff_sales_id')
@@ -234,12 +240,13 @@ class SalesOrderForm
                     ->preload()
                     ->searchable()
                     ->required(),
-
                 F\Select::make('export_warehouse_id')
+                    ->label(__('Warehouse'))
                     ->relationship(
                         name: 'warehouse',
                         titleAttribute: 'warehouse_name',
-                    ),
+                    )
+                    ->grow(false),
             ]),
 
             F\Checkbox::make('is_skip_invoice')
@@ -254,64 +261,19 @@ class SalesOrderForm
     /**
      * Đợt giao dự kiến, bỏ qua sản phẩm (tính tổng tự gắn vào)
      */
-    public static function deliveryScheduleForm(): array
+    public static function orderLines(): array
     {
-        $errorMessage = 'At least one Date is required.';
-
         return [
-            F\Repeater::make('deliverySchedules')
+            F\Repeater::make('salesOrderLines')
                 ->hiddenLabel()
                 ->relationship()
-                ->schema([
-                    S\Flex::make([
-
-                        F\DatePicker::make('from_date')
-                            ->label(__('From Date'))
-                            ->minDate(today()->subMonths(6))
-                            ->requiredWithout('to_date')
-                            ->validationMessages([
-                                'required_without' => __($errorMessage),
-                            ])
-                            ->grow(false),
-
-                        F\DatePicker::make('to_date')
-                            ->label(__('To Date'))
-                            ->minDate(today()->subMonths(6))
-                            ->requiredWithout('from_date')
-                            ->validationMessages([
-                                'required_without' => __($errorMessage),
-                            ])
-                            ->grow(false),
-
-                        F\TextInput::make('delivery_address')
-                            ->label(__('Address')),
-
-                        // __notes()
-                        //     ->hint(__('Delivery notes'))
-                        //     ->rows(4)
-                        //     ->columnSpanFull(),
-                    ])
-                        ->columns(),
-
-                    // Product list
-                    F\Repeater::make('deliveryLines')
-                        ->relationship()
-                        ->hiddenLabel()
-                        ->table(POProductForm::repeaterHeaders())
-                        ->schema([
-                            ...POProductForm::configure(new Schema())->getComponents(),
-                        ])
-                        ->compact()
-                        ->addActionLabel(__('Add Product'))
-
-                ])
-                ->itemLabel(__('Shipment'))
-                ->itemNumbers()
-                ->addActionLabel(__('Add Shipment'))
-                // ->collapsible()
+                ->table(POProductForm::repeaterHeaders())
+                ->schema(POProductForm::formSchema())
+                ->addActionLabel(__('Add Product'))
                 ->columns(1)
                 ->defaultItems(1)
                 ->minItems(1)
+                ->compact()
                 ->columnSpanFull(),
         ];
     }

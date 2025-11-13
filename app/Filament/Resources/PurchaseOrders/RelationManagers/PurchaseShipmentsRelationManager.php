@@ -85,24 +85,22 @@ class PurchaseShipmentsRelationManager extends RelationManager
             ->pluralModelLabel(__('Shipments'))
             ->headerActions([
                 A\CreateAction::make()
-                    ->after(function (PurchaseShipment $record): void {
-                        $this->sync($record->id);
-                    })
+                    ->after(fn(PurchaseShipment $record) => $this->afterSave($record->id))
                     ->disabled(fn(): bool => $this->getOwnerRecord()->order_number == null)
                     ->modal()->slideOver(),
             ])
             ->recordActions([
                 A\EditAction::make()
-                    ->after(function (PurchaseShipment $record): void {
-                        $this->sync($record->id);
-                    })
+                    ->after(fn(PurchaseShipment $record) => $this->afterSave($record->id))
                     ->modal()->slideOver(),
 
-                A\DeleteAction::make(),
+                A\DeleteAction::make()
+                    ->after(fn() => app(\App\Services\PurchaseOrder\PurchaseOrderService::class)
+                        ->syncOrderInfo($this->getOwnerRecord()->id)),
             ]);
     }
 
-    public function sync(int $id): void
+    public function afterSave(int $id): void
     {
         app(PurchaseShipmentService::class)->syncShipmentInfo($id);
         $this->dispatch('refresh-order-status');

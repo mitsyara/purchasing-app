@@ -5,7 +5,6 @@ namespace App\Filament\Resources\PurchaseOrders\Schemas;
 use App\Filament\Resources\Contacts\Schemas\ContactForm;
 use App\Filament\Schemas\POProductForm;
 use App\Models\PurchaseOrder;
-use App\Services\PurchaseOrder\PurchaseOrderService;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 
@@ -259,14 +258,14 @@ class PurchaseOrderForm
                         ->label(__('Generate Order Number'))
                         ->icon(Heroicon::OutlinedPlay)
                         ->action(function (callable $set, callable $get, ?PurchaseOrder $record) {
-                            $purchaseOrderService = app(PurchaseOrderService::class);
                             // Nếu chưa có date, set date là hôm nay
                             if ($get('company_id') && $get('supplier_id')) {
                                 if (!$get('order_date')) $set('order_date', today());
                             }
 
+                            $service = app(\App\Services\PurchaseOrder\PurchaseOrderService::class);
                             // Tạo số order
-                            $orderNumber = $purchaseOrderService->generateOrderNumber([
+                            $orderNumber = $service->generateOrderNumber([
                                 'company_id' => $get('company_id'),
                                 'order_date' => $get('order_date'),
                                 'supplier_id' => $get('supplier_id'),
@@ -313,7 +312,7 @@ class PurchaseOrderForm
 
             F\Select::make('currency')
                 ->label(__('Currency'))
-                ->options(fn() => \App\Models\Country::whereIsFav(true)->pluck('curr_name', 'curr_code'))
+                ->options(fn() => \App\Models\Country::whereIsFav(true)->pluck('curr_code', 'curr_code'))
                 ->default(fn() => 'USD')
                 ->required(),
 

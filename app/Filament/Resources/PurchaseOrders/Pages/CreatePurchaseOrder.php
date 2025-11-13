@@ -23,9 +23,7 @@ class CreatePurchaseOrder extends CreateRecord
         $record = $this->getRecord();
 
         // Log the user who created the record
-        $record->updateQuietly([
-            'created_by' => auth()->id(),
-        ]);
+        $record->updateQuietly(['created_by' => auth()->id()]);
 
         // Use service to handle business logic
         app(PurchaseOrderService::class)->syncOrderInfo($record->id);

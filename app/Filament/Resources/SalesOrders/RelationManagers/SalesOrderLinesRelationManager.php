@@ -1,24 +1,22 @@
 <?php
 
-namespace App\Filament\Resources\PurchaseOrders\RelationManagers;
+namespace App\Filament\Resources\SalesOrders\RelationManagers;
 
 use App\Filament\Schemas\POProductForm;
-use App\Services\PurchaseOrder\PurchaseOrderService;
 use Filament\Resources\RelationManagers\RelationManager;
-
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 
 use Filament\Tables\Columns as T;
-use Filament\Actions as A;
+use Filament\Schemas\Components as S;
 use Filament\Forms\Components as F;
+use Filament\Actions as A;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
-class PurchaseOrderLinesRelationManager extends RelationManager
+class SalesOrderLinesRelationManager extends RelationManager
 {
-    protected static string $relationship = 'purchaseOrderLines';
+    protected static string $relationship = 'salesOrderLines';
 
     public static function getTitle(Model $ownerRecord, string $pageClass): string
     {
@@ -38,6 +36,8 @@ class PurchaseOrderLinesRelationManager extends RelationManager
 
     public function table(Table $table): Table
     {
+        $currency = $this->getOwnerRecord()->currency ?? 'VND';
+
         return $table
             ->modelLabel(fn(): string => __('Product'))
             ->pluralModelLabel(static::title())
@@ -45,9 +45,9 @@ class PurchaseOrderLinesRelationManager extends RelationManager
                 fn(Builder $query): Builder
                 => $query
                     ->with(['product', 'assortment'])
-                    ->leftJoin('products', 'purchase_order_lines.product_id', '=', 'products.id')
-                    ->leftJoin('assortments', 'purchase_order_lines.assortment_id', '=', 'assortments.id')
-                    ->selectRaw('purchase_order_lines.*, COALESCE(products.product_description, assortments.assortment_name) as combined_product')
+                    ->leftJoin('products', 'sales_order_lines.product_id', '=', 'products.id')
+                    ->leftJoin('assortments', 'sales_order_lines.assortment_id', '=', 'assortments.id')
+                    ->selectRaw('sales_order_lines.*, COALESCE(products.product_description, assortments.assortment_name) as combined_product')
             )
             ->columns([
                 __index(),
@@ -62,26 +62,26 @@ class PurchaseOrderLinesRelationManager extends RelationManager
                     ->sortable(),
 
                 T\TextColumn::make('unit_price')
-                    ->money(fn($record) => $record->currency)
+                    ->money($currency)
                     ->sortable(),
 
                 T\TextColumn::make('display_contract_price')
                     ->label(__('Contract price'))
-                    ->money(fn($record) => $record->currency)
+                    ->money($currency)
                     ->sortable(),
 
                 T\TextColumn::make('value')
-                    ->money(fn($record) => $record->currency)
+                    ->money($currency)
                     ->sortable(),
                 T\TextColumn::make('contract_value')
-                    ->money(fn($record) => $record->currency)
+                    ->money($currency)
                     ->sortable(),
 
             ])
             ->filters([
                 //
             ])
-             ->headerActions([
+            ->headerActions([
                 A\CreateAction::make()
                     ->after(fn() => $this->syncAfterSave()),
             ])
@@ -95,7 +95,7 @@ class PurchaseOrderLinesRelationManager extends RelationManager
 
     public function syncAfterSave(): void
     {
-        $purchaseOrder = $this->getOwnerRecord();
-        app(\App\Services\PurchaseOrder\PurchaseOrderService::class)->syncOrderInfo($purchaseOrder->id);
+        $salesOrder = $this->getOwnerRecord();
+        app(\App\Services\SalesOrder\SalesOrderService::class)->syncOrderInfo($salesOrder->id);
     }
 }

@@ -11,6 +11,7 @@
     "require": {
         "php": "^8.2",
         "achyutn/filament-log-viewer": "^1.5",
+        "bezhansalleh/filament-language-switch": "^4.0",
         "bezhansalleh/filament-shield": "^4.0",
         "defstudio/filament-searchable-input": "^4.0",
         "filament/filament": "^4.0",

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('sales_delivery_schedules', function (Blueprint $table) {
             $table->id();
             $table->foreignId('sales_order_id')->nullable()->constrained('sales_orders')->cascadeOnDelete();
+            $table->foreignId('export_warehouse_id')->nullable()->constrained('warehouses')->nullOnDelete();
             $table->string('delivery_status')->nullable();
             $table->date('from_date')->nullable();
             $table->date('to_date')->nullable();

@@ -6,7 +6,6 @@ use App\Filament\Clusters\Settings\Resources\Assortments\Pages\ManageAssortments
 use App\Filament\Clusters\Settings\SettingsCluster;
 use App\Filament\Tables\ProductTable;
 use App\Models\Assortment;
-use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -22,7 +21,6 @@ use Filament\Forms\Components as F;
 use Filament\Actions as A;
 use Filament\Schemas\Components as S;
 use Illuminate\Database\Eloquent\Builder;
-use UnitEnum;
 
 class AssortmentResource extends Resource
 {
@@ -30,13 +28,13 @@ class AssortmentResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBookmark;
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedBookmark;
 
     protected static ?string $cluster = SettingsCluster::class;
 
     protected static bool $shouldRegisterNavigation = false;
 
-    public static function getNavigationGroup(): string|UnitEnum|null
+    public static function getNavigationGroup(): string|\UnitEnum|null
     {
         return __('Product Settings');
     }

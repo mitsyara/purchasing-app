@@ -17,6 +17,10 @@ return new class extends Migration
             $table->foreignId('assortment_id')->nullable()->constrained('assortments')->cascadeOnDelete();
             $table->foreignId('product_id')->nullable()->constrained('products')->cascadeOnDelete();
             $table->decimal('qty', 15, 3)->nullable();
+            $table->decimal('unit_price', 15, 3)->nullable();
+            $table->decimal('contract_price', 15, 3)->nullable();
+            $table->decimal('value', 24, 6)->storedAs('qty * unit_price');
+            $table->decimal('contract_value', 24, 6)->storedAs('qty * COALESCE(contract_price, unit_price)');
             $table->longText('notes')->nullable();
             $table->timestamps();
         });

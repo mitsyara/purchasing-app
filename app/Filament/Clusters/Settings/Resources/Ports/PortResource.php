@@ -7,7 +7,6 @@ use App\Enums\RegionEnum;
 use App\Filament\Clusters\Settings\Resources\Ports\Pages\ManagePorts;
 use App\Filament\Clusters\Settings\SettingsCluster;
 use App\Models\Port;
-use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -21,7 +20,6 @@ use Filament\Forms\Components as F;
 use Filament\Schemas\Components as S;
 use Filament\Tables\Columns as T;
 use Filament\Tables\Filters as TF;
-use UnitEnum;
 
 class PortResource extends Resource
 {
@@ -29,11 +27,11 @@ class PortResource extends Resource
 
     protected static ?int $navigationSort = 13;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMapPin;
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedMapPin;
 
     protected static ?string $cluster = SettingsCluster::class;
 
-    public static function getNavigationGroup(): string|UnitEnum|null
+    public static function getNavigationGroup(): string|\UnitEnum|null
     {
         return __('Company Settings');
     }

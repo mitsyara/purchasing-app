@@ -54,7 +54,7 @@ class PurchaseOrderService
             if (!isset($order->order_number) || empty($order->order_number)) {
                 $orderNumber = $this->generateOrderNumber([
                     'company_id' => $order->company_id,
-                    'order_date' => $order->order_date ?? today()->format('Y-m-d'),
+                    'order_date' => $order->order_date?->format('Y-m-d') ?? today()->format('Y-m-d'),
                     'supplier_id' => $order->supplier_id,
                 ]);
 
@@ -122,17 +122,14 @@ class PurchaseOrderService
      */
     public function calculateOrderTotal(PurchaseOrder $order): float
     {
-        return $order->purchaseOrderLines
-            ->sum(fn(PurchaseOrderLine $line) => $line->qty * $line->unit_price);
+        return $order->purchaseOrderLines()->sum('value');
     }
     /**
      * Tính tổng giá trị hợp đồng order
      */
     public function calculateContractValue(PurchaseOrder $order): ?float
     {
-        return $order->purchaseOrderLines
-            ->sum(fn(PurchaseOrderLine $line)
-            => $line->qty * ($line->contract_price ?? $line->unit_price));
+        return $order->purchaseOrderLines()->sum('contract_value');
     }
 
     /**
@@ -152,13 +149,23 @@ class PurchaseOrderService
         $prefix = 'PO-' . $data['company_id'];
         $date = Carbon::createFromFormat('Y-m-d', $data['order_date']);
         $date = $date->format('ymd');
-        // $supplierId = str_pad($data['supplier_id'], 3, '0', STR_PAD_LEFT);
-        $supplierId = $data['supplier_id'];
+        // $partnerId = str_pad($data['supplier_id'], 3, '0', STR_PAD_LEFT);
+        $partnerId = $data['supplier_id'];
 
-        $code = "{$prefix}{$date}/{$supplierId}.";
+        $baseCode = "{$prefix}{$date}/{$partnerId}";
 
-        // Tìm số thứ tự cuối cùng trong ngày
-        $lastOrder = PurchaseOrder::where('order_number', 'LIKE', "{$prefix}{$date}%")
+        // Kiểm tra xem mã cơ bản đã tồn tại chưa
+        $existingBase = PurchaseOrder::where('order_number', $baseCode)
+            ->when($orderId, fn($query) => $query->where('id', '!=', $orderId))
+            ->exists();
+
+        if (!$existingBase) {
+            // Nếu chưa tồn tại mã cơ bản => dùng luôn mã này
+            return $baseCode;
+        }
+
+        // Nếu đã tồn tại => tìm hậu tố lớn nhất để +1
+        $lastOrder = PurchaseOrder::where('order_number', 'LIKE', "{$baseCode}.%")
             ->when($orderId, fn($query) => $query->where('id', '!=', $orderId))
             ->orderBy('order_number', 'desc')
             ->first();
@@ -166,11 +173,13 @@ class PurchaseOrderService
         if (!$lastOrder) {
             $sequence = 1;
         } else {
-            $lastSequence = (int) substr($lastOrder->supplier_order_no, -3);
+            // Tách hậu tố sau dấu chấm cuối
+            $parts = explode('.', $lastOrder->order_number);
+            $lastSequence = isset($parts[1]) ? (int) $parts[1] : 0;
             $sequence = $lastSequence + 1;
         }
 
-        return $code . str_pad($sequence, 3, '0', STR_PAD_LEFT);
+        return $baseCode . str_pad($sequence, 3, '0', STR_PAD_LEFT);
     }
 
     /**

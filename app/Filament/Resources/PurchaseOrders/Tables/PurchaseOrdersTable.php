@@ -139,8 +139,10 @@ class PurchaseOrdersTable
                                 fn(PurchaseOrder $record) =>
                                 app(PurchaseOrderService::class)->cancelOrder($record)
                             )
-                            ->disabled(fn(PurchaseOrder $record): bool
-                            => $record->order_status === \App\Enums\OrderStatusEnum::Canceled),
+                            ->disabled(fn(PurchaseOrder $record): bool => in_array($record->order_status, [
+                                \App\Enums\OrderStatusEnum::Completed,
+                                \App\Enums\OrderStatusEnum::Canceled,
+                            ])),
                     ])
                         ->dropdown(false),
 

@@ -21,7 +21,7 @@ class SalesOrderResource extends Resource
 
     protected static string|\UnitEnum|null $navigationGroup = 'sales';
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 20;
 
     public static function form(Schema $schema): Schema
     {
@@ -36,7 +36,8 @@ class SalesOrderResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\SalesOrderLinesRelationManager::class,
+            RelationManagers\DeliverySchedulesRelationManager::class,
         ];
     }
 

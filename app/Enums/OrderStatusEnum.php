@@ -2,7 +2,6 @@
 
 namespace App\Enums;
 
-use BackedEnum;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
@@ -12,8 +11,8 @@ enum OrderStatusEnum: string implements HasLabel, HasIcon, HasColor
 {
     case Draft = 'draft';
     case Inprogress = 'inprogress';
-    case Canceled = 'canceled';
     case Completed = 'completed';
+    case Canceled = 'canceled';
 
     public function getLabel(): string|Htmlable|null
     {
@@ -25,7 +24,7 @@ enum OrderStatusEnum: string implements HasLabel, HasIcon, HasColor
         };
     }
 
-    public function getIcon(): string|BackedEnum|null
+    public function getIcon(): string|\BackedEnum|null
     {
         return match ($this) {
             self::Draft => 'heroicon-o-document-text',

@@ -244,7 +244,7 @@ class ProjectForm
 
             F\Select::make('currency')
                 ->label(__('Currency'))
-                ->options(fn() => \App\Models\Country::whereIsFav(true)->pluck('curr_name', 'curr_code'))
+                ->options(fn() => \App\Models\Country::whereIsFav(true)->pluck('curr_code', 'curr_code'))
                 ->default(fn() => 'USD')
                 ->required(),
 

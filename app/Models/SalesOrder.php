@@ -6,6 +6,7 @@ use App\Traits\HasPayment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class SalesOrder extends Model
 {
@@ -122,6 +123,18 @@ class SalesOrder extends Model
     public function deliverySchedules(): HasMany
     {
         return $this->hasMany(SalesDeliverySchedule::class, 'sales_order_id');
+    }
+
+    public function deliveryScheduleLines(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            SalesDeliveryScheduleLine::class,
+            SalesDeliverySchedule::class,
+            'sales_order_id', // Foreign key on the delivery schedules table...
+            'sales_delivery_schedule_id', // Foreign key on the delivery schedule lines table...
+            'id', // Local key on the sales orders table...
+            'id' // Local key on the delivery schedules table...
+        );
     }
 
     // Edit history

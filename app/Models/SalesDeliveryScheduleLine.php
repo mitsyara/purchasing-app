@@ -20,11 +20,17 @@ class SalesDeliveryScheduleLine extends Model
         'assortment_id',
         'product_id',
         'qty',
+        'unit_price',
+        'contract_price',
         'notes',
     ];
 
     protected $casts = [
         'qty' => 'decimal:3',
+        'unit_price' => 'decimal:3',
+        'contract_price' => 'decimal:3',
+        'value' => 'decimal:6',
+        'contract_value' => 'decimal:6',
     ];
 
     public function deliverySchedule(): BelongsTo
@@ -40,6 +46,14 @@ class SalesDeliveryScheduleLine extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class, 'product_id');
+    }
+
+    public function salesOrder(): BelongsToThrough
+    {
+        return $this->belongsToThrough(
+            SalesOrder::class,
+            SalesDeliverySchedule::class,
+        );
     }
 
     public function company(): BelongsToThrough

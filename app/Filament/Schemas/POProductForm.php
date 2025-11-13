@@ -3,7 +3,7 @@
 namespace App\Filament\Schemas;
 
 use App\Filament\Clusters\Settings\Resources\Products\ProductResource;
-use App\Models\{AssortmentProduct, Product, ProjectItem, PurchaseOrderLine, PurchaseOrder, Project};
+use App\Models\{AssortmentProduct, Product, ProjectItem, PurchaseOrderLine, PurchaseOrder, Project, SalesOrder};
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\{Schema, JsContent};
 use Filament\Support\Icons\Heroicon;
@@ -61,8 +61,7 @@ class POProductForm
                 ->preload()
                 ->disableOptionsWhenSelectedInSiblingRepeaterItems()
                 ->afterStateUpdatedJs(self::clearOppositeField('product_id'))
-                ->columnSpanFull()
-                ->requiredWithout(['product_id']),
+                ->columnSpanFull(),
 
             // Product select
             F\Select::make('product_id')
@@ -90,7 +89,10 @@ class POProductForm
                 ->editOptionForm(ProductResource::form(new Schema())->getComponents())
                 ->afterStateUpdatedJs(self::clearOppositeField('assortment_id'))
                 ->columnSpanFull()
-                ->requiredWithout(['assortment_id']),
+                ->requiredWithout(['assortment_id'])
+                ->validationMessages([
+                    'required_without' => __('At least one assortment or product must be selected.'),
+                ]),
 
             // Quantity
             __number_field('qty')
@@ -114,6 +116,7 @@ class POProductForm
     {
         return match (true) {
             $order instanceof PurchaseOrder => $order->purchaseOrderLines(),
+            $order instanceof SalesOrder => $order->salesOrderLines(),
             $order instanceof Project => $order->projectItems(),
             default => collect(),
         };

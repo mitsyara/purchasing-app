@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -20,6 +21,7 @@ class SalesDeliverySchedule extends Model
     protected $fillable = [
         'sales_order_id',
         'delivery_status',
+        'export_warehouse_id',
         'from_date',
         'to_date',
         'delivery_address',
@@ -43,6 +45,11 @@ class SalesDeliverySchedule extends Model
             Company::class,
             SalesOrder::class,
         );
+    }
+
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class, 'export_warehouse_id');
     }
 
     public function customer(): BelongsToThrough
@@ -75,5 +82,29 @@ class SalesDeliverySchedule extends Model
     public function salesShipmentDeliveries(): HasMany
     {
         return $this->hasMany(SalesDeliveryShipment::class, 'sales_delivery_schedule_id');
+    }
+
+    public function etd(): Attribute
+    {
+        return Attribute::get(function () {
+            if ($this->from_date && $this->to_date && $this->from_date != $this->to_date) {
+                return $this->from_date->format('d/m/Y') . '-' . $this->to_date->format('d/m/Y');
+            } elseif ($this->from_date) {
+                return $this->from_date->format('d/m/Y');
+            } elseif ($this->to_date) {
+                return $this->to_date->format('d/m/Y');
+            } else {
+                return null;
+            }
+        });
+    }
+
+    public function productList(): Attribute
+    {
+        return Attribute::get(
+            fn() => $this->deliveryLines
+                ->map(fn($line) => ($line->product?->product_name ?? $line->assortment?->assortment_name)
+                    . ' : ' . __number_string_converter($line->qty))
+        );
     }
 }

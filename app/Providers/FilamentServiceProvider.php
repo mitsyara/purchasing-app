@@ -25,6 +25,21 @@ class FilamentServiceProvider extends ServiceProvider
         $timezone = config('app.timezone', 'UTC');
         \Filament\Support\Facades\FilamentTimezone::set($timezone);
 
+        // Language Switcher
+        \BezhanSalleh\LanguageSwitch\LanguageSwitch::configureUsing(function (\BezhanSalleh\LanguageSwitch\LanguageSwitch $switch): void {
+            // Return only the locales that are available in your application
+            $installedLocales = \LaravelLang\Locales\Facades\Locales::installed()
+                ->pluck('code')->toArray();
+            $labels = \LaravelLang\Locales\Facades\Locales::installed()
+                ->pluck('native', 'code')->toArray();
+
+            $switch
+                ->locales($installedLocales)
+                ->labels($labels)
+                ->circular()
+                ->renderHook(\Filament\View\PanelsRenderHook::USER_MENU_BEFORE);
+        });
+
         // Custom Js and CSS
         // \Filament\Support\Facades\FilamentAsset::register([
         //     \Filament\Support\Assets\Js::make('custom-script', __DIR__ . '/../../resources/js/custom.js'),

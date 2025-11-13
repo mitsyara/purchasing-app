@@ -11,18 +11,12 @@ class SalesOrderLine extends Model
 
     protected $fillable = [
         'sales_order_id',
-        'company_id',
-        'warehouse_id',
         'assortment_id',
         'product_id',
         'qty',
         'unit_price',
-        'currency',
         'contract_price',
         'extra_cost',
-        'display_contract_price',
-        'value',
-        'contract_value',
         'notes',
     ];
 
@@ -31,7 +25,6 @@ class SalesOrderLine extends Model
         'unit_price' => 'decimal:3',
         'contract_price' => 'decimal:3',
         'extra_cost' => 'decimal:3',
-        'display_contract_price' => 'decimal:6',
         'value' => 'decimal:6',
         'contract_value' => 'decimal:6',
     ];

@@ -16,4 +16,12 @@ class EditSalesOrder extends EditRecord
             DeleteAction::make(),
         ];
     }
+
+    protected function afterSave(): void
+    {
+        // Get Purchase Order
+        $record = $this->getRecord();
+        // Call Services to update project totals
+        app(\App\Services\SalesOrder\SalesOrderService::class)->syncOrderInfo($record->id);
+    }
 }

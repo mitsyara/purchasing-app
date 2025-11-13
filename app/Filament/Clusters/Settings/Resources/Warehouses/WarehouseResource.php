@@ -27,11 +27,11 @@ class WarehouseResource extends Resource
 
     protected static ?int $navigationSort = 12;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedHomeModern;
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedHomeModern;
 
     protected static ?string $cluster = SettingsCluster::class;
 
-    public static function getNavigationGroup(): string|UnitEnum|null
+    public static function getNavigationGroup(): string|\UnitEnum|null
     {
         return __('Company Settings');
     }

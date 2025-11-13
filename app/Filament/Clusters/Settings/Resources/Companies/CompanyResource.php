@@ -5,7 +5,6 @@ namespace App\Filament\Clusters\Settings\Resources\Companies;
 use App\Filament\Clusters\Settings\Resources\Companies\Pages\ManageCompanies;
 use App\Filament\Clusters\Settings\SettingsCluster;
 use App\Models\Company;
-use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -19,7 +18,6 @@ use Filament\Schemas\Components as S;
 use Filament\Forms\Components as F;
 use Filament\Tables\Columns as T;
 use Filament\Tables\Filters as TF;
-use UnitEnum;
 
 class CompanyResource extends Resource
 {
@@ -27,11 +25,11 @@ class CompanyResource extends Resource
 
     protected static ?int $navigationSort = 11;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBriefcase;
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedBriefcase;
 
     protected static ?string $cluster = SettingsCluster::class;
 
-    public static function getNavigationGroup(): string|UnitEnum|null
+    public static function getNavigationGroup(): string|\UnitEnum|null
     {
         return __('Company Settings');
     }
