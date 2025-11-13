@@ -75,12 +75,19 @@ class DeliverySchedulesRelationManager extends RelationManager
                     ->sortable()
                     ->toggleable(),
 
-                T\TextColumn::make('delivery_address'),
+                T\TextColumn::make('customer.contact_name')
+                    ->description(fn($record) => $record->delivery_address)
+                    ->label(__('Delivery Address'))
+                    ->sortable()
+                    ->toggleable(),
 
                 T\TextColumn::make('product_list')
                     ->label(__('Products'))
                     ->listWithLineBreaks()
                     ->bulleted()
+                    ->searchable(query: fn(Builder $query, string $search): Builder
+                    => $query->whereHas('products', fn(Builder $q) => $q->where('product_description', 'like', "%{$search}%"))
+                        ->orWhereHas('assortments', fn(Builder $q) => $q->where('assortment_name', 'like', "%{$search}%")))
                     ->toggleable(),
             ])
             ->filters([

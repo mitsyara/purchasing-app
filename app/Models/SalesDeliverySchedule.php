@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Znck\Eloquent\Relations\BelongsToThrough;
 use Znck\Eloquent\Traits\BelongsToThrough as HasBelongsToThrough;
 
@@ -60,6 +61,30 @@ class SalesDeliverySchedule extends Model
             foreignKeyLookup: [
                 Contact::class => 'customer_id',
             ]
+        );
+    }
+
+    public function products(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Product::class,
+            SalesDeliveryScheduleLine::class,
+            'sales_delivery_schedule_id', // foreign key trên bảng trung gian
+            'id', // foreign key trên bảng product (mặc định)
+            'id', // local key trên bảng SalesDeliverySchedule
+            'product_id' // local key trên bảng trung gian
+        );
+    }
+
+    public function assortments(): HasManyThrough
+    {
+        return $this->hasManyThrough(
+            Assortment::class,
+            SalesDeliveryScheduleLine::class,
+            'sales_delivery_schedule_id', // foreign key trên bảng trung gian
+            'id', // foreign key trên bảng product (mặc định)
+            'id', // local key trên bảng SalesDeliverySchedule
+            'assortment_id' // local key trên bảng trung gian
         );
     }
 
