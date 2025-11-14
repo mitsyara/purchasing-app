@@ -218,7 +218,7 @@ class ValidationService
         $rules = [
             'warehouse_id' => 'required|exists:warehouses,id',
             'product_id' => 'required|exists:products,id',
-            'transaction_type' => 'required|in:import,export',
+            'transaction_direction' => 'required|in:import,export',
             'qty' => 'required|numeric|min:0.01',
             'io_price' => 'nullable|numeric|min:0',
             'io_currency' => 'nullable|string|size:3',
@@ -229,8 +229,8 @@ class ValidationService
             'warehouse_id.exists' => 'Kho hàng không tồn tại.',
             'product_id.required' => 'Sản phẩm là bắt buộc.',
             'product_id.exists' => 'Sản phẩm không tồn tại.',
-            'transaction_type.required' => 'Loại giao dịch là bắt buộc.',
-            'transaction_type.in' => 'Loại giao dịch không hợp lệ.',
+            'transaction_direction.required' => 'Loại giao dịch là bắt buộc.',
+            'transaction_direction.in' => 'Loại giao dịch không hợp lệ.',
             'qty.required' => 'Số lượng là bắt buộc.',
             'qty.min' => 'Số lượng phải lớn hơn 0.',
         ];

@@ -6,7 +6,7 @@ use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
 
-enum InventoryTransactionTypeEnum: string implements HasLabel, HasIcon, HasColor
+enum InventoryTransactionDirectionEnum: string implements HasLabel, HasIcon, HasColor
 {
     case Import = 'import';
     case Export = 'export';

@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('sales_shipments', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('customer_id')->constrained('contacts')->cascadeOnDelete();
+            $table->foreignId('warehouse_id')->constrained('warehouses')->cascadeOnDelete();
             $table->string('shipment_no')->nullable();
             $table->string('shipment_status')->nullable();
             $table->date('atd')->nullable();

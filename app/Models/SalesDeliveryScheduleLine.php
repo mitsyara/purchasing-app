@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Znck\Eloquent\Relations\BelongsToThrough;
@@ -90,5 +91,19 @@ class SalesDeliveryScheduleLine extends Model
                 Contact::class => 'customer_id',
             ]
         );
+    }
+
+    // Attributes
+
+    /**
+     * Schedule and date
+     * "{$record->salesOrder->order_number} ({$record->etd})"
+     */
+    public function label(): Attribute
+    {
+        return Attribute::get(function(): string{
+            $productPrefx = $this->assortment?->assortment_name ?? $this->product?->product_name ?? 'N/A';
+            return "{$productPrefx} - {$this->deliverySchedule->salesOrder->order_number} ({$this->deliverySchedule->etd})";
+        });
     }
 }

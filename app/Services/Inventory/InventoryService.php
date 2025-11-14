@@ -4,7 +4,7 @@ namespace App\Services\Inventory;
 
 use App\Models\InventoryTransaction;
 use App\Models\PurchaseShipmentLine;
-use App\Enums\InventoryTransactionTypeEnum;
+use App\Enums\InventoryTransactionDirectionEnum;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -44,7 +44,7 @@ class InventoryService
             'company_id' => $shipment->company_id,
             'warehouse_id' => $shipment->warehouse_id,
             'product_id' => $shipmentLine->product_id,
-            'transaction_type' => InventoryTransactionTypeEnum::Import->value,
+            'transaction_direction' => InventoryTransactionDirectionEnum::Import->value,
             'io_price' => $shipmentLine->unit_price,
             'io_currency' => $shipmentLine->currency,
             'break_price' => $shipmentLine->break_price,

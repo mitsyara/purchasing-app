@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 #[ObservedBy([\App\Observers\InventoryTransactionObserver::class])]
@@ -22,7 +24,7 @@ class InventoryTransaction extends Model
         'sourceable_type',
         'parent_id',
 
-        'transaction_type',
+        'transaction_direction',
         'transaction_date',
         'qty',
         'lot_no',
@@ -39,7 +41,7 @@ class InventoryTransaction extends Model
     ];
 
     protected $casts = [
-        'transaction_type' => \App\Enums\InventoryTransactionTypeEnum::class,
+        'transaction_direction' => \App\Enums\InventoryTransactionDirectionEnum::class,
         'transaction_date' => 'date',
         'mfg_date' => 'date',
         'exp_date' => 'date',
@@ -75,7 +77,35 @@ class InventoryTransaction extends Model
         return $this->morphTo();
     }
 
-    // Helpers
+    public function salesScheduleLines(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            SalesDeliveryScheduleLine::class,
+            'sales_shipment_transactions',
+            'inventory_transaction_id',
+            'sales_delivery_schedule_line_id'
+        );
+    }
+
+    // Attributes
+
+    public function lotDescription(): Attribute
+    {
+        return Attribute::get(function () {
+            $parts = [];
+            $parts[] = "{$this->loadMissing('product')->product->product_code}";
+            if ($this->lot_no) {
+                $parts[] = "Lot: {$this->lot_no}";
+            }
+            if ($this->mfg_date) {
+                $parts[] = "MFG: {$this->mfg_date->format('d/m/Y')}";
+            }
+            if ($this->exp_date) {
+                $parts[] = "EXP: {$this->exp_date->format('d/m/Y')}";
+            }
+            return implode(' | ', $parts);
+        });
+    }
 
     /**
      * Mark this transaction as checked.

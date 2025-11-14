@@ -5,13 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class SalesDeliveryShipment extends Pivot
+/**
+ * Pivot giữa Kế hoạch giao hàng và Lô hàng xuất kho (Lần giao hàng)
+ */
+class SalesDeliveryScheduleShipment extends Pivot
 {
     use \App\Traits\HasLoggedActivity;
 
     protected $table = 'sales_delivery_schedule_shipment';
-    public $incrementing = true;
-    public $timestamps = true;
 
     protected $fillable = [
         'sales_shipment_id',

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->foreignId('parent_id')->nullable()->constrained('inventory_transactions')->cascadeOnDelete();
 
             $table->morphs('sourceable');
-            $table->string('transaction_type')->nullable(); // e.g., 'in', 'out'
+            $table->string('transaction_direction')->nullable(); // e.g., 'in', 'out'
             $table->date('transaction_date')->nullable();
             $table->integer('qty');
             $table->string('lot_no')->nullable();

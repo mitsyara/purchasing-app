@@ -2,9 +2,13 @@
 
 namespace App\Models;
 
+use Attribute;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
+use Znck\Eloquent\Relations\BelongsToThrough;
 
 /**
  * Lần giao hàng thực tế (Đơn bán)
@@ -17,6 +21,9 @@ class SalesShipment extends Model
     use \App\Traits\HasInventoryTransactions;
 
     protected $fillable = [
+        'customer_id',
+        'warehouse_id',
+
         'shipment_no',
         'shipment_status',
         'atd',
@@ -35,6 +42,16 @@ class SalesShipment extends Model
         'shipment_status' => \App\Enums\ShipmentStatusEnum::class,
     ];
 
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class, 'warehouse_id');
+    }
+
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Contact::class, 'customer_id');
+    }
+
     public function deliverySchedules(): BelongsToMany
     {
         return $this->belongsToMany(
@@ -48,6 +65,6 @@ class SalesShipment extends Model
     }
     public function salesShipmentDeliveries(): HasMany
     {
-        return $this->hasMany(SalesDeliveryShipment::class, 'sales_shipment_id');
+        return $this->hasMany(SalesDeliveryScheduleShipment::class, 'sales_shipment_id');
     }
 }

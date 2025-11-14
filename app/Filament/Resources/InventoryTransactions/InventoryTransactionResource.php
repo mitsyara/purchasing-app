@@ -58,7 +58,7 @@ class InventoryTransactionResource extends Resource
             ->columns([
                 __index(),
 
-                T\TextColumn::make('transaction_type')
+                T\TextColumn::make('transaction_direction')
                     ->label('Type')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -97,9 +97,9 @@ class InventoryTransactionResource extends Resource
                 T\TextColumn::make('io_price')
                     ->label('In/Out Price')
                     ->money(fn(InventoryTransaction $record): string => $record->io_currency ?? 'VND')
-                    ->color(fn(InventoryTransaction $record): ?string => match ($record->transaction_type) {
-                        \App\Enums\InventoryTransactionTypeEnum::Import => 'danger',
-                        \App\Enums\InventoryTransactionTypeEnum::Export => 'info',
+                    ->color(fn(InventoryTransaction $record): ?string => match ($record->transaction_direction) {
+                        \App\Enums\InventoryTransactionDirectionEnum::Import => 'danger',
+                        \App\Enums\InventoryTransactionDirectionEnum::Export => 'info',
                         default => null,
                     })
                     ->sortable()
@@ -137,17 +137,17 @@ class InventoryTransactionResource extends Resource
             ->filters([
                 TF\BaseFilter::make('custom_filters')
                     ->schema([
-                        F\ToggleButtons::make('transaction_type')
+                        F\ToggleButtons::make('transaction_direction')
                             ->label('Transaction Type')
                             ->options([
                                 null => __('All'),
-                                \App\Enums\InventoryTransactionTypeEnum::Import->value => 'Import',
-                                \App\Enums\InventoryTransactionTypeEnum::Export->value => 'Export',
+                                \App\Enums\InventoryTransactionDirectionEnum::Import->value => 'Import',
+                                \App\Enums\InventoryTransactionDirectionEnum::Export->value => 'Export',
                             ])
                             ->colors([
                                 null => 'secondary',
-                                \App\Enums\InventoryTransactionTypeEnum::Import->value => 'success',
-                                \App\Enums\InventoryTransactionTypeEnum::Export->value => 'danger',
+                                \App\Enums\InventoryTransactionDirectionEnum::Import->value => 'success',
+                                \App\Enums\InventoryTransactionDirectionEnum::Export->value => 'danger',
                             ])
                             ->grouped(),
 
@@ -184,8 +184,8 @@ class InventoryTransactionResource extends Resource
                     ->query(function (Builder $query, array $data): Builder {
                         // Apply custom filtering logic based on form data
                         return $query
-                            ->when($data['transaction_type'] ?? null, fn(Builder $query, $type) =>
-                                $query->where('transaction_type', $type)
+                            ->when($data['transaction_direction'] ?? null, fn(Builder $query, $type) =>
+                                $query->where('transaction_direction', $type)
                             )
                             ->when($data['warehouse_id'] ?? null, fn(Builder $query, $warehouseIds) =>
                                 $query->whereIn('warehouse_id', $warehouseIds)

@@ -96,7 +96,7 @@ class SalesDeliverySchedule extends Model
     public function deliveryShipments(): BelongsToMany
     {
         return $this->belongsToMany(
-            SalesDeliveryShipment::class,
+            SalesDeliveryScheduleShipment::class,
             'sales_delivery_schedule_shipment',
             'sales_delivery_schedule_id',
             'sales_shipment_id',
@@ -106,7 +106,12 @@ class SalesDeliverySchedule extends Model
     }
     public function salesShipmentDeliveries(): HasMany
     {
-        return $this->hasMany(SalesDeliveryShipment::class, 'sales_delivery_schedule_id');
+        return $this->hasMany(SalesDeliveryScheduleShipment::class, 'sales_delivery_schedule_id');
+    }
+
+    public function label(): Attribute
+    {
+        return Attribute::get(fn() => trim("{$this->salesOrder->order_number} ({$this->etd})"));
     }
 
     public function etd(): Attribute

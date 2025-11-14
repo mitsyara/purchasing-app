@@ -13,7 +13,12 @@ class ManageSalesShipments extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->modal()->slideOver()
+                ->modalWidth(\Filament\Support\Enums\Width::FourExtraLarge)
+                ->mutateDataUsing(function (CreateAction $action, array $data) {
+                    dd($data);
+                }),
         ];
     }
 }
