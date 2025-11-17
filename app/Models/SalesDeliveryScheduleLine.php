@@ -5,8 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Znck\Eloquent\Relations\BelongsToThrough;
-use Znck\Eloquent\Traits\BelongsToThrough as TraitsBelongsToThrough;
+use Znck\Eloquent\Traits\BelongsToThrough as HasBelongsToThrough;
 
 /**
  * Danh sách hàng hoá trong kế hoạch giao hàng (đơn bán)
@@ -14,7 +16,8 @@ use Znck\Eloquent\Traits\BelongsToThrough as TraitsBelongsToThrough;
 class SalesDeliveryScheduleLine extends Model
 {
     use \App\Traits\HasLoggedActivity;
-    use TraitsBelongsToThrough;
+    use \App\Traits\HasCustomRecursiveQueryBuilder;
+    use HasBelongsToThrough;
 
     protected $fillable = [
         'sales_delivery_schedule_id',
@@ -91,6 +94,20 @@ class SalesDeliveryScheduleLine extends Model
                 Contact::class => 'customer_id',
             ]
         );
+    }
+
+    public function inventoryTransactions(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            InventoryTransaction::class,
+            'sales_shipment_transactions',
+            'sales_delivery_schedule_line_id',
+            'inventory_transaction_id'
+        )->withPivot(['qty']);
+    }
+    public function scheduleDeliveries(): HasMany
+    {
+        return $this->hasMany(SalesShipmentTransaction::class, 'sales_delivery_schedule_line_id');
     }
 
     // Attributes

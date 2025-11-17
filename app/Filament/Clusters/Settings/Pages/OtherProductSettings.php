@@ -30,6 +30,7 @@ class OtherProductSettings extends Page
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedSquares2x2;
 
     // vat, unit, packing
+    #[\Livewire\Attributes\Url]
     public ?string $activePanel = 'vat';
 
     protected function getHeaderActions(): array

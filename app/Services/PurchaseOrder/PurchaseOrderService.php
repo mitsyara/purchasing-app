@@ -30,6 +30,9 @@ class PurchaseOrderService
         // Cập nhật lại đơn hàng ngoại
         $order->is_foreign = $this->isForeign($order);
 
+        // Đồng bộ thông tin đến các line của order
+        $this->syncOrderLinesInfo($order);
+
         // Nếu có shipment => process order
         if ($order->purchaseShipments()->exists()) {
             $this->processOrder($order);
@@ -133,6 +136,20 @@ class PurchaseOrderService
     }
 
     /**
+     * Đồng bộ thông tin đến các line của order
+     */
+    public function syncOrderLinesInfo(PurchaseOrder $order): void
+    {
+        foreach ($order->purchaseOrderLines as $line) {
+            $line->update([
+                'company_id' => $order->company_id,
+                'warehouse_id' => $line->warehouse_id ?? $order->import_warehouse_id,
+                'currency' => $order->currency,
+            ]);
+        }
+    }
+
+    /**
      * Tạo số order tự động (PO-{companyId}{ymd}/{supplierId}.###)
      * Tìm theo prefix, pad số thứ tự 3 chữ số
      */
@@ -217,39 +234,4 @@ class PurchaseOrderService
         }
     }
 
-    // -------------------------- PURCHASE SHIPMENTs SERVICES --------------------------
-
-    /**
-     * Đồng bộ thông tin từ order sang tất cả các shipment của order
-     */
-    public function syncAllShipmentsInfo(PurchaseOrder $order): void
-    {
-        if ($order->purchaseShipments()->exists()) {
-            // Update thẳng từ DB, ko gọi model events
-            $order->purchaseShipments()->update([
-                'company_id' => $order->company_id,
-                'supplier_id' => $order->supplier_id,
-                'supplier_contract_id' => $order->supplier_contract_id,
-                'supplier_payment_id' => $order->supplier_payment_id,
-                'currency' => $order->currency,
-            ]);
-        }
-    }
-
-    // -------------------------- PURCHASE ORDER LINEs SERVICES --------------------------
-
-    /**
-     * Đồng bộ thông tin từ order sang tất cả các line của order
-     */
-    public function syncAllOrderLinesInfo(PurchaseOrder $order): void
-    {
-        if ($order->purchaseOrderLines()->exists()) {
-            // Update thẳng từ DB, ko gọi model events
-            $order->purchaseOrderLines()->update([
-                'company_id' => $order->company_id,
-                'import_warehouse_id' => $order->import_warehouse_id,
-                'currency' => $order->currency,
-            ]);
-        }
-    }
 }

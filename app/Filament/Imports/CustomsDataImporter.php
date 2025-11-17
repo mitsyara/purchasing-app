@@ -156,20 +156,20 @@ class CustomsDataImporter extends Importer
     public static function getCompletedNotificationBody(Import $import): string
     {
         $body = 'Your customs data import has completed and '
-            . number_format($import->successful_rows) . ' '
+            . __number_string_converter($import->successful_rows) . ' '
             . str('row')->plural($import->successful_rows) . ' imported.';
         if (app()->getLocale() === 'vi') {
             $body = 'Dữ liệu Hải quan đã được thêm Thành công. Có '
-                . number_format($import->successful_rows)
+                . __number_string_converter($import->successful_rows)
                 . ' bản ghi được thêm vào CSDL.';
         }
 
         if ($failedRowsCount = $import->getFailedRowsCount()) {
-            $body .= ' ' . number_format($failedRowsCount) . ' '
+            $body .= ' ' . __number_string_converter($failedRowsCount) . ' '
                 . str('row')->plural($failedRowsCount)
                 . ' failed to import.';
             if (app()->getLocale() === 'vi') {
-                $body .= ' ' . number_format($failedRowsCount)
+                $body .= ' ' . __number_string_converter($failedRowsCount)
                     . ' bị lỗi, không thể thêm vào CSDL.';
             }
         }

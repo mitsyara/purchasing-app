@@ -22,7 +22,7 @@ return new class extends Migration
             $table->morphs('sourceable');
             $table->string('transaction_direction')->nullable(); // e.g., 'in', 'out'
             $table->date('transaction_date')->nullable();
-            $table->integer('qty');
+            $table->decimal('qty', 15, 3);
             $table->string('lot_no')->nullable();
             $table->date('mfg_date')->nullable();
             $table->date('exp_date')->nullable();

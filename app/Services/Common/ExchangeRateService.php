@@ -271,7 +271,7 @@ class ExchangeRateService
         ];
         
         $format = $formatMap[strtoupper($currency)] ?? ['decimals' => 2, 'symbol' => '', 'position' => 'after'];
-        $formattedAmount = number_format($amount, $format['decimals'], '.', ',');
+        $formattedAmount = __number_string_converter($amount);
         
         return $format['position'] === 'before' 
             ? $format['symbol'] . $formattedAmount

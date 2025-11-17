@@ -2,7 +2,6 @@
 
 namespace App\Livewire\MyProfile;
 
-use App\Livewire\DisplayAppPin;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\Concerns\InteractsWithActions;
@@ -103,19 +102,12 @@ class PasswordSection extends Component implements HasSchemas, HasActions
                             ->disabled(fn(): bool => $this->user->lock_pin === null)
                             ->requiresConfirmation(),
 
-                        Action::make('setAppPin')
-                            ->schema([
-                                F\TextInput::make('app_pin')
-                                    ->label(__('Application PIN'))
-                                    ->mask('9999')
-                                    ->default(fn(): string => \Illuminate\Support\Facades\Cache::get('app_pin', '1234'))
-                                    ->required(),
-                            ])
-                            ->action(fn(array $data, \Livewire\Component $livewire) => $this->submitAppPin($data, $livewire))
-                            ->modal()->link()->outlined()->color('warning')
-                            ->modalWidth(Width::Small)
-                            ->icon(Heroicon::DevicePhoneMobile)
-                            ->disabled(fn(): bool => !auth()->user()->isAdmin())
+                        \Filament\Actions\Action::make('clearExportedFiles')
+                            ->label(__('Clear Exported Files'))->link()
+                            ->icon('heroicon-o-trash')->color('danger')
+                            ->action(fn() => $this->deleteFilamentExportedFiles())
+                            ->visible(fn() => optional($this->user->isAdmin()))
+                            ->requiresConfirmation(),
 
                     ])
                         ->columns(['default' => 4])
@@ -193,25 +185,42 @@ class PasswordSection extends Component implements HasSchemas, HasActions
         }
     }
 
-    public function submitAppPin(array $data, \Livewire\Component $livewire): void
+    public function deleteFilamentExportedFiles(): void
     {
-        $pin = $data['app_pin'];
-        $currentPin = \Illuminate\Support\Facades\Cache::get('app_pin', null);
-        if ($pin === $currentPin) {
-            Notification::make()
-                ->danger()
-                ->title(__('Cannot be the same as the current one'))
+        $directories = [
+            storage_path('app/private/filament_exports'),
+            storage_path('app/dlhq_exports'),
+        ];
+
+        $totalFiles = 0;
+
+        foreach ($directories as $dir) {
+            if (\Illuminate\Support\Facades\File::exists($dir)) {
+                $iterator = new \RecursiveIteratorIterator(
+                    new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS)
+                );
+
+                foreach ($iterator as $file) {
+                    if ($file->isFile()) {
+                        \Illuminate\Support\Facades\File::delete($file->getRealPath());
+                        $totalFiles++;
+                    }
+                }
+            }
+        }
+
+        if ($totalFiles === 0) {
+            \Filament\Notifications\Notification::make()
+                ->title(__('No files to delete'))
+                ->warning()
                 ->send();
             return;
         }
 
-        \Illuminate\Support\Facades\Cache::put('app_pin', $pin);
-
-        $this->dispatch('refresh-app-pin')->to(DisplayAppPin::class);
-
-        Notification::make()
+        \Filament\Notifications\Notification::make()
+            ->title(__('Deleted Exported Files'))
+            ->body(__('All :count files have been deleted.', ['count' => $totalFiles]))
             ->success()
-            ->title(__('Application PIN updated'))
             ->send();
     }
 

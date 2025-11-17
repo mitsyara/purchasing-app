@@ -40,19 +40,19 @@ class CustomsDataExporter extends Exporter
     public static function getCompletedNotificationBody(Export $export): string
     {
         $body = 'Your customs data export has completed and '
-            . number_format($export->successful_rows) . ' '
+            . __number_string_converter($export->successful_rows) . ' '
             . str('row')->plural($export->successful_rows) . ' exported.';
 
         if (app()->getLocale() === 'vi') {
             $body = 'Dữ liệu Hải quan đã được xuất Thành công. '
-                . number_format($export->successful_rows)
+                . __number_string_converter($export->successful_rows)
                 . ' bản ghi được xuất ra.';
         }
 
         if ($failedRowsCount = $export->getFailedRowsCount()) {
-            $body .= ' ' . number_format($failedRowsCount) . ' ' . str('row')->plural($failedRowsCount) . ' failed to export.';
+            $body .= ' ' . __number_string_converter($failedRowsCount) . ' ' . str('row')->plural($failedRowsCount) . ' failed to export.';
             if (app()->getLocale() === 'vi') {
-                $body .= ' ' . number_format($failedRowsCount) . ' bản ghi xuất thất bại.';
+                $body .= ' ' . __number_string_converter($failedRowsCount) . ' bản ghi xuất thất bại.';
             }
         }
 

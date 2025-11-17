@@ -18,9 +18,11 @@ use Znck\Eloquent\Relations\BelongsToThrough;
 class SalesShipment extends Model
 {
     use \App\Traits\HasLoggedActivity;
+    use \App\Traits\HasCustomRecursiveQueryBuilder;
     use \App\Traits\HasInventoryTransactions;
 
     protected $fillable = [
+        'company_id',
         'customer_id',
         'warehouse_id',
 
@@ -41,6 +43,11 @@ class SalesShipment extends Model
         'atd' => 'date',
         'shipment_status' => \App\Enums\ShipmentStatusEnum::class,
     ];
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class, 'company_id');
+    }
 
     public function warehouse(): BelongsTo
     {

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PurchaseShipments\Tables;
 
+use App\Filament\Resources\PurchaseOrders\RelationManagers\PurchaseShipmentsRelationManager;
 use Filament\Tables\Table;
 use App\Models\PurchaseShipment;
 use Filament\Support\Icons\Heroicon;
@@ -36,7 +37,7 @@ class PurchaseShipmentTable
                     ->searchable()
                     ->sortable()
                     ->hiddenOn([
-                        \App\Filament\Resources\PurchaseOrders\RelationManagers\PurchaseShipmentsRelationManager::class,
+                        PurchaseShipmentsRelationManager::class,
                     ]),
 
                 T\TextColumn::make('company.company_code')
@@ -44,7 +45,7 @@ class PurchaseShipmentTable
                     ->searchable()
                     ->sortable()
                     ->hiddenOn([
-                        \App\Filament\Resources\PurchaseOrders\RelationManagers\PurchaseShipmentsRelationManager::class,
+                        PurchaseShipmentsRelationManager::class,
                     ]),
 
                 T\TextColumn::make('supplier.contact_name')
@@ -52,7 +53,7 @@ class PurchaseShipmentTable
                     ->searchable()
                     ->sortable()
                     ->hiddenOn([
-                        \App\Filament\Resources\PurchaseOrders\RelationManagers\PurchaseShipmentsRelationManager::class,
+                        PurchaseShipmentsRelationManager::class,
                     ]),
 
                 __date_range_column('etd'),
@@ -105,10 +106,8 @@ class PurchaseShipmentTable
                     A\EditAction::make()
                         ->modal()->slideOver()
                         ->after(function (PurchaseShipment $record) {
-                            // Use new service instead of legacy service
-                            $purchaseShipmentService = app(PurchaseShipmentService::class);
-                            $purchaseShipmentService->syncShipmentInfo($record->id);
-                            
+                            app(PurchaseShipmentService::class)->syncShipmentInfo($record->id);
+
                             // Sync inventory lines from shipment lines
                             if ($record->purchaseShipmentLines()->exists()) {
                                 $inventoryService = app(InventoryService::class);

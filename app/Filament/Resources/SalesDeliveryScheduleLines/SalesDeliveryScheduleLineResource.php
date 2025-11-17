@@ -4,6 +4,7 @@ namespace App\Filament\Resources\SalesDeliveryScheduleLines;
 
 use App\Filament\Resources\SalesDeliveryScheduleLines\Pages\ManageSalesDeliveryScheduleLines;
 use App\Filament\Resources\SalesOrders\SalesOrderResource;
+use App\Filament\Resources\SalesShipments\SalesShipmentResource;
 use App\Models\SalesDeliverySchedule;
 use Filament\Actions as A;
 use Filament\Resources\Resource;
@@ -20,7 +21,7 @@ class SalesDeliveryScheduleLineResource extends Resource
 {
     protected static ?string $model = SalesDeliveryScheduleLine::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedTruck;
+    protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendar;
 
     protected static string|\UnitEnum|null $navigationGroup = 'sales';
 
@@ -37,6 +38,10 @@ class SalesDeliveryScheduleLineResource extends Resource
     {
         return __('Delivery Schedules');
     }
+    public static function getNavigationParentItem(): ?string
+    {
+        return SalesShipmentResource::getNavigationLabel();
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -52,6 +57,7 @@ class SalesDeliveryScheduleLineResource extends Resource
                 fn(Builder $query): Builder
                 => $query
                     ->with(['product', 'assortment'])
+                    ->withSum('scheduleDeliveries as shipped_qty', 'qty')
                     ->leftJoin('products', 'sales_delivery_schedule_lines.product_id', '=', 'products.id')
                     ->leftJoin('assortments', 'sales_delivery_schedule_lines.assortment_id', '=', 'assortments.id')
                     ->selectRaw('sales_delivery_schedule_lines.*, COALESCE(products.product_description, assortments.assortment_name) as combined_product')
@@ -100,6 +106,11 @@ class SalesDeliveryScheduleLineResource extends Resource
                     ->label(__('Quantity'))
                     ->numeric()
                     ->sortable(),
+
+                T\TextColumn::make('shipped_qty')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(),
 
                 T\TextColumn::make('unit_price')
                     ->label(__('Price'))

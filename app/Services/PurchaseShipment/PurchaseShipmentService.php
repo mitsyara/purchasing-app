@@ -32,6 +32,14 @@ class PurchaseShipmentService
         // Đồng bộ thông tin từ order sang shipment
         $this->syncInfoFromOrder($shipment);
 
+        // Đồng bộ thông tin đến các giao dịch con
+        $this->syncShipmentLinesInfo($shipment);
+
+        // Đồng bộ các line sang inventory
+        foreach ($shipment->purchaseShipmentLines as $line) {
+            $this->inventoryService->syncFromShipmentLine($line);
+        }
+
         // Tính toán lại tổng giá trị shipment
         $totalAmount = $this->calculateShipmentTotal($shipment);
         $totalContractValue = $this->calculateShipmentContractTotal($shipment);
@@ -65,6 +73,58 @@ class PurchaseShipmentService
         }
 
         $shipment->save();
+    }
+
+    /**
+     * Đồng bộ thông tin đến các line của shipment
+     * - Cần cập nhật các fields: company_id, currency, warehouse_id, exchange_rate từ shipment cha
+     * - Cần cập nhật các fields: purchase_order_line_id, purchase_order_id từ order cha (có hỗ trợ tìm gán theo assortment)
+     */
+    public function syncShipmentLinesInfo(PurchaseShipment $shipment): void
+    {
+        $shipment->load('purchaseShipmentLines');
+        if (!$shipment->purchaseShipmentLines()->exists()) return;
+
+        // Lấy danh sách orderline
+        $orderLines = $shipment->purchaseOrder->purchaseOrderLines()->get(['id', 'product_id', 'assortment_id']);
+
+        $shipment->loadMissing('purchaseShipmentLines')
+            ->purchaseShipmentLines()->update([
+                'company_id' => $shipment->company_id,
+                'currency' => $shipment->currency,
+                'warehouse_id' => $shipment->warehouse_id,
+                'exchange_rate' => $shipment->exchange_rate,
+            ]);
+
+        // Đồng bộ order_line_id, purchase_order_id
+        foreach ($shipment->purchaseShipmentLines as $line) {
+            $matchedOrderLine = null;
+            
+            // Ưu tiên 1: Tìm theo product_id trực tiếp
+            $matchedOrderLine = $orderLines->firstWhere('product_id', $line->product_id);
+            
+            // Ưu tiên 2: Nếu không tìm thấy, tìm theo assortment (many-to-many)
+            if (!$matchedOrderLine && $line->product_id) {
+                // Lấy danh sách assortment_id của product này
+                $productAssortmentIds = $line->product->assortments()->pluck('assortments.id')->toArray();
+                
+                // Tìm orderline có assortment_id trùng với bất kỳ assortment nào của product
+                foreach ($productAssortmentIds as $assortmentId) {
+                    $matchedOrderLine = $orderLines->firstWhere('assortment_id', $assortmentId);
+                    if ($matchedOrderLine) {
+                        break; // Tìm thấy rồi thì dừng
+                    }
+                }
+            }
+            
+            // Cập nhật nếu tìm thấy orderline phù hợp
+            if ($matchedOrderLine) {
+                $line->update([
+                    'purchase_order_line_id' => $matchedOrderLine->id,
+                    'purchase_order_id' => $shipment->purchase_order_id,
+                ]);
+            }
+        }
     }
 
     /**

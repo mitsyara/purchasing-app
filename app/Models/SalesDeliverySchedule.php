@@ -17,6 +17,7 @@ use Znck\Eloquent\Traits\BelongsToThrough as HasBelongsToThrough;
 class SalesDeliverySchedule extends Model
 {
     use \App\Traits\HasLoggedActivity;
+    use \App\Traits\HasCustomRecursiveQueryBuilder;
     use HasBelongsToThrough;
 
     protected $fillable = [

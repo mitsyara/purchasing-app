@@ -60,12 +60,6 @@ class FilamentServiceProvider extends ServiceProvider
             fn(): string => \Livewire\Livewire::mount('screen-lock-modal'),
         );
 
-        // App PIN
-        \Filament\Support\Facades\FilamentView::registerRenderHook(
-            \Filament\View\PanelsRenderHook::GLOBAL_SEARCH_AFTER,
-            fn(): string => \Livewire\Livewire::mount('display-app-pin'),
-        );
-
         // Configure Filament global settings
         \Filament\Tables\Table::configureUsing(function (\Filament\Tables\Table $table) {
             $table

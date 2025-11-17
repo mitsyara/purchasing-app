@@ -26,7 +26,8 @@ class UserActivities extends Page implements HasActions, HasSchemas
 
     protected static ?int $navigationSort = 1;
 
-    public string $activePanel = 'activities';
+    #[\Livewire\Attributes\Url]
+    public string $activeTab = 'activities';
 
     public static function getNavigationGroup(): string|\UnitEnum|null
     {

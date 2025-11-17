@@ -174,8 +174,18 @@ class UserResource extends Resource
                         }),
 
                     A\EditAction::make()
-                        ->after(function (\App\Models\User $record) {
-                            // Generate UUID
+                        ->before(function (User $record, array $data): array {
+                            if (($data['email_verified_at'] ?? false)
+                                && !$record->email_verified_at
+                            ) {
+                                $data['email_verified_at'] = now();
+                            }
+                            if (($data['phone_verified_at'] ?? false)
+                                && !$record->phone_verified_at
+                            ) {
+                                $data['phone_verified_at'] = now();
+                            }
+                            return $data;
                         }),
                     A\DeleteAction::make(),
                 ]),

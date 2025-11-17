@@ -14,7 +14,16 @@ class ManageUsers extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->before(function (array $data): array {
+                    if ($data['email_verified_at'] ?? false) {
+                        $data['email_verified_at'] = now();
+                    }
+                    if ($data['phone_verified_at'] ?? false) {
+                        $data['phone_verified_at'] = now();
+                    }
+                    return $data;
+                }),
         ];
     }
 }

@@ -1,21 +1,21 @@
-<x-filament-panels::page x-data="{ activePanel: $wire.entangle('activePanel') }">
+<x-filament-panels::page x-data="{ activeTab: $wire.entangle('activeTab') }">
 
     <x-filament::tabs label="Content tabs">
-        <x-filament::tabs.item x-on:click="activePanel = 'activities'" :alpine-active="'activePanel === \'activities\''">
+        <x-filament::tabs.item x-on:click="activeTab = 'activities'" :alpine-active="'activeTab === \'activities\''">
             Activities
         </x-filament::tabs.item>
 
-        <x-filament::tabs.item x-on:click="activePanel = 'authentication'" :alpine-active="'activePanel === \'authentication\''">
+        <x-filament::tabs.item x-on:click="activeTab = 'authentication'" :alpine-active="'activeTab === \'authentication\''">
             Authentication
         </x-filament::tabs.item>
     </x-filament::tabs>
 
     <div>
-        <div x-show="activePanel === 'activities'">
+        <div x-show="activeTab === 'activities'">
             <livewire:user-activity-log lazy />
         </div>
 
-        <div x-show="activePanel === 'authentication'">
+        <div x-show="activeTab === 'authentication'">
             <livewire:user-authentication-log lazy />
         </div>
     </div>

@@ -95,13 +95,6 @@ class PurchasingPanelProvider extends PanelProvider
                     })
                     ->visible(fn() => isset(auth()->user()->lock_pin))
                     ->requiresConfirmation(),
-
-                \Filament\Actions\Action::make('clearExportedFiles')
-                    ->label(__('Clear Exported Files'))
-                    ->icon('heroicon-o-trash')->color('danger')
-                    ->action(fn() => $this->deleteFilamentExportedFiles())
-                    ->visible(fn() => auth()->user()->isAdmin())
-                    ->requiresConfirmation(),
             ])
 
             ->discoverClusters(in: app_path('Filament/Clusters'), for: 'App\Filament\Clusters')
@@ -183,44 +176,5 @@ class PurchasingPanelProvider extends PanelProvider
                 $title => \Filament\Navigation\NavigationGroup::make()->label(__($label))
             ];
         })->toArray();
-    }
-
-    public function deleteFilamentExportedFiles(): void
-    {
-        $directories = [
-            storage_path('app/private/filament_exports'),
-            storage_path('app/dlhq_exports'),
-        ];
-
-        $totalFiles = 0;
-
-        foreach ($directories as $dir) {
-            if (\Illuminate\Support\Facades\File::exists($dir)) {
-                $iterator = new \RecursiveIteratorIterator(
-                    new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS)
-                );
-
-                foreach ($iterator as $file) {
-                    if ($file->isFile()) {
-                        \Illuminate\Support\Facades\File::delete($file->getRealPath());
-                        $totalFiles++;
-                    }
-                }
-            }
-        }
-
-        if ($totalFiles === 0) {
-            \Filament\Notifications\Notification::make()
-                ->title(__('No files to delete'))
-                ->warning()
-                ->send();
-            return;
-        }
-
-        \Filament\Notifications\Notification::make()
-            ->title(__('Deleted Exported Files'))
-            ->body(__('All :count files have been deleted.', ['count' => $totalFiles]))
-            ->success()
-            ->send();
     }
 }

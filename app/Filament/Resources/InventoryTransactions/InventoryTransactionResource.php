@@ -53,8 +53,19 @@ class InventoryTransactionResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn(Builder $query): Builder
-            => $query->with(['company', 'warehouse', 'product', 'checkedBy']))
+            ->modifyQueryUsing(
+                fn(Builder $query): Builder
+                => $query->with(['company', 'warehouse', 'product', 'checkedBy'])
+                    ->withSum('children as exported_qty', 'qty')
+                    ->addSelect([
+                        'inventory_transactions.*',
+                    ])
+                    ->selectRaw(
+                        'inventory_transactions.qty - COALESCE(
+                            (SELECT SUM(qty) FROM inventory_transactions children WHERE children.parent_id = inventory_transactions.id), 0
+                        ) as remaining_qty'
+                    )
+            )
             ->columns([
                 __index(),
 
@@ -66,13 +77,13 @@ class InventoryTransactionResource extends Resource
                 T\TextColumn::make('transaction_date')
                     ->label('Checked At')
                     ->date('d/m/Y')
-                    ->description(fn(InventoryTransaction $record): string => $record->checkedBy?->name)
+                    ->description(fn(InventoryTransaction $record): ?string => $record->checkedBy?->name)
                     ->sortable()
                     ->toggleable(),
 
                 T\TextColumn::make('warehouse.warehouse_name')
                     ->label('Warehouse')
-                    ->description(fn(InventoryTransaction $record): string => $record->company?->company_code)
+                    ->description(fn(InventoryTransaction $record): ?string => $record->company?->company_code)
                     ->sortable()
                     ->toggleable(),
 
@@ -94,9 +105,22 @@ class InventoryTransactionResource extends Resource
                     ->sortable()
                     ->toggleable(),
 
+                T\TextColumn::make('exported_qty')
+                    ->label('Exported')
+                    ->numeric()
+                    ->sortable()
+                    ->toggleable(),
+
+                T\TextColumn::make('remaining_qty')
+                    ->label('Remaining')
+                    ->numeric()
+                    ->color(fn($state): ?string => $state <= 0 ? 'danger' : ($state > 0 ? 'success' : null))
+                    ->sortable()
+                    ->toggleable(),
+
                 T\TextColumn::make('io_price')
                     ->label('In/Out Price')
-                    ->money(fn(InventoryTransaction $record): string => $record->io_currency ?? 'VND')
+                    ->money(fn(InventoryTransaction $record): ?string => $record->io_currency ?? 'VND')
                     ->color(fn(InventoryTransaction $record): ?string => match ($record->transaction_direction) {
                         \App\Enums\InventoryTransactionDirectionEnum::Import => 'danger',
                         \App\Enums\InventoryTransactionDirectionEnum::Export => 'info',
@@ -153,48 +177,61 @@ class InventoryTransactionResource extends Resource
 
                         F\Select::make('warehouse_id')
                             ->label('Warehouse')
-                            ->options(fn(): array => \App\Models\Warehouse::query()
-                                ->orderBy('warehouse_name')
-                                ->pluck('warehouse_name', 'id')
-                                ->toArray()
+                            ->options(
+                                fn(): array => \App\Models\Warehouse::query()
+                                    ->orderBy('warehouse_name')
+                                    ->pluck('warehouse_name', 'id')
+                                    ->toArray()
                             )
                             ->placeholder(__('All'))
                             ->multiple(),
 
                         F\Select::make('company_id')
                             ->label('Company')
-                            ->options(fn(): array => \App\Models\Company::query()
-                                ->orderBy('company_code')
-                                ->pluck('company_code', 'id')
-                                ->toArray()
+                            ->options(
+                                fn(): array => \App\Models\Company::query()
+                                    ->orderBy('company_code')
+                                    ->pluck('company_code', 'id')
+                                    ->toArray()
                             )
                             ->placeholder(__('All'))
                             ->multiple(),
 
                         F\Select::make('category_id')
                             ->label('Category')
-                            ->options(fn(): array => \App\Models\Category::query()
-                                ->orderBy('category_code')
-                                ->pluck('category_name', 'id')
-                                ->toArray()
+                            ->options(
+                                fn(): array => \App\Models\Category::query()
+                                    ->orderBy('category_code')
+                                    ->pluck('category_name', 'id')
+                                    ->toArray()
                             )
                             ->placeholder(__('All')),
-                        
+
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         // Apply custom filtering logic based on form data
                         return $query
-                            ->when($data['transaction_direction'] ?? null, fn(Builder $query, $type) =>
+                            ->when(
+                                $data['transaction_direction'] ?? null,
+                                fn(Builder $query, $type) =>
                                 $query->where('transaction_direction', $type)
                             )
-                            ->when($data['warehouse_id'] ?? null, fn(Builder $query, $warehouseIds) =>
+                            ->when(
+                                $data['warehouse_id'] ?? null,
+                                fn(Builder $query, $warehouseIds) =>
                                 $query->whereIn('warehouse_id', $warehouseIds)
                             )
-                            ->when($data['company_id'] ?? null, fn(Builder $query, $companyIds) =>
+                            ->when(
+                                $data['company_id'] ?? null,
+                                fn(Builder $query, $companyIds) =>
                                 $query->whereIn('company_id', $companyIds)
                             )
-                            ->when($data['category_id'] ?? null, fn(Builder $query, $categoryId) =>
-                                $query->whereHas('product', fn(Builder $query) =>
+                            ->when(
+                                $data['category_id'] ?? null,
+                                fn(Builder $query, $categoryId) =>
+                                $query->whereHas(
+                                    'product',
+                                    fn(Builder $query) =>
                                     $query->where('category_id', $categoryId)
                                 )
                             );
