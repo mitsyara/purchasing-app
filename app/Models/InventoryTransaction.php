@@ -110,6 +110,16 @@ class InventoryTransaction extends Model
         });
     }
 
+    public function lotFifo(): Attribute
+    {
+        return Attribute::get(function() {
+            return implode(' | ', [
+                $this->lot_no ?? '',
+                $this->transaction_date?->format('d/m/Y') ?? '',
+            ]);
+        });
+    }
+
     /**
      * Mark this transaction as checked.
      */

@@ -23,7 +23,7 @@ return new class extends Migration
             $table->decimal('contract_price', 15, 3)->nullable();
 
             $table->decimal('average_cost', 15, 3)->nullable();
-            $table->string('currency')->nullable();
+            $table->string('currency', 3)->nullable();
             $table->decimal('exchange_rate', 15, 6)->nullable();
 
             $table->decimal('display_contract_price', 15, 3)->storedAs('COALESCE(contract_price, unit_price)');

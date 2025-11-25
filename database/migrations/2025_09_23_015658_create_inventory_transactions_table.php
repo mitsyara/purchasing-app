@@ -20,7 +20,7 @@ return new class extends Migration
             $table->foreignId('parent_id')->nullable()->constrained('inventory_transactions')->cascadeOnDelete();
 
             $table->morphs('sourceable');
-            $table->string('transaction_direction')->nullable(); // e.g., 'in', 'out'
+            $table->string('transaction_direction', 10)->nullable(); // e.g., 'in', 'out'
             $table->date('transaction_date')->nullable();
             $table->decimal('qty', 15, 3);
             $table->string('lot_no')->nullable();
@@ -29,7 +29,7 @@ return new class extends Migration
 
             $table->decimal('break_price', 15, 4)->nullable();
             $table->decimal('io_price', 15, 4)->nullable();
-            $table->string('io_currency')->nullable();
+            $table->string('io_currency', 4)->nullable();
 
             $table->boolean('is_checked')->default(false);
             $table->foreignId('checked_by')->nullable()->constrained('users')->nullOnDelete();

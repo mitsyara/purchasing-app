@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('project_id')->nullable()->constrained('projects')->cascadeOnDelete();
             $table->foreignId('port_id')->nullable()->constrained('ports')->cascadeOnDelete();
 
-            $table->string('currency')->nullable();
+            $table->string('currency', 3)->nullable();
 
             $table->foreignId('staff_docs_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('staff_declarant_id')->nullable()->constrained('users')->nullOnDelete();

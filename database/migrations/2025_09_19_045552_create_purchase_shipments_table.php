@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('port_id')->nullable()->constrained('ports')->cascadeOnDelete();
             $table->foreignId('company_id')->nullable()->constrained('companies')->cascadeOnDelete();
             $table->foreignId('warehouse_id')->nullable()->constrained('warehouses')->cascadeOnDelete();
-            $table->string('currency')->nullable();
+            $table->string('currency', 3)->nullable();
 
             // supplier (real)
             $table->foreignId('supplier_id')->nullable()->constrained('contacts')->cascadeOnDelete();

@@ -4,7 +4,6 @@ namespace App\Filament\Resources\SalesShipments\Pages;
 
 use App\Filament\Resources\SalesShipments\Helpers\SalesShipmentResourceHelper;
 use App\Filament\Resources\SalesShipments\SalesShipmentResource;
-use App\Models\SalesShipment;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ManageRecords;
 

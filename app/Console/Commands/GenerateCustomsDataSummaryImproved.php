@@ -31,7 +31,7 @@ class GenerateCustomsDataSummaryImproved extends Command
         $this->batchSize = (int) $this->option('batch-size');
         $this->chunkSize = (int) $this->option('chunk-size');
 
-        $this->logInfo('=== Starting Improved CustomsDataSummary Generation ===', [
+        $this->logInfo('=== Starting CustomsDataSummary Generation ===', [
             'batch_size' => $this->batchSize,
             'chunk_size' => $this->chunkSize,
             'force' => $this->option('force')

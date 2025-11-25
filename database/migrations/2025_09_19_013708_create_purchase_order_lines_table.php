@@ -21,7 +21,7 @@ return new class extends Migration
 
             $table->decimal('qty', 15, 3);
             $table->decimal('unit_price', 15, 3);
-            $table->string('currency')->nullable();
+            $table->string('currency', 3)->nullable();
             $table->decimal('contract_price', 15, 3)->nullable();
             $table->decimal('extra_cost', 15, 3)->default(0);
 

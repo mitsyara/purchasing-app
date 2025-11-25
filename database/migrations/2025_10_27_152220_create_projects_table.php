@@ -45,7 +45,7 @@ return new class extends Migration
             $table->boolean('is_foreign')->nullable();
             $table->boolean('is_skip_invoice')->default(false);
             $table->string('incoterm')->nullable();
-            $table->string('currency')->nullable();
+            $table->string('currency', 3)->nullable();
 
             $table->string('payment_method')->nullable();
             $table->string('pay_term_delay_at')->nullable();

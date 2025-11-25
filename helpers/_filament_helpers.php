@@ -141,12 +141,12 @@ if (!function_exists('__number_field')) {
     function __number_field(
         string $fieldName,
         ?string $suffixField = null,
-        bool $autoLocale = true
+        bool $autoLocale = true,
+        bool $negative = false
     ): F\TextInput {
         // Lấy locale hiện tại & ký hiệu phân tách
         if ($autoLocale) {
             $locale = app()->getLocale();
-
             $fmt = new \NumberFormatter($locale, \NumberFormatter::DECIMAL);
             $decimalSeparator = $fmt->getSymbol(\NumberFormatter::DECIMAL_SEPARATOR_SYMBOL);
             $thousandSeparator = $fmt->getSymbol(\NumberFormatter::GROUPING_SEPARATOR_SYMBOL);
@@ -157,53 +157,58 @@ if (!function_exists('__number_field')) {
         }
 
         $textInput = F\TextInput::make($fieldName)
-            ->minValue(0.001)
+            ->minValue($negative ? null : 0.001)
             ->afterStateHydrated(function (
                 F\TextInput $component,
                 ?string $state
-            ) use ($decimalSeparator, $thousandSeparator): void {
+            ) use ($autoLocale, $negative, $decimalSeparator, $thousandSeparator): void {
                 if ($state === null || $state === '') return;
 
-                // Nếu là số (float, int) → format trực tiếp
+                // Helper function để format số với precision 3 và trim zeros
+                $formatNumber = function (float $numValue) use ($autoLocale, $decimalSeparator, $thousandSeparator): string {
+                    if ($autoLocale) {
+                        $locale = app()->getLocale();
+                        $fmt = new \NumberFormatter($locale, \NumberFormatter::DECIMAL);
+                        $fmt->setAttribute(\NumberFormatter::FRACTION_DIGITS, 3);
+                        $formatted = $fmt->format($numValue);
+                    } else {
+                        $formatted = number_format($numValue, 3, $decimalSeparator, $thousandSeparator);
+                    }
+
+                    // Trim trailing zeros
+                    return preg_replace('/' . preg_quote($decimalSeparator, '/') . '?0+$/', '', $formatted);
+                };
+
                 if (is_numeric($state)) {
-                    $formatted = number_format((float) $state, 3, $decimalSeparator, $thousandSeparator);
-                    $formatted = preg_replace('/' . preg_quote($decimalSeparator, '/') . '?0+$/', '', $formatted);
-                    $component->state($formatted);
-                    return;
+                    // Số thuần → format trực tiếp
+                    $numValue = (float) $state;
+                    $formatted = $formatNumber($numValue);
+                } else {
+                    // Chuỗi → parse về số rồi format lại
+                    $numValue = __number_string_converter($state, false, $autoLocale);
+
+                    if ($numValue !== null) {
+                        // Xử lý số âm nếu không cho phép
+                        if (!$negative && $numValue < 0) {
+                            $numValue = abs($numValue);
+                        }
+
+                        $formatted = $formatNumber($numValue);
+                    } else {
+                        $formatted = '';
+                    }
                 }
-
-                // Nếu là chuỗi → normalize cross-locale
-                $normalized = preg_replace('/[^0-9,\.]/', '', $state);
-
-                // Xác định dấu thập phân (ký tự cuối giữa , và .)
-                $lastDecimal = null;
-                if (str_contains($normalized, '.') || str_contains($normalized, ',')) {
-                    $posDot = strrpos($normalized, '.');
-                    $posComma = strrpos($normalized, ',');
-                    $lastDecimal = $posDot > $posComma ? '.' : ',';
-                }
-
-                // Loại bỏ hết dấu phân tách nghìn
-                $normalized = str_replace(['.', ','], '', $normalized);
-
-                // Nếu có dấu thập phân, thêm lại '.' ở vị trí cuối
-                if ($lastDecimal !== null) {
-                    $decimalPos = strrpos($state, $lastDecimal);
-                    $fraction = substr($state, $decimalPos + 1);
-                    $normalized = substr($normalized, 0, -strlen($fraction)) . '.' . $fraction;
-                }
-
-                $formatted = number_format((float) $normalized, 3, $decimalSeparator, $thousandSeparator);
-                $formatted = preg_replace('/' . preg_quote($decimalSeparator, '/') . '?0+$/', '', $formatted);
 
                 $component->state($formatted);
             })
 
             ->stripCharacters($thousandSeparator)
+
             ->mask(\Filament\Support\RawJs::make(strtr(<<<'JS'
                 () => {
                     const decimalSeparator = '{{decimal}}';
                     const thousandSeparator = '{{thousand}}';
+                    const allowNegative = '{{allowNegative}}';
 
                     let skipNextInput = false;
 
@@ -235,8 +240,18 @@ if (!function_exists('__number_field')) {
                             return;
                         }
 
-                        // Giữ lại số, dấu decimalSeparator và thousandSeparator (cho phép . hoặc , tuỳ locale)
-                        let raw = $el.value.replace(new RegExp('[^\\d\\' + decimalSeparator + '\\' + thousandSeparator + ']', 'g'), '');
+                        // Giữ lại số, dấu decimalSeparator, thousandSeparator và dấu trừ (nếu cho phép)
+                        let pattern = allowNegative === 'true'
+                            ? '[^\\d\\' + decimalSeparator + '\\' + thousandSeparator + '\\-]'
+                            : '[^\\d\\' + decimalSeparator + '\\' + thousandSeparator + ']';
+                        let raw = $el.value.replace(new RegExp(pattern, 'g'), '');
+
+                        // Xử lý dấu trừ: nếu có dấu trừ bất kỳ đâu thì chuyển lên đầu
+                        let isNegative = false;
+                        if (allowNegative === 'true' && raw.includes('-')) {
+                            isNegative = true; // Bất kỳ có dấu trừ nào thì coi như số âm
+                            raw = raw.replace(/-/g, ''); // Xóa tất cả dấu trừ
+                        }
 
                         // Chuẩn hoá nếu user nhập trộn dấu (ví dụ nhập 1.000,5 ở vi-VN)
                         // Giữ lại tất cả thousandSeparators, chỉ xác định 1 decimalSeparator cuối cùng
@@ -250,33 +265,50 @@ if (!function_exists('__number_field')) {
                         // Format lại phần integer với thousandSeparator chuẩn
                         const formattedInteger = cleanInteger.replace(/\B(?=(\d{3})+(?!\d))/g, thousandSeparator);
 
+                        let result = '';
                         if (lastDecimalPos >= 0) {
                             // Có phần thập phân
-                            $el.value = `${formattedInteger}${decimalSeparator}${decimalPart.slice(0, 3)}`;
+                            result = `${formattedInteger}${decimalSeparator}${decimalPart.slice(0, 3)}`;
                         } else {
-                            $el.value = formattedInteger;
+                            result = formattedInteger;
                         }
+
+                        // Thêm dấu trừ vào đầu nếu cần
+                        if (allowNegative === 'true' && isNegative) {
+                            result = '-' + result;
+                        }
+
+                        $el.value = result;
                     });
                 }
             JS, [
                 '{{decimal}}' => $decimalSeparator,
                 '{{thousand}}' => $thousandSeparator,
+                '{{allowNegative}}' => $negative ? 'true' : 'false',
             ])))
 
             ->validationMessages([
                 'min' => 'Min: :value.',
             ])
 
-            ->dehydrateStateUsing(function ($state)
-            use ($decimalSeparator, $thousandSeparator) {
-                if (!$state) return null;
-                $normalized = str_replace($thousandSeparator, '', $state);
-                $normalized = str_replace($decimalSeparator, '.', $normalized);
-                return (float)$normalized;
+            ->dehydrateStateUsing(function ($state) use ($autoLocale, $negative) {
+                // Kiểm tra state null hoặc empty string, NHƯNG không loại trừ "0"
+                if ($state === null || $state === '') return null;
+
+                // parse về float
+                $result = __number_string_converter($state, false, $autoLocale);
+
+                // Xử lý số âm nếu không cho phép
+                if (!$negative && $result !== null && $result < 0) {
+                    $result = abs($result);
+                }
+
+                return $result;
             });
 
         return $suffixField
-            ? $textInput->suffix(\Filament\Schemas\JsContent::make("\$get('{$suffixField}')"))
+            ? $textInput
+            ->suffix(\Filament\Schemas\JsContent::make("\$get('{$suffixField}')"))
             : $textInput;
     }
 }

@@ -2,13 +2,10 @@
 
 namespace App\Filament\Resources\SalesShipments;
 
-use App\Filament\Resources\SalesShipments\Helpers\SalesShipmentResourceHelper;
 use App\Filament\Resources\SalesShipments\Pages\ManageSalesShipments;
 use App\Filament\Tables\DeliveryScheduleTable;
 use App\Models\SalesDeliverySchedule;
-use App\Models\SalesDeliveryScheduleLine;
 use App\Models\SalesShipment;
-use FFI;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -111,9 +108,9 @@ class SalesShipmentResource extends Resource
     /**
      * Helper instance
      */
-    protected static function helper(): SalesShipmentResourceHelper
+    protected static function helper(): Helpers\SalesShipmentResourceHelper
     {
-        return app(SalesShipmentResourceHelper::class);
+        return app(Helpers\SalesShipmentResourceHelper::class);
     }
 
     /**

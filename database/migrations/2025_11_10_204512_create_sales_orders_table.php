@@ -34,7 +34,7 @@ return new class extends Migration
             $table->date('eta_max')->nullable();
 
             $table->boolean('is_skip_invoice')->nullable();
-            $table->string('currency')->nullable();
+            $table->string('currency', 3)->nullable();
 
             $table->string('pay_term_delay_at')->nullable();
             $table->integer('pay_term_days')->nullable();

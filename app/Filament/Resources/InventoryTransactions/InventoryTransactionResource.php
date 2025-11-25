@@ -101,6 +101,11 @@ class InventoryTransactionResource extends Resource
 
                 T\TextColumn::make('qty')
                     ->label('Quantity')
+                    ->color(fn(InventoryTransaction $record): ?string => match ($record->transaction_direction) {
+                        \App\Enums\InventoryTransactionDirectionEnum::Import => 'success',
+                        \App\Enums\InventoryTransactionDirectionEnum::Export => 'danger',
+                        default => null,
+                    })
                     ->numeric()
                     ->sortable()
                     ->toggleable(),
@@ -109,14 +114,16 @@ class InventoryTransactionResource extends Resource
                     ->label('Exported')
                     ->numeric()
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable()
+                    ->visible(fn($livewire) => $livewire->activeTab === __('Import')),
 
                 T\TextColumn::make('remaining_qty')
                     ->label('Remaining')
                     ->numeric()
                     ->color(fn($state): ?string => $state <= 0 ? 'danger' : ($state > 0 ? 'success' : null))
                     ->sortable()
-                    ->toggleable(),
+                    ->toggleable()
+                    ->visible(fn($livewire) => $livewire->activeTab === __('Import')),
 
                 T\TextColumn::make('io_price')
                     ->label('In/Out Price')

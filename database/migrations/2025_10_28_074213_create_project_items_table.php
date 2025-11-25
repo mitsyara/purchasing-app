@@ -21,7 +21,7 @@ return new class extends Migration
             $table->decimal('qty', 15, 3);
             $table->decimal('unit_price', 15, 3);
             $table->decimal('contract_price', 15, 3)->nullable();
-            $table->string('currency')->nullable();
+            $table->string('currency', 3)->nullable();
 
             $table->decimal('display_contract_price', 15, 3)->storedAs('COALESCE(contract_price, unit_price)');
             $table->decimal('value', 24, 6)->storedAs('qty * unit_price');

@@ -15,26 +15,4 @@ class CustomsDataCluster extends Cluster
     // protected static string|\UnitEnum|null $navigationGroup = 'other';
 
     protected static ?int $navigationSort = 91;
-
-
-    public static function aggregateAction(): \Filament\Actions\Action
-    {
-        return \Filament\Actions\Action::make('aggregateData')
-            ->label('Re-Assign Categories')
-            ->icon(\Filament\Support\Icons\Heroicon::ChartBarSquare)
-            ->color('success')
-            ->action(function () {
-                $user = auth()->user();
-                // Assign Categories to CustomsData
-                \App\Jobs\CustomsData\DispatchCustomsDataBatchJob::dispatch($user);
-
-                \Filament\Notifications\Notification::make()
-                    ->title('Job Started!')
-                    ->body('This may take a while. You will be notified when complete.')
-                    ->success()
-                    ->send();
-            })
-            ->requiresConfirmation()
-            ->visible(fn() => auth()->user()->isAdmin());
-    }
 }

@@ -26,10 +26,10 @@ class ManageInventoryTransactions extends ManageRecords
     {
         return [
             'all' => Tab::make(),
-            __('Checked') => Tab::make()
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('is_checked', true)),
-            __('Unchecked') => Tab::make()
-                ->modifyQueryUsing(fn(Builder $query) => $query->where('is_checked', false)),
+            __('Import') => Tab::make()
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('transaction_direction', \App\Enums\InventoryTransactionDirectionEnum::Import)),
+            __('Export') => Tab::make()
+                ->modifyQueryUsing(fn(Builder $query) => $query->where('transaction_direction', \App\Enums\InventoryTransactionDirectionEnum::Export)),
         ];
     }
 }
