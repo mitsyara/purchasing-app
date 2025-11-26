@@ -364,21 +364,31 @@ class SalesShipmentService
         // Lấy danh sách child transaction IDs cần exclude
         $excludeTransactionIds = $excludeShipmentId ? $this->getShipmentTransactionIds($excludeShipmentId) : [];
 
-        // Sử dụng getLotsWithBalanceForShipment để lấy options với balance đã tính sẵn
-        $companyId = null; // Không filter theo company trong context này
-        $includeZeroBalance = !empty($currentTransactionId); // Chỉ include zero balance nếu có current selection
-
-        $options = InventoryTransaction::query()
+        // Lấy tất cả lots của products (không phụ thuộc vào available)
+        $allLots = InventoryTransaction::query()
             ->forProducts($productIds)
             ->inWarehouse($warehouseId)
-            ->getLotsWithBalanceForShipment($companyId, $warehouseId, $excludeTransactionIds, $includeZeroBalance);
+            ->where('transaction_direction', \App\Enums\InventoryTransactionDirectionEnum::Import)
+            ->with(['product'])
+            ->get();
 
-        // Nếu có currentTransactionId và nó không có trong options (balance = 0)
-        // thì thêm vào để user có thể thấy và chỉnh sửa
-        if ($currentTransactionId && !isset($options[$currentTransactionId])) {
-            $currentLot = InventoryTransaction::with('product')->find($currentTransactionId);
-            if ($currentLot) {
-                $options[$currentTransactionId] = $currentLot->lot_description . ' | Còn: 0';
+        $options = [];
+
+        foreach ($allLots as $lot) {
+            // Tính remaining quantity với exclude logic
+            $shippedQty = $lot->children()
+                ->where('transaction_direction', \App\Enums\InventoryTransactionDirectionEnum::Export)
+                ->when(!empty($excludeTransactionIds), function ($query) use ($excludeTransactionIds) {
+                    $query->whereNotIn('id', $excludeTransactionIds);
+                })
+                ->sum('qty');
+
+            $remainingQty = $lot->qty - $shippedQty;
+
+            // Chỉ hiển thị lots có remaining > 0 HOẶC đang được chọn
+            if ($remainingQty > 0 || $lot->id == $currentTransactionId) {
+                $label = $lot->lot_description . ' | Còn: ' . __number_string_converter($remainingQty);
+                $options[$lot->id] = $label;
             }
         }
 

@@ -18,7 +18,7 @@ class ManageInventoryAdjustments extends ManageRecords
                 ->slideOver()
                 ->modalWidth(\Filament\Support\Enums\Width::FiveExtraLarge)
                 ->mutateDataUsing(fn(CreateAction $action, array $data): array
-                => app(InventoryAdjustmentResourceHelper::class)->syncData($action, $data)),
+                => InventoryAdjustmentResourceHelper::syncData($action, $data)),
 
         ];
     }

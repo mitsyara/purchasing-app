@@ -11,103 +11,181 @@ use Staudenmeir\LaravelAdjacencyList\Eloquent\Builder as RecursiveBuilder;
 class InventoryTransactionQuery extends RecursiveBuilder
 {
     /**
-     * Lấy các lot nhập kho có thể xuất (còn tồn)
+     * Lấy danh sách lots có tồn kho với balance
+     * Method chính - linh hoạt và tái sử dụng được
+     * 
+     * @param int|null $companyId ID công ty (có thể null)
+     * @param int|null $warehouseId ID kho (có thể null)
+     * @param array|string|int|null $excludeIds Danh sách transaction IDs cần loại trừ
+     * @return array
      */
-    public function availableForExport(): self
+    public function getLotsWithBalance(?int $companyId = null, ?int $warehouseId = null, $excludeIds = null): array
     {
-        return $this->where('transaction_direction', InventoryTransactionDirectionEnum::Import)
-            ->withSum('children as shipped_qty', 'qty')
-            ->havingRaw('qty - COALESCE(shipped_qty, 0) > 0');
-    }
+        // Chuẩn hóa excludeIds thành array
+        $excludeTransactionIds = [];
+        if ($excludeIds !== null) {
+            if (is_array($excludeIds)) {
+                $excludeTransactionIds = array_filter($excludeIds);
+            } elseif (is_string($excludeIds) || is_int($excludeIds)) {
+                $excludeTransactionIds = [$excludeIds];
+            }
+        }
 
-    /**
-     * Lọc theo warehouse
-     */
-    public function inWarehouse(int $warehouseId): self
-    {
-        return $this->where('warehouse_id', $warehouseId);
-    }
+        // Build query
+        $query = $this->where('transaction_direction', InventoryTransactionDirectionEnum::Import);
 
-    /**
-     * Lọc theo danh sách product IDs
-     */
-    public function forProducts(array $productIds): self
-    {
-        return $this->whereIn('product_id', array_filter($productIds));
-    }
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        }
 
-    /**
-     * Lấy available lots cho form options
-     */
-    public function getAvailableLotsForForm(array $productIds, int $warehouseId): array
-    {
-        return $this->forProducts($productIds)
-            ->inWarehouse($warehouseId)
-            ->availableForExport()
-            ->with(['product'])
-            ->get()
-            ->pluck('lot_description', 'id')
+        if ($warehouseId) {
+            $query->where('warehouse_id', $warehouseId);
+        }
+
+        $lots = $query->with('product')->get();
+
+        return $lots->mapWithKeys(function ($lot) use ($excludeTransactionIds) {
+            // Tạo fresh query để tính balance chính xác
+            $balance = $lot->newQuery()->calculateLotBalance($lot->id, $excludeTransactionIds);
+            if ($balance <= 0) return [];
+
+            $balanceFormatted = __number_string_converter($balance);
+            $label = "{$lot->lot_fifo} | Tồn: {$balanceFormatted}";
+            return [$lot->id => $label];
+        })
+            ->filter()
             ->toArray();
     }
 
     /**
-     * Lấy available lots với remaining quantity trong label
+     * Tính số dư của lot với exclude IDs
+     * Method hỗ trợ cho getLotsWithBalance
      */
-    public function getAvailableLotsForFormWithRemaining(array $productIds, int $warehouseId, array $excludeTransactionIds = []): array
+    public function calculateLotBalance(int $lotId, array $excludeTransactionIds = []): float
     {
-        return $this->forProducts($productIds)
-            ->inWarehouse($warehouseId)
-            ->availableForExport()
-            ->with(['product'])
-            ->get()
-            ->mapWithKeys(function ($transaction) use ($excludeTransactionIds) {
-                // Build description parts
-                $parts = [];
-                $parts[] = $transaction->product->product_code ?? 'N/A';
-                
-                if ($transaction->lot_no) {
-                    $parts[] = "{$transaction->lot_no}";
-                }
-                
-                if ($transaction->mfg_date) {
-                    $parts[] = "{$transaction->mfg_date->format('d/m/Y')}";
-                }
-                
-                if ($transaction->exp_date) {
-                    $parts[] = "{$transaction->exp_date->format('d/m/Y')}";
-                }
+        // Tạo fresh query để tìm lot
+        $lot = $this->getModel()->newQuery()
+            ->where('transaction_direction', InventoryTransactionDirectionEnum::Import)
+            ->find($lotId);
 
-                // Tính remaining quantity (loại trừ transactions đang edit)
-                $shippedQty = $transaction->children()
-                    ->where('transaction_direction', \App\Enums\InventoryTransactionDirectionEnum::Export)
-                    ->when(!empty($excludeTransactionIds), function ($query) use ($excludeTransactionIds) {
-                        $query->whereNotIn('id', $excludeTransactionIds);
-                    })
-                    ->sum('qty');
+        if (!$lot) return 0;
 
-                $remainingQty = $transaction->qty - ($shippedQty ?: 0);
-                $parts[] = "Còn: " . __number_string_converter($remainingQty);
-                
-                $description = implode(' | ', $parts);
-                
-                return [$transaction->id => $description];
-            })
-            ->toArray();
+        $originalQty = $lot->qty ?? 0;
+
+        // Tạo fresh query để tính exported qty
+        $exportQuery = $this->getModel()->newQuery()
+            ->where('parent_id', $lotId)
+            ->where('transaction_direction', InventoryTransactionDirectionEnum::Export);
+
+        // Loại trừ các transaction IDs cụ thể
+        if (!empty($excludeTransactionIds)) {
+            $exportQuery->whereNotIn('id', $excludeTransactionIds);
+        }
+
+        $exportedQty = $exportQuery->sum('qty');
+        return max(0, $originalQty - $exportedQty);
     }
 
     /**
      * Kiểm tra tồn kho available
      */
-    public function checkAvailability(int $transactionId, float $requestedQty): bool
+    public function checkAvailability(int $transactionId, float $requestedQty, array $excludeTransactionIds = []): bool
     {
-        $transaction = $this->withSum('children as shipped_qty', 'qty')
-            ->find($transactionId);
+        $balance = $this->calculateLotBalance($transactionId, $excludeTransactionIds);
+        return $balance >= $requestedQty;
+    }
 
-        if (!$transaction) {
-            return false;
+    /**
+     * Lọc theo danh sách product IDs
+     * 
+     * @param array|int $productIds ID hoặc array IDs của products
+     * @return static
+     */
+    public function forProducts($productIds): static
+    {
+        if (is_array($productIds)) {
+            return $this->whereIn('product_id', $productIds);
+        }
+        
+        return $this->where('product_id', $productIds);
+    }
+
+    /**
+     * Lọc theo kho hàng
+     * 
+     * @param int $warehouseId ID của kho hàng
+     * @return static
+     */
+    public function inWarehouse(int $warehouseId): static
+    {
+        return $this->where('warehouse_id', $warehouseId);
+    }
+
+    /**
+     * Lọc các giao dịch có thể export (Import transactions với balance > 0)
+     * 
+     * @return static
+     */
+    public function availableForExport(): static
+    {
+        return $this->where('transaction_direction', InventoryTransactionDirectionEnum::Import)
+            ->whereRaw('
+                (SELECT COALESCE(SUM(children.qty), 0) 
+                 FROM inventory_transactions children 
+                 WHERE children.parent_id = inventory_transactions.id
+                   AND children.transaction_direction = ?) < inventory_transactions.qty
+            ', [InventoryTransactionDirectionEnum::Export->value]);
+    }
+
+    /**
+     * Lấy danh sách lots có tồn kho với balance cho SalesShipment
+     * Sử dụng lot_description thay vì lot_fifo và "Còn:" thay vì "Tồn:"
+     * 
+     * @param int|null $companyId ID công ty (có thể null)
+     * @param int|null $warehouseId ID kho (có thể null)
+     * @param array|string|int|null $excludeIds Danh sách transaction IDs cần loại trừ
+     * @param bool $includeZeroBalance Có bao gồm lots có balance = 0 không
+     * @return array
+     */
+    public function getLotsWithBalanceForShipment(
+        ?int $companyId = null, 
+        ?int $warehouseId = null, 
+        $excludeIds = null,
+        bool $includeZeroBalance = false
+    ): array {
+        // Chuẩn hóa excludeIds thành array
+        $excludeTransactionIds = [];
+        if ($excludeIds !== null) {
+            if (is_array($excludeIds)) {
+                $excludeTransactionIds = array_filter($excludeIds);
+            } elseif (is_string($excludeIds) || is_int($excludeIds)) {
+                $excludeTransactionIds = [$excludeIds];
+            }
         }
 
-        $availableQty = $transaction->qty - ($transaction->shipped_qty ?: 0);
-        return $availableQty >= $requestedQty;
+        // Build query
+        $query = $this->where('transaction_direction', InventoryTransactionDirectionEnum::Import);
+
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        }
+
+        if ($warehouseId) {
+            $query->where('warehouse_id', $warehouseId);
+        }
+
+        $lots = $query->with('product')->get();
+
+        return $lots->mapWithKeys(function ($lot) use ($excludeTransactionIds, $includeZeroBalance) {
+            // Tạo fresh query để tính balance chính xác
+            $balance = $lot->newQuery()->calculateLotBalance($lot->id, $excludeTransactionIds);
+            if (!$includeZeroBalance && $balance <= 0) return [];
+
+            $balanceFormatted = __number_string_converter($balance);
+            $label = "{$lot->lot_description} | Còn: {$balanceFormatted}";
+            return [$lot->id => $label];
+        })
+            ->filter()
+            ->toArray();
     }
 }

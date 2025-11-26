@@ -20,6 +20,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class InventoryTransactionResource extends Resource
 {
+    use Helpers\InventoryTransactionResourceHelper;
+
     protected static ?string $model = InventoryTransaction::class;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedHomeModern;
@@ -39,15 +41,7 @@ class InventoryTransactionResource extends Resource
     public static function infolist(Schema $schema): Schema
     {
         return $schema
-            ->components([
-                S\Group::make([
-                    I\TextEntry::make('product.product_code')->label('Product Code'),
-                    I\TextEntry::make('product.product_full_name')->label('Product'),
-                    I\TextEntry::make('qty'),
-                    I\TextEntry::make('break_price')->money('vnd'),
-                    I\TextEntry::make('created_at'),
-                ]),
-            ]);
+            ->components(static::getTransactionInfolist());
     }
 
     public static function table(Table $table): Table
@@ -56,14 +50,17 @@ class InventoryTransactionResource extends Resource
             ->modifyQueryUsing(
                 fn(Builder $query): Builder
                 => $query->with(['company', 'warehouse', 'product', 'checkedBy'])
-                    ->withSum('children as exported_qty', 'qty')
+                    ->withSum('exportedChildren as exported_qty', 'qty')
                     ->addSelect([
                         'inventory_transactions.*',
                     ])
                     ->selectRaw(
                         'inventory_transactions.qty - COALESCE(
-                            (SELECT SUM(qty) FROM inventory_transactions children WHERE children.parent_id = inventory_transactions.id), 0
-                        ) as remaining_qty'
+                            (SELECT SUM(qty)
+                            FROM inventory_transactions children
+                            WHERE children.parent_id = inventory_transactions.id
+                            AND children.transaction_direction = "export"),
+                        0) as remaining_qty'
                     )
             )
             ->columns([
@@ -350,7 +347,7 @@ class InventoryTransactionResource extends Resource
             //             ->requiresConfirmation(),
             //     ]),
             // ])
-            
+
         ;
     }
 

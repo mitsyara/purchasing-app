@@ -160,7 +160,7 @@ class SalesShipmentResource extends Resource
                         ->required(),
 
                     F\DatePicker::make('atd')
-                        ->label('Actual Delivered Date')
+                        ->label('Delivered Date')
                         ->requiredIf('shipment_status', \App\Enums\ShipmentStatusEnum::Delivered->value),
 
                 ])
@@ -264,7 +264,7 @@ class SalesShipmentResource extends Resource
                         ->required(),
 
                     /**
-                     * LOGIC ĐÃ SỬA - ĐƯỢC COVER BỞI FEATURE TEST:
+                     * LOGIC ĐÃ SỬA - CÓ FEATURE TEST:
                      * 
                      * 1. getFormOptionsForLotSelection() bao gồm:
                      *    - Tất cả lots có remaining > 0 

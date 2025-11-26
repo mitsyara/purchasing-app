@@ -16,7 +16,7 @@ use Filament\Tables\Columns as T;
 
 class InventoryAdjustmentResource extends Resource
 {
-    use Helpers\InventoryAdjustmentResourceFormHelper;
+    use Helpers\InventoryAdjustmentResourceHelper;
 
     protected static ?string $model = InventoryAdjustment::class;
 
@@ -36,14 +36,14 @@ class InventoryAdjustmentResource extends Resource
         return $schema
             ->components([
                 S\Group::make([
-                    ...static::adjustmentInfo(),
+                    ...static::adjustmentInfoSchema(),
                 ])
                     ->columns()
                     ->columnSpanFull(),
 
                 S\Fieldset::make('Details')
                     ->schema([
-                        ...static::linesInfo(),
+                        ...static::linesInfoSchema(),
                     ])
                     ->columnSpanFull(),
             ]);
@@ -95,9 +95,9 @@ class InventoryAdjustmentResource extends Resource
                     A\EditAction::make()
                         ->slideOver()
                         ->modalWidth(\Filament\Support\Enums\Width::FiveExtraLarge)
-                        ->fillForm(fn(InventoryAdjustment $record) => static::helper()->loadFormData($record))
+                        ->fillForm(fn(InventoryAdjustment $record) => static::loadFormData($record))
                         ->mutateDataUsing(fn(A\EditAction $action, array $data): array
-                        => static::helper()->syncData($action, $data)),
+                        => static::syncData($action, $data)),
 
                     A\DeleteAction::make(),
                 ]),
@@ -116,13 +116,5 @@ class InventoryAdjustmentResource extends Resource
         ];
     }
 
-    
 
-    /**
-     * Helper instance
-     */
-    protected static function helper(): Helpers\InventoryAdjustmentResourceHelper
-    {
-        return app(Helpers\InventoryAdjustmentResourceHelper::class);
-    }
 }

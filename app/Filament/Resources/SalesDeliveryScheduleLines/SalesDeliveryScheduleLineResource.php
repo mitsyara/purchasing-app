@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\SalesDeliveryScheduleLines;
 
+use App\Filament\Resources\SalesDeliveryScheduleLines\Helpers\SalesDeliveryScheduleLineResourceHelper;
 use App\Filament\Resources\SalesDeliveryScheduleLines\Pages\ManageSalesDeliveryScheduleLines;
 use App\Filament\Resources\SalesOrders\SalesOrderResource;
 use App\Filament\Resources\SalesShipments\SalesShipmentResource;
@@ -19,6 +20,8 @@ use Illuminate\Support\Number;
 
 class SalesDeliveryScheduleLineResource extends Resource
 {
+    use SalesDeliveryScheduleLineResourceHelper;
+
     protected static ?string $model = SalesDeliveryScheduleLine::class;
 
     protected static string|\BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendar;
@@ -140,28 +143,5 @@ class SalesDeliveryScheduleLineResource extends Resource
         ];
     }
 
-    // Helpers
 
-    /**
-     * Edit Delivery Schedule Status
-     */
-    public static function editScheduleStatus(): A\Action
-    {
-        return A\Action::make('switch_status')
-            ->modal()
-            ->modalWidth(\Filament\Support\Enums\Width::Large)
-            ->schema([
-                \Filament\Forms\Components\ToggleButtons::make('delivery_status')
-                    ->label(__('Delivery Status'))
-                    ->options(\App\Enums\DeliveryStatusEnum::class)
-                    ->grouped()
-                    ->required(),
-            ])
-            ->fillForm(fn($record) => ['delivery_status' => $record->deliverySchedule->delivery_status])
-            ->action(function (SalesDeliveryScheduleLine $record, array $data): void {
-                if ($data['delivery_status']) {
-                    $record->deliverySchedule->update(['delivery_status' => $data['delivery_status']]);
-                }
-            });
-    }
 }

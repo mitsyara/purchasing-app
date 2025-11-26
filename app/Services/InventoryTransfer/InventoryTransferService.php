@@ -9,6 +9,10 @@ use App\Enums\OrderStatusEnum;
 use App\Enums\InventoryTransactionDirectionEnum;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Service xử lý business logic cho Inventory Transfer
+ * Không chứa logic UI/Form - chỉ pure business logic
+ */
 class InventoryTransferService
 {
     /**

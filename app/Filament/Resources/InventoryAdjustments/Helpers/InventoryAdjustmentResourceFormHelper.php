@@ -8,24 +8,17 @@ use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Helper tập trung cho Resource Form/Table
+ * Form Helper - chỉ chứa Filament form schemas
  */
 trait InventoryAdjustmentResourceFormHelper
 {
-    /**
-     * Helper instance
-     */
-    protected static function helper(): InventoryAdjustmentResourceHelper
-    {
-        return app(InventoryAdjustmentResourceHelper::class);
-    }
 
     // Form fields
 
     /**
-     * Form chính
+     * Form schema cho thông tin adjustment
      */
-    public static function adjustmentInfo(): array
+    protected static function adjustmentInfoSchema(): array
     {
         return [
             S\Flex::make([
@@ -75,9 +68,9 @@ trait InventoryAdjustmentResourceFormHelper
     }
 
     /**
-     * Các lot điều chỉnh - chia thành 2 repeater cho In/Out
+     * Form schema cho các lines adjustment
      */
-    public static function linesInfo(): array
+    protected static function linesInfoSchema(): array
     {
         return [
             S\Tabs::make('adjustment_directions')
@@ -144,7 +137,7 @@ trait InventoryAdjustmentResourceFormHelper
             ->label('Product')
             ->options(fn() => \App\Models\Product::pluck('product_description', 'id'))
             ->getOptionLabelUsing(fn($value) => \App\Models\Product::find($value)?->product_description)
-            ->afterStateUpdated(fn(callable $set, $state) => static::helper()->{$populateMethod}($state, $set))
+            ->afterStateUpdated(fn(callable $set, $state) => static::{$populateMethod}($state, $set))
             ->preload()
             ->searchable()
             ->live()
@@ -226,9 +219,9 @@ trait InventoryAdjustmentResourceFormHelper
                 F\Hidden::make('id'),
                 F\Select::make('parent_transaction_id')
                     ->label('Available Lot')
-                    ->options(fn(callable $get) => static::helper()->getAvailableLotsForOutCallable($get))
+                    ->options(fn(callable $get) => static::getAvailableLotsForOutCallable($get))
                     ->getOptionLabelUsing(fn($value) => \App\Models\InventoryTransaction::find($value)?->lot_fifo)
-                    ->afterStateUpdated(fn($state, callable $set) => static::helper()->populateDataFromParentTransaction($state, $set))
+                    ->afterStateUpdated(fn($state, callable $set) => static::populateDataFromParentTransaction($state, $set))
                     ->live()
                     ->partiallyRenderComponentsAfterStateUpdated(['mfg_date', 'exp_date', 'lot_no'])
                     ->disableOptionsWhenSelectedInSiblingRepeaterItems()

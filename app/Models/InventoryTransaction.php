@@ -79,6 +79,15 @@ class InventoryTransaction extends Model
     }
 
     /**
+     * Các transaction con là export
+     */
+    public function exportedChildren(): HasMany
+    {
+        return $this->hasMany(InventoryTransaction::class, 'parent_id')
+            ->where('transaction_direction', \App\Enums\InventoryTransactionDirectionEnum::Export);
+    }
+
+    /**
      * Lot nào gắn với lịch giao nào
      */
     public function salesScheduleLines(): BelongsToMany
@@ -112,7 +121,7 @@ class InventoryTransaction extends Model
 
     public function lotFifo(): Attribute
     {
-        return Attribute::get(function() {
+        return Attribute::get(function () {
             return implode(' | ', [
                 $this->lot_no ?? '',
                 $this->transaction_date?->format('d/m/Y') ?? '',

@@ -37,12 +37,12 @@ class InventoryTransferResource extends Resource
                     ->tabs([
                         S\Tabs\Tab::make('Transfer Info')
                             ->schema([
-                                ...static::transferInfo(),
+                                ...static::transferInfoSchema(),
                             ]),
 
                         S\Tabs\Tab::make('Lot Selection')
                             ->schema([
-                                ...static::lotSelection(),
+                                ...static::lotSelectionSchema(),
                             ]),
                     ])
                     ->columnSpanFull(),
@@ -84,15 +84,16 @@ class InventoryTransferResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                T\TextColumn::make('transferLines_count')
+                T\TextColumn::make('transferLines.lot.lot_no')
                     ->label('Lines')
-                    ->counts('transferLines')
-                    ->alignCenter()
-                    ->sortable(),
+                    ->badge()
+                    ->listWithLineBreaks()
+                    ->limitList(2)
+                    ->expandableLimitedList(),
 
                 T\TextColumn::make('total_transfer_qty')
                     ->label('Total Qty')
-                    ->getStateUsing(fn($record) => $record->transferLines()->sum('transfer_qty'))
+                    ->getStateUsing(fn(InventoryTransfer $record) => $record->transferLines()->sum('transfer_qty'))
                     ->numeric(decimalPlaces: 3)
                     ->alignEnd(),
 
@@ -105,29 +106,6 @@ class InventoryTransferResource extends Resource
                     ->label('Avg Cost/Unit')
                     ->money('VND')
                     ->sortable(),
-
-                T\TextColumn::make('createdBy.name')
-                    ->label('Created By')
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                T\TextColumn::make('approvedBy.name')
-                    ->label('Approved By')
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                T\TextColumn::make('approved_at')
-                    ->label('Approved At')
-                    ->dateTime('d/m/Y H:i')
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                T\TextColumn::make('created_at')
-                    ->label('Created At')
-                    ->dateTime('d/m/Y H:i')
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                T\TextColumn::make('updated_at')
-                    ->label('Updated At')
-                    ->dateTime('d/m/Y H:i')
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //

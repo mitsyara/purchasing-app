@@ -2,27 +2,31 @@
 
 namespace App\Filament\Resources\InventoryAdjustments\Helpers;
 
+use App\Filament\Resources\InventoryAdjustments\Helpers\InventoryAdjustmentResourceFormHelper;
 use App\Models\InventoryAdjustment;
 use App\Models\InventoryTransaction;
 use App\Services\InventoryAdjustment\InventoryAdjustmentService;
 use Filament\Actions\Action;
 
 /**
- * Helper tập trung cho Resource Form/Table
+ * Resource Helper - logic hỗ trợ cho Resource (REFACTORED)
  */
-class InventoryAdjustmentResourceHelper
+trait InventoryAdjustmentResourceHelper
 {
-    protected InventoryAdjustmentService $service;
+    use InventoryAdjustmentResourceFormHelper;
 
-    public function __construct(InventoryAdjustmentService $service)
+    /**
+     * Get service instance
+     */
+    protected static function getService(): InventoryAdjustmentService
     {
-        $this->service = $service;
+        return app(InventoryAdjustmentService::class);
     }
 
     /**
      * Đồng bộ dữ liệu cho action create/edit
      */
-    public function syncData(Action $action, array $data): array
+    public static function syncData(Action $action, array $data): array
     {
         // Determine if this is create or edit
         $isCreate = $action instanceof \Filament\Actions\CreateAction;
@@ -32,12 +36,12 @@ class InventoryAdjustmentResourceHelper
             $data['created_by'] = auth()->id();
             
             $action->after(function (InventoryAdjustment $record) use ($data) {
-                $this->service->createOrUpdate($data, $record);
+                static::getService()->createOrUpdate($data, $record);
             });
         } else {
             // Edit: handle after update
             $action->after(function (InventoryAdjustment $record) use ($data) {
-                $this->service->createOrUpdate($data, $record);
+                static::getService()->createOrUpdate($data, $record);
             });
         }
 
@@ -50,15 +54,15 @@ class InventoryAdjustmentResourceHelper
     /**
      * Load dữ liệu cho form edit
      */
-    public function loadFormData(InventoryAdjustment $record): array
+    public static function loadFormData(InventoryAdjustment $record): array
     {
-        return $this->service->loadFormData($record);
+        return static::getService()->loadFormData($record);
     }
 
     /**
      * Lấy danh sách available lots cho OUT adjustment (Form helper)
      */
-    public function getAvailableLotsForOut(int $warehouseId, int $productId): array
+    public static function getAvailableLotsForOut(int $warehouseId, int $productId): array
     {
         if (!$warehouseId || !$productId) {
             return [];
@@ -83,7 +87,7 @@ class InventoryAdjustmentResourceHelper
     /**
      * Populate data after product select (IN)
      */
-    public function populateDataFromProductIn(?string $state, \Filament\Schemas\Components\Utilities\Set $set): void
+    public static function populateDataFromProductIn(?string $state, \Filament\Schemas\Components\Utilities\Set $set): void
     {
         // Reset lots
         $set('lots', [
@@ -100,7 +104,7 @@ class InventoryAdjustmentResourceHelper
     /**
      * Populate data after product select (OUT)
      */
-    public function populateDataFromProductOut(?string $state, \Filament\Schemas\Components\Utilities\Set $set): void
+    public static function populateDataFromProductOut(?string $state, \Filament\Schemas\Components\Utilities\Set $set): void
     {
         // Reset lots
         $set('lots', [
@@ -118,18 +122,18 @@ class InventoryAdjustmentResourceHelper
     /**
      * Lấy danh sách available lots cho OUT adjustment (callable wrapper)
      */
-    public function getAvailableLotsForOutCallable(callable $get): array
+    public static function getAvailableLotsForOutCallable(callable $get): array
     {
         $warehouseId = $get('../../../../warehouse_id');
         $productId = $get('../../product_id');
 
-        return $this->getAvailableLotsForOut($warehouseId, $productId);
+        return static::getAvailableLotsForOut($warehouseId, $productId);
     }
 
     /**
      * Populate data from parent transaction
      */
-    public function populateDataFromParentTransaction(?string $parentId, \Filament\Schemas\Components\Utilities\Set $set): void
+    public static function populateDataFromParentTransaction(?string $parentId, \Filament\Schemas\Components\Utilities\Set $set): void
     {
         if (!$parentId) {
             $set('lot_no', null);
