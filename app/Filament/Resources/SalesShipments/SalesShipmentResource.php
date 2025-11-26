@@ -6,7 +6,7 @@ use App\Filament\Resources\SalesShipments\Pages\ManageSalesShipments;
 use App\Filament\Tables\DeliveryScheduleTable;
 use App\Models\SalesDeliverySchedule;
 use App\Models\SalesShipment;
-use Filament\Resources\Resource;
+use App\Filament\BaseResource as Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;

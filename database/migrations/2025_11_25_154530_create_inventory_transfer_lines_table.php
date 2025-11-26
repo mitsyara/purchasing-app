@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('inventory_transfer_lines', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('inventory_transfer_id')->nullable()->constrained('inventory_transfers')->cascadeOnDelete();
+            $table->foreignId('lot_id')->nullable()->constrained('inventory_transactions')->nullOnDelete();
+            $table->decimal('transfer_qty', 15, 3);
+            $table->decimal('extra_cost', 15, 3)->nullable();
             $table->timestamps();
         });
     }

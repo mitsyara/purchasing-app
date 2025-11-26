@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InventoryTransfer extends Model
 {
@@ -19,7 +20,10 @@ class InventoryTransfer extends Model
         'approved_by',
         'approved_at',
 
-        'extra_costs', // json format: [{reason: string, amount: decimal}]
+        // json format: [{reason: string, amount: decimal}]
+        'extra_costs',
+        'total_extra_cost', // default VND
+        'average_extra_cost_per_unit',
 
         'notes',
     ];
@@ -29,6 +33,8 @@ class InventoryTransfer extends Model
         'transfer_date' => 'date',
         'approved_at' => 'date',
         'extra_costs' => 'array',
+        'total_extra_cost' => 'decimal:2',
+        'average_extra_cost_per_unit' => 'decimal:2',
     ];
 
     public function company(): BelongsTo
@@ -54,5 +60,50 @@ class InventoryTransfer extends Model
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function transferLines(): HasMany
+    {
+        return $this->hasMany(InventoryTransferLine::class, 'inventory_transfer_id');
+    }
+
+    /**
+     * Mutator để đảm bảo extra_costs có đúng type
+     */
+    public function setExtraCostsAttribute($value): void
+    {
+        if (is_array($value)) {
+            $value = array_map(function ($item) {
+                if (isset($item['amount'])) {
+                    $item['amount'] = (float) $item['amount'];
+                }
+                return $item;
+            }, $value);
+        }
+        $this->attributes['extra_costs'] = json_encode($value);
+    }
+
+    /**
+     * Calculate total extra cost
+     */
+    public function calculateTotalExtraCost(): void
+    {
+        $total = 0;
+        $extraCosts = $this->extra_costs ?? [];
+        foreach ($extraCosts as $cost) {
+            $total += $cost['amount'] ?? 0;
+        }
+        $this->update([
+            'total_extra_cost' => $total,
+        ]);
+    }
+
+    public function calculateAvgExtraCost(): void
+    {
+        $totalUnits = $this->transferLines()->sum('transfer_qty');
+        $avgCost = $totalUnits > 0 ? $this->total_extra_cost / $totalUnits : 0;
+        $this->update([
+            'average_extra_cost_per_unit' => $avgCost,
+        ]);
     }
 }

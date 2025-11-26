@@ -25,6 +25,9 @@ return new class extends Migration
             $table->foreignId('approved_by')->nullable()->constrained('users')->cascadeOnDelete();
 
             $table->json('extra_costs')->nullable();
+            $table->decimal('total_extra_cost', 24, 6)->default(0);
+            $table->decimal('average_extra_cost_per_unit', 15, 3)->default(0);
+
             $table->longText('notes')->nullable();
 
             $table->timestamps();

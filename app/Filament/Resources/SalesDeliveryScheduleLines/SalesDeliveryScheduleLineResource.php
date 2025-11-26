@@ -7,7 +7,7 @@ use App\Filament\Resources\SalesOrders\SalesOrderResource;
 use App\Filament\Resources\SalesShipments\SalesShipmentResource;
 use App\Models\SalesDeliverySchedule;
 use Filament\Actions as A;
-use Filament\Resources\Resource;
+use App\Filament\BaseResource as Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
